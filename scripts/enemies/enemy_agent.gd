@@ -48,6 +48,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	velocity = calculate_desired_velocity(_delta)
 	move_and_slide()
+	try_apply_contact_damage()
 
 func calculate_desired_velocity(_delta: float) -> Vector2:
 	if target == null:
@@ -110,3 +111,28 @@ func _configure_collision(definition: Dictionary) -> void:
 		circle_shape = CircleShape2D.new()
 	circle_shape.radius = collision_radius
 	collision_shape.shape = circle_shape
+
+func try_apply_contact_damage() -> bool:
+	if target == null or not target.has_method("take_contact_damage"):
+		return false
+	if not target is Node2D:
+		return false
+
+	var target_node := target as Node2D
+	var contact_range := get_contact_radius() + _get_target_contact_radius(target_node)
+	if global_position.distance_to(target_node.global_position) > contact_range:
+		return false
+
+	return bool(target_node.call("take_contact_damage", contact_damage))
+
+func get_contact_radius() -> float:
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D")
+	if collision_shape != null and collision_shape.shape is CircleShape2D:
+		return (collision_shape.shape as CircleShape2D).radius
+	return 16.0
+
+func _get_target_contact_radius(target_node: Node2D) -> float:
+	if target_node.has_method("get_contact_radius"):
+		return float(target_node.call("get_contact_radius"))
+	return 18.0

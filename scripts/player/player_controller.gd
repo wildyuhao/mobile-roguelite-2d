@@ -4,16 +4,25 @@ class_name PlayerController
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 @export var move_speed: float = 260.0
+@export var contact_invulnerability_seconds: float = 0.6
 
 @onready var health: Node = $HealthComponent
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 var external_move_vector: Vector2 = Vector2.ZERO
+var damage_invulnerability_remaining: float = 0.0
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.PLAYER_GROUP)
-	health.configure(100)
+	if health == null:
+		health = get_node_or_null("HealthComponent")
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D")
+	if health != null:
+		health.configure(100)
 
 func _physics_process(_delta: float) -> void:
+	tick_damage_invulnerability(_delta)
 	var input_vector := _get_move_input()
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
@@ -37,3 +46,27 @@ func set_external_move_vector(new_vector: Vector2) -> void:
 	if new_vector.length() > 1.0:
 		new_vector = new_vector.normalized()
 	external_move_vector = new_vector
+
+func take_contact_damage(amount: int) -> bool:
+	if amount <= 0 or damage_invulnerability_remaining > 0.0:
+		return false
+	if health == null:
+		health = get_node_or_null("HealthComponent")
+	if health == null or (health.has_method("is_dead") and health.is_dead()):
+		return false
+
+	health.take_damage(amount)
+	damage_invulnerability_remaining = contact_invulnerability_seconds
+	return true
+
+func tick_damage_invulnerability(delta: float) -> void:
+	if damage_invulnerability_remaining <= 0.0:
+		return
+	damage_invulnerability_remaining = max(0.0, damage_invulnerability_remaining - max(0.0, delta))
+
+func get_contact_radius() -> float:
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D")
+	if collision_shape != null and collision_shape.shape is CircleShape2D:
+		return (collision_shape.shape as CircleShape2D).radius
+	return 18.0

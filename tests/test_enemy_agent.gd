@@ -1,5 +1,18 @@
 extends RefCounted
 
+class ContactTarget:
+	extends Node2D
+
+	var contact_radius: float = 18.0
+	var damage_amounts: Array[int] = []
+
+	func get_contact_radius() -> float:
+		return contact_radius
+
+	func take_contact_damage(amount: int) -> bool:
+		damage_amounts.append(amount)
+		return true
+
 func run(runner) -> void:
 	if not ResourceLoader.exists("res://scripts/enemies/enemy_agent.gd"):
 		runner.assert_true(false, "enemy agent script should exist")
@@ -82,5 +95,21 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "enemy should calculate behavior-specific velocity")
 
+	var contact_target := ContactTarget.new()
+	contact_target.global_position = Vector2(18, 0)
+	enemy.global_position = Vector2.ZERO
+	enemy.configure({
+		"behavior": "chase",
+		"contact_damage": 14,
+		"collision_radius": 18.0,
+		"max_health": 24,
+	}, contact_target)
+	if enemy.has_method("try_apply_contact_damage"):
+		runner.assert_true(enemy.try_apply_contact_damage(), "enemy should apply contact damage in range")
+		runner.assert_eq(contact_target.damage_amounts[0], 14, "enemy should pass configured contact damage")
+	else:
+		runner.assert_true(false, "enemy should expose contact damage application")
+
+	contact_target.free()
 	enemy.free()
 	target.free()
