@@ -19,3 +19,6 @@ text = "Lv 1"
 
 [node name="ExperienceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 text = "EXP 0/5"
+
+[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+text = "HP 100/100"

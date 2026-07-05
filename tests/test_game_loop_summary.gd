@@ -24,4 +24,19 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "game loop should record enemy defeat summaries")
 
+	var defeat_loop = game_loop_script.new()
+	defeat_loop.run_summary = {
+		"defeated_enemies": 3,
+		"base_materials": 7,
+		"boss_defeated": false,
+	}
+	if defeat_loop.has_method("record_player_defeat"):
+		var defeat_summary = defeat_loop.record_player_defeat()
+		runner.assert_eq(defeat_summary["boss_defeated"], false, "player defeat should not mark boss defeated")
+		runner.assert_eq(defeat_loop.run_ended, true, "player defeat should end the run")
+		runner.assert_eq(defeat_loop.settlement_rewards["materials"], 10, "player defeat should calculate settlement rewards")
+	else:
+		runner.assert_true(false, "game loop should record player defeat")
+	defeat_loop.free()
+
 	game_loop.free()

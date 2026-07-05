@@ -44,6 +44,7 @@ func _ready() -> void:
 	enemy_director.enemy_spawned.connect(_on_enemy_spawned)
 	enemy_director.configure(database, player)
 	virtual_joystick.move_vector_changed.connect(player.set_external_move_vector)
+	_connect_player_health()
 	experience_system.level_up.connect(_on_level_up)
 	experience_system.experience_changed.connect(hud.set_experience)
 	upgrade_choice_panel.upgrade_selected.connect(_on_upgrade_selected)
@@ -51,6 +52,9 @@ func _ready() -> void:
 	hud.set_experience(experience_system.current_experience, experience_system.get_required_experience())
 
 func _process(delta: float) -> void:
+	if run_ended:
+		return
+
 	run_time += delta
 	hud.set_run_time(run_time)
 
@@ -144,3 +148,43 @@ func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 		run_ended = true
 		settlement_rewards = settlement_system.calculate_rewards(run_summary)
 	return run_summary
+
+func record_player_defeat() -> Dictionary:
+	if run_ended:
+		return run_summary
+
+	run_summary["boss_defeated"] = false
+	run_summary["player_defeated"] = true
+	run_ended = true
+	settlement_rewards = settlement_system.calculate_rewards(run_summary)
+	if is_inside_tree():
+		get_tree().paused = true
+	return run_summary
+
+func _connect_player_health() -> void:
+	var player_health := player.get_node_or_null("HealthComponent")
+	if player_health == null:
+		return
+
+	if player_health.has_signal("damaged"):
+		player_health.damaged.connect(_on_player_health_changed.unbind(1))
+	if player_health.has_signal("healed"):
+		player_health.healed.connect(_on_player_health_changed.unbind(1))
+	if player_health.has_signal("died"):
+		player_health.died.connect(_on_player_died)
+	_update_player_health_hud(player_health)
+
+func _on_player_health_changed() -> void:
+	var player_health := player.get_node_or_null("HealthComponent")
+	if player_health != null:
+		_update_player_health_hud(player_health)
+
+func _on_player_died() -> void:
+	var player_health := player.get_node_or_null("HealthComponent")
+	if player_health != null:
+		_update_player_health_hud(player_health)
+	record_player_defeat()
+
+func _update_player_health_hud(player_health: Node) -> void:
+	if hud != null and hud.has_method("set_health"):
+		hud.set_health(int(player_health.get("current_health")), int(player_health.get("max_health")))
