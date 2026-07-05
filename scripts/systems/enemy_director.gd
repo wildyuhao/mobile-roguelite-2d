@@ -2,6 +2,7 @@ extends Node
 class_name EnemyDirector
 
 signal enemy_spawned(enemy: Node)
+signal boss_spawned(enemy: Node)
 
 @export var enemy_scene: PackedScene
 @export var spawn_radius: float = 520.0
@@ -30,7 +31,9 @@ func _process(delta: float) -> void:
 
 func _spawn_wave(event: Dictionary) -> void:
 	var enemy_id: String = event.get("enemy_id", "basic_demon")
-	var definition: Dictionary = database.get_enemy(enemy_id)
+	var definition: Dictionary = database.get_enemy(enemy_id).duplicate(true)
+	if bool(event.get("is_boss", false)):
+		definition["is_boss"] = true
 	var count := int(event.get("spawn_count", 1))
 	for index in range(count):
 		var enemy = enemy_scene.instantiate()
@@ -38,3 +41,5 @@ func _spawn_wave(event: Dictionary) -> void:
 		enemy.global_position = player.global_position + Vector2.RIGHT.rotated(TAU * float(index) / max(1, count)) * spawn_radius
 		enemy.configure(definition, player)
 		enemy_spawned.emit(enemy)
+		if bool(definition.get("is_boss", false)) or definition.get("behavior", "") == "boss":
+			boss_spawned.emit(enemy)

@@ -46,20 +46,37 @@ func get_weapon_damage(id: String) -> int:
 	return value
 
 func get_weapon_cooldown(id: String) -> float:
-	var value := float(_get_base_definition_value(id, "cooldown", 1.0))
-	for modifier in _get_active_level_modifiers(id):
-		if modifier.has("cooldown"):
-			value = float(modifier["cooldown"])
+	var value := float(_get_modified_definition_value(id, "cooldown", 1.0))
 	return max(0.05, value)
+
+func get_weapon_pierce(id: String) -> int:
+	return int(_get_modified_definition_value(id, "pierce", 0))
+
+func get_weapon_range(id: String) -> int:
+	return int(_get_modified_definition_value(id, "range", 320))
+
+func get_weapon_area_size(id: String) -> int:
+	return int(_get_modified_definition_value(id, "area_size", 0))
+
+func get_weapon_knockback(id: String) -> int:
+	return int(_get_modified_definition_value(id, "knockback", 0))
+
+func get_weapon_stun_chance(id: String) -> float:
+	return float(_get_modified_definition_value(id, "stun_chance", 0.0))
 
 func _build_fire_event(id: String, state: Dictionary) -> Dictionary:
 	var definition: Dictionary = state["definition"]
 	return {
 		"weapon_id": id,
+		"weapon_type": definition.get("type", "projectile"),
 		"damage": get_weapon_damage(id),
-		"range": int(definition.get("range", 320)),
+		"range": get_weapon_range(id),
 		"projectile_speed": int(definition.get("projectile_speed", 480)),
 		"projectile_count": _get_projectile_count(id),
+		"pierce": get_weapon_pierce(id),
+		"area_size": get_weapon_area_size(id),
+		"knockback": get_weapon_knockback(id),
+		"stun_chance": get_weapon_stun_chance(id),
 	}
 
 func _get_projectile_count(id: String) -> int:
@@ -73,6 +90,13 @@ func _get_base_definition_value(id: String, key: String, fallback: Variant) -> V
 	if not weapons.has(id):
 		return fallback
 	return weapons[id]["definition"].get(key, fallback)
+
+func _get_modified_definition_value(id: String, key: String, fallback: Variant) -> Variant:
+	var value = _get_base_definition_value(id, key, fallback)
+	for modifier in _get_active_level_modifiers(id):
+		if modifier.has(key):
+			value = modifier[key]
+	return value
 
 func _get_active_level_modifiers(id: String) -> Array:
 	if not weapons.has(id):

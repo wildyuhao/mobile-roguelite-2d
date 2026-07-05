@@ -11,6 +11,11 @@ const TEST_SCRIPTS := [
 	"res://tests/test_settlement_system.gd",
 	"res://tests/test_upgrade_system.gd",
 	"res://tests/test_weapon_system.gd",
+	"res://tests/test_projectile.gd",
+	"res://tests/test_combat_resolver.gd",
+	"res://tests/test_enemy_agent.gd",
+	"res://tests/test_game_loop_summary.gd",
+	"res://tests/test_enemy_director.gd",
 ]
 
 func _initialize() -> void:

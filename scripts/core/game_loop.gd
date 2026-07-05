@@ -4,6 +4,8 @@ class_name GameLoop
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
 const GameDatabaseScript = preload("res://scripts/data/game_database.gd")
 const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
+const CombatResolverScript = preload("res://scripts/systems/combat_resolver.gd")
+const SettlementSystemScript = preload("res://scripts/systems/settlement_system.gd")
 
 @export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
@@ -17,10 +19,19 @@ const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
 
 var database = GameDatabaseScript.new()
 var upgrade_system = UpgradeSystemScript.new()
+var combat_resolver = CombatResolverScript.new()
+var settlement_system = SettlementSystemScript.new()
 var runtime_state := {
 	"owned_weapons": { "flying_sword": 1 },
 	"upgrade_stacks": {},
 }
+var run_summary := {
+	"defeated_enemies": 0,
+	"base_materials": 0,
+	"boss_defeated": false,
+}
+var settlement_rewards := {}
+var run_ended: bool = false
 var run_time: float = 0.0
 
 func _ready() -> void:
@@ -43,22 +54,51 @@ func _process(delta: float) -> void:
 
 	var fire_events = weapon_system.tick(delta)
 	for event in fire_events:
-		_spawn_projectiles(event)
+		if event.get("weapon_type", "projectile") == "pulse":
+			_apply_pulse_event(event)
+		else:
+			_spawn_projectiles(event)
 
 func _spawn_projectiles(event: Dictionary) -> void:
 	var enemies = get_tree().get_nodes_in_group(GameConstantsScript.ENEMY_GROUP)
 	if enemies.is_empty() or projectile_scene == null:
 		return
 
-	var target = enemies[0] as Node2D
+	var target = combat_resolver.find_closest_enemy(player.global_position, enemies, float(event.get("range", 320.0)))
+	if target == null:
+		return
+
 	var direction: Vector2 = player.global_position.direction_to(target.global_position)
 	var count := int(event.get("projectile_count", 1))
-	for index in range(count):
+	for projectile_direction in combat_resolver.build_spread_directions(direction, count, 8.0):
 		var projectile = projectile_scene.instantiate()
 		add_child(projectile)
 		projectile.global_position = player.global_position
-		var spread := deg_to_rad(8.0 * (index - (count - 1) / 2.0))
-		projectile.configure(direction.rotated(spread), float(event["projectile_speed"]), int(event["damage"]))
+		if projectile.has_method("configure_from_event"):
+			projectile.configure_from_event(projectile_direction, event)
+		else:
+			projectile.configure(projectile_direction, float(event["projectile_speed"]), int(event["damage"]))
+
+func _apply_pulse_event(event: Dictionary) -> void:
+	var enemies = get_tree().get_nodes_in_group(GameConstantsScript.ENEMY_GROUP)
+	var targets = combat_resolver.get_enemies_in_radius(player.global_position, enemies, float(event.get("range", 0.0)))
+	for target in targets:
+		_damage_enemy(target, int(event.get("damage", 1)))
+		_apply_knockback(target, float(event.get("knockback", 0.0)))
+
+func _damage_enemy(enemy: Node, amount: int) -> void:
+	var target_health := enemy.get_node_or_null("HealthComponent")
+	if target_health != null and target_health.has_method("take_damage"):
+		target_health.take_damage(amount)
+
+func _apply_knockback(enemy: Node2D, amount: float) -> void:
+	if amount <= 0.0:
+		return
+
+	var direction := player.global_position.direction_to(enemy.global_position)
+	if direction == Vector2.ZERO:
+		direction = Vector2.RIGHT
+	enemy.global_position += direction * amount
 
 func _on_level_up(new_level: int) -> void:
 	hud.set_level(new_level)
@@ -80,7 +120,10 @@ func _on_enemy_spawned(enemy: Node) -> void:
 	if enemy.has_signal("defeated"):
 		enemy.defeated.connect(_on_enemy_defeated)
 
-func _on_enemy_defeated(enemy_position: Vector2, experience_value: int) -> void:
+func _on_enemy_defeated(payload: Dictionary) -> void:
+	record_enemy_defeat(payload)
+	var enemy_position: Vector2 = payload.get("enemy_position", Vector2.ZERO)
+	var experience_value := int(payload.get("experience_value", 0))
 	if experience_pickup_scene == null:
 		experience_system.add_experience(experience_value)
 		return
@@ -90,3 +133,12 @@ func _on_enemy_defeated(enemy_position: Vector2, experience_value: int) -> void:
 	pickup.global_position = enemy_position
 	pickup.configure(experience_value)
 	pickup.collected.connect(experience_system.add_experience)
+
+func record_enemy_defeat(payload: Dictionary) -> Dictionary:
+	run_summary["defeated_enemies"] = int(run_summary.get("defeated_enemies", 0)) + 1
+	run_summary["base_materials"] = int(run_summary.get("base_materials", 0)) + int(payload.get("material_value", 0))
+	if bool(payload.get("is_boss", false)):
+		run_summary["boss_defeated"] = true
+		run_ended = true
+		settlement_rewards = settlement_system.calculate_rewards(run_summary)
+	return run_summary
