@@ -33,6 +33,16 @@ func run(runner) -> void:
 	system.apply_upgrade(runtime_state, damage_upgrade)
 	runner.assert_eq(runtime_state["upgrade_stacks"][damage_upgrade["id"]], 1, "selected upgrade stack increments")
 
+	var unlock_upgrade := {
+		"id": "unlock_talisman_fire",
+		"kind": "weapon_unlock",
+		"weapon_id": "talisman_fire"
+	}
+	system.apply_upgrade(runtime_state, unlock_upgrade)
+	runner.assert_true(runtime_state["owned_weapons"].has("talisman_fire"), "weapon unlock should add weapon id")
+	if runtime_state["owned_weapons"].has("talisman_fire"):
+		runner.assert_eq(runtime_state["owned_weapons"]["talisman_fire"], 1, "weapon unlock should add weapon at level 1")
+
 func _all_unique(choices: Array) -> bool:
 	var seen := {}
 	for choice in choices:

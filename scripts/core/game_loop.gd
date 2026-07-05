@@ -70,6 +70,10 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 	upgrade_system.apply_upgrade(runtime_state, upgrade)
 	if upgrade.get("kind", "") == "weapon_level":
 		weapon_system.level_weapon(upgrade.get("weapon_id", ""))
+	elif upgrade.get("kind", "") == "weapon_unlock":
+		var weapon_id: String = upgrade.get("weapon_id", "")
+		if weapon_id != "" and not weapon_system.has_weapon(weapon_id):
+			weapon_system.add_weapon(database.get_weapon(weapon_id))
 	get_tree().paused = false
 
 func _on_enemy_spawned(enemy: Node) -> void:

@@ -31,6 +31,12 @@ func apply_upgrade(runtime_state: Dictionary, upgrade: Dictionary) -> void:
 		var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
 		owned_weapons[weapon_id] = int(owned_weapons.get(weapon_id, 1)) + 1
 		runtime_state["owned_weapons"] = owned_weapons
+	elif upgrade.get("kind", "") == "weapon_unlock":
+		var weapon_id: String = upgrade.get("weapon_id", "")
+		var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
+		if weapon_id != "" and not owned_weapons.has(weapon_id):
+			owned_weapons[weapon_id] = 1
+		runtime_state["owned_weapons"] = owned_weapons
 
 func _get_available_upgrades(runtime_state: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -47,6 +53,10 @@ func _get_available_upgrades(runtime_state: Dictionary) -> Array[Dictionary]:
 		if upgrade.get("kind", "") == "weapon_level":
 			var weapon_id: String = upgrade.get("weapon_id", "")
 			if not owned_weapons.has(weapon_id):
+				continue
+		elif upgrade.get("kind", "") == "weapon_unlock":
+			var weapon_id: String = upgrade.get("weapon_id", "")
+			if owned_weapons.has(weapon_id):
 				continue
 
 		result.append(upgrade)
