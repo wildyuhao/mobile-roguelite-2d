@@ -1,0 +1,17 @@
+extends CanvasLayer
+class_name HUD
+
+@onready var timer_label: Label = $MarginContainer/VBoxContainer/TimerLabel
+@onready var level_label: Label = $MarginContainer/VBoxContainer/LevelLabel
+@onready var experience_label: Label = $MarginContainer/VBoxContainer/ExperienceLabel
+
+func set_run_time(seconds: float) -> void:
+	var minutes := int(seconds / 60.0)
+	var remainder := int(seconds) % 60
+	timer_label.text = "%02d:%02d" % [minutes, remainder]
+
+func set_level(level: int) -> void:
+	level_label.text = "Lv %d" % level
+
+func set_experience(current: int, required: int) -> void:
+	experience_label.text = "EXP %d/%d" % [current, required]

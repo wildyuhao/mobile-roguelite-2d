@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/game_loop.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scripts/systems/enemy_director.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/systems/experience_system.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/systems/weapon_system.gd" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UpgradeChoicePanel.tscn" id="9"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
@@ -24,3 +26,7 @@ script = ExtResource("6")
 
 [node name="WeaponSystem" type="Node" parent="."]
 script = ExtResource("7")
+
+[node name="HUD" parent="." instance=ExtResource("8")]
+
+[node name="UpgradeChoicePanel" parent="." instance=ExtResource("9")]
