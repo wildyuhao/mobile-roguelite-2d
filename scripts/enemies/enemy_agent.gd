@@ -14,6 +14,7 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 @export var is_boss: bool = false
 
 @onready var health: Node = $HealthComponent
+@onready var sprite: Sprite2D = $Sprite2D
 
 var target: Node2D
 var behavior: String = "chase"
@@ -21,6 +22,8 @@ var behavior: String = "chase"
 func configure(definition: Dictionary, new_target: Node2D) -> void:
 	if health == null:
 		health = get_node_or_null("HealthComponent")
+	if sprite == null:
+		sprite = get_node_or_null("Sprite2D")
 	target = new_target
 	behavior = definition.get("behavior", "chase")
 	move_speed = float(definition.get("move_speed", move_speed))
@@ -32,6 +35,7 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 	is_boss = definition.get("behavior", "") == "boss" or bool(definition.get("is_boss", false))
 	if health != null:
 		health.configure(int(definition.get("max_health", 24)))
+	_configure_sprite(definition)
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.ENEMY_GROUP)
@@ -74,3 +78,15 @@ func get_defeat_payload() -> Dictionary:
 		"material_value": material_value,
 		"is_boss": is_boss,
 	}
+
+func _configure_sprite(definition: Dictionary) -> void:
+	if sprite == null:
+		return
+
+	var sprite_path: String = definition.get("sprite_path", "")
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		sprite.texture = load(sprite_path)
+
+	var sprite_scale := float(definition.get("sprite_scale", 0.0))
+	if sprite_scale > 0.0:
+		sprite.scale = Vector2(sprite_scale, sprite_scale)

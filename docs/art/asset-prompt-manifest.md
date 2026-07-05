@@ -65,3 +65,23 @@ Post process: copied generated square texture into the project and imported thro
 ### Scene Integration
 
 - Game scene uses `wasteland_ground_tile.png` as the first large ground sprite behind gameplay.
+
+## Generated Batch 3
+
+Generator: internal image-2
+Post process: chroma-key removal from a 2x2 enemy sheet, then cropped into individual transparent PNG sprites.
+
+### Source Green-Screen Sheet
+
+- `res://art/source_green/enemy_batch_2x2_green.png`
+
+### Final Transparent Assets
+
+- Charging demon: `res://art/enemies/charging_demon/charging_demon_front.png`
+- Ranged demon: `res://art/enemies/ranged_demon/ranged_demon_front.png`
+- Elite guardian: `res://art/enemies/elite_guardian/elite_guardian_front.png`
+- Seal boss: `res://art/enemies/seal_boss/seal_boss_front.png`
+
+### Scene Integration
+
+- Enemy data now drives `sprite_path` and `sprite_scale`, so the shared enemy scene can display different enemy types from JSON.
