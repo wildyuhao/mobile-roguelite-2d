@@ -1,0 +1,49 @@
+[
+  {
+    "id": "weapon_damage_1",
+    "display_name": "Sharpened Edge",
+    "kind": "stat",
+    "stat": "weapon_damage_multiplier",
+    "value": 0.15,
+    "max_stacks": 5
+  },
+  {
+    "id": "cooldown_1",
+    "display_name": "Quick Invocation",
+    "kind": "stat",
+    "stat": "weapon_cooldown_multiplier",
+    "value": -0.08,
+    "max_stacks": 5
+  },
+  {
+    "id": "pickup_radius_1",
+    "display_name": "Spirit Magnet",
+    "kind": "stat",
+    "stat": "pickup_radius",
+    "value": 24,
+    "max_stacks": 4
+  },
+  {
+    "id": "move_speed_1",
+    "display_name": "Cloudstep",
+    "kind": "stat",
+    "stat": "move_speed",
+    "value": 24,
+    "max_stacks": 4
+  },
+  {
+    "id": "max_health_1",
+    "display_name": "Jade Body",
+    "kind": "stat",
+    "stat": "max_health",
+    "value": 12,
+    "max_stacks": 5
+  },
+  {
+    "id": "flying_sword_level",
+    "display_name": "Flying Sword Mastery",
+    "kind": "weapon_level",
+    "weapon_id": "flying_sword",
+    "max_stacks": 4
+  }
+]

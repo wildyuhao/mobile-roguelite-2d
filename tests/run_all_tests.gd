@@ -16,7 +16,11 @@ func _initialize() -> void:
 			runner.assert_true(false, "Missing test script: %s" % script_path)
 			continue
 
-		var script := load(script_path)
+		var script = load(script_path)
+		if script == null:
+			runner.assert_true(false, "Test script failed to load: %s" % script_path)
+			continue
+
 		var test_case: Object = script.new()
 		if not test_case.has_method("run"):
 			runner.assert_true(false, "Test script has no run method: %s" % script_path)

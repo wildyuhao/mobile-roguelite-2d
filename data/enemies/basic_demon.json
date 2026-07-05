@@ -1,0 +1,9 @@
+{
+  "id": "basic_demon",
+  "display_name": "Small Demon",
+  "max_health": 24,
+  "move_speed": 110,
+  "contact_damage": 8,
+  "experience_value": 1,
+  "material_value": 1
+}

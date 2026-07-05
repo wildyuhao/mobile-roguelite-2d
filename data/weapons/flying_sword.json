@@ -1,0 +1,18 @@
+{
+  "id": "flying_sword",
+  "display_name": "Flying Sword",
+  "description": "A talisman-guided blade that strikes the nearest demon.",
+  "type": "projectile",
+  "base_damage": 12,
+  "cooldown": 0.9,
+  "projectile_speed": 560,
+  "range": 420,
+  "pierce": 0,
+  "max_level": 5,
+  "level_modifiers": [
+    { "level": 2, "base_damage": 16 },
+    { "level": 3, "cooldown": 0.75 },
+    { "level": 4, "pierce": 1 },
+    { "level": 5, "projectile_count": 2 }
+  ]
+}

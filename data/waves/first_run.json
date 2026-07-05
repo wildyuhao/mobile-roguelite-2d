@@ -1,0 +1,14 @@
+[
+  {
+    "time": 0,
+    "enemy_id": "basic_demon",
+    "spawn_count": 4,
+    "spawn_interval": 1.2
+  },
+  {
+    "time": 60,
+    "enemy_id": "basic_demon",
+    "spawn_count": 8,
+    "spawn_interval": 0.8
+  }
+]

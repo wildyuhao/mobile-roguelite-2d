@@ -1,0 +1,12 @@
+[
+  {
+    "id": "talisman_robe",
+    "display_name": "Talisman Robe",
+    "stat_modifiers": { "max_health": 10 }
+  },
+  {
+    "id": "sword_gourd",
+    "display_name": "Sword Gourd",
+    "starting_weapon_id": "flying_sword"
+  }
+]
