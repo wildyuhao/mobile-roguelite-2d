@@ -52,3 +52,16 @@ Post process: chroma-key removal from flat green-screen source images into trans
 - Basic demon scene uses `small_demon_front.png`.
 - Projectile scene uses `flying_sword_projectile.png`.
 - Experience pickup scene uses `icon_spirit_stone.png`.
+
+## Generated Batch 2
+
+Generator: internal image-2
+Post process: copied generated square texture into the project and imported through Godot.
+
+### Environment Texture
+
+- Wasteland ground tile: `res://art/environment/wasteland_ground_tile.png`
+
+### Scene Integration
+
+- Game scene uses `wasteland_ground_tile.png` as the first large ground sprite behind gameplay.

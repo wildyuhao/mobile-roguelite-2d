@@ -16,6 +16,7 @@ const SettlementSystemScript = preload("res://scripts/systems/settlement_system.
 @onready var weapon_system: Node = $WeaponSystem
 @onready var hud: Node = $HUD
 @onready var upgrade_choice_panel: Node = $UpgradeChoicePanel
+@onready var virtual_joystick: Node = $VirtualJoystick/Stick
 
 var database = GameDatabaseScript.new()
 var upgrade_system = UpgradeSystemScript.new()
@@ -42,6 +43,7 @@ func _ready() -> void:
 	weapon_system.add_weapon(database.get_weapon("flying_sword"))
 	enemy_director.enemy_spawned.connect(_on_enemy_spawned)
 	enemy_director.configure(database, player)
+	virtual_joystick.move_vector_changed.connect(player.set_external_move_vector)
 	experience_system.level_up.connect(_on_level_up)
 	experience_system.experience_changed.connect(hud.set_experience)
 	upgrade_choice_panel.upgrade_selected.connect(_on_upgrade_selected)
