@@ -6,6 +6,7 @@ const GameDatabaseScript = preload("res://scripts/data/game_database.gd")
 const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
 const CombatResolverScript = preload("res://scripts/systems/combat_resolver.gd")
 const SettlementSystemScript = preload("res://scripts/systems/settlement_system.gd")
+const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
 
 @export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
@@ -23,6 +24,7 @@ var database = GameDatabaseScript.new()
 var upgrade_system = UpgradeSystemScript.new()
 var combat_resolver = CombatResolverScript.new()
 var settlement_system = SettlementSystemScript.new()
+var save_system: Object = SaveSystemScript.new()
 var runtime_state := {
 	"owned_weapons": { "flying_sword": 1 },
 	"upgrade_stacks": {},
@@ -33,6 +35,7 @@ var run_summary := {
 	"boss_defeated": false,
 }
 var settlement_rewards := {}
+var settlement_saved: bool = false
 var run_ended: bool = false
 var run_time: float = 0.0
 
@@ -144,12 +147,16 @@ func _on_enemy_defeated(payload: Dictionary) -> void:
 	pickup.collected.connect(experience_system.add_experience)
 
 func record_enemy_defeat(payload: Dictionary) -> Dictionary:
+	if run_ended:
+		return run_summary
+
 	run_summary["defeated_enemies"] = int(run_summary.get("defeated_enemies", 0)) + 1
 	run_summary["base_materials"] = int(run_summary.get("base_materials", 0)) + int(payload.get("material_value", 0))
 	if bool(payload.get("is_boss", false)):
 		run_summary["boss_defeated"] = true
 		run_ended = true
 		settlement_rewards = settlement_system.calculate_rewards(run_summary)
+		_persist_settlement_rewards()
 		_show_settlement_result("Boss Sealed")
 	return run_summary
 
@@ -161,6 +168,7 @@ func record_player_defeat() -> Dictionary:
 	run_summary["player_defeated"] = true
 	run_ended = true
 	settlement_rewards = settlement_system.calculate_rewards(run_summary)
+	_persist_settlement_rewards()
 	_show_settlement_result("Run Failed")
 	if is_inside_tree():
 		get_tree().paused = true
@@ -168,6 +176,9 @@ func record_player_defeat() -> Dictionary:
 
 func set_settlement_panel(panel: Node) -> void:
 	settlement_panel = panel
+
+func set_save_system(system: Object) -> void:
+	save_system = system
 
 func _connect_player_health() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")
@@ -200,6 +211,21 @@ func _update_player_health_hud(player_health: Node) -> void:
 func _show_settlement_result(title: String) -> void:
 	if settlement_panel != null and settlement_panel.has_method("show_result"):
 		settlement_panel.show_result(title, settlement_rewards, run_summary)
+
+func _persist_settlement_rewards() -> bool:
+	if settlement_saved:
+		return false
+	if save_system == null or not save_system.has_method("load_game") or not save_system.has_method("save_game"):
+		return false
+
+	var save_data = save_system.load_game()
+	if typeof(save_data) != TYPE_DICTIONARY:
+		save_data = {}
+
+	var earned_materials := int(settlement_rewards.get("materials", 0))
+	save_data["materials"] = int(save_data.get("materials", 0)) + earned_materials
+	settlement_saved = bool(save_system.save_game(save_data))
+	return settlement_saved
 
 func _on_settlement_restart_requested() -> void:
 	if not is_inside_tree():

@@ -14,6 +14,31 @@ class FakeSettlementPanel:
 		last_rewards = rewards
 		last_summary = summary
 
+class FakeSaveSystem:
+	extends RefCounted
+
+	var data: Dictionary = {}
+	var save_calls: int = 0
+	var last_saved_data: Dictionary = {}
+
+	func _init(starting_materials: int = 0) -> void:
+		data = {
+			"version": 1,
+			"materials": starting_materials,
+			"equipment_levels": {},
+			"unlocked_equipment": ["talisman_robe", "sword_gourd"],
+			"settings": {},
+		}
+
+	func load_game() -> Dictionary:
+		return data.duplicate(true)
+
+	func save_game(new_data: Dictionary) -> bool:
+		save_calls += 1
+		last_saved_data = new_data.duplicate(true)
+		data = new_data.duplicate(true)
+		return true
+
 func run(runner) -> void:
 	if not ResourceLoader.exists("res://scripts/core/game_loop.gd"):
 		runner.assert_true(false, "game loop script should exist")
@@ -22,10 +47,15 @@ func run(runner) -> void:
 	var game_loop_script = load("res://scripts/core/game_loop.gd")
 	var game_loop = game_loop_script.new()
 	var victory_panel := FakeSettlementPanel.new()
+	var victory_save := FakeSaveSystem.new(11)
 	if game_loop.has_method("set_settlement_panel"):
 		game_loop.set_settlement_panel(victory_panel)
 	else:
 		runner.assert_true(false, "game loop should accept a settlement panel")
+	if game_loop.has_method("set_save_system"):
+		game_loop.set_save_system(victory_save)
+	else:
+		runner.assert_true(false, "game loop should accept an injected save system")
 	var payload := {
 		"enemy_position": Vector2.ZERO,
 		"experience_value": 30,
@@ -41,15 +71,30 @@ func run(runner) -> void:
 		runner.assert_eq(game_loop.run_ended, true, "boss defeat should end the run")
 		runner.assert_eq(game_loop.settlement_rewards["materials"], 69, "boss defeat should calculate settlement rewards")
 		runner.assert_eq(victory_panel.last_title, "Boss Sealed", "boss defeat should show victory title")
+		runner.assert_eq(victory_save.save_calls, 1, "boss defeat should save rewards once")
+		runner.assert_eq(int(victory_save.last_saved_data.get("materials", -1)), 80, "boss rewards should be added to saved materials")
+		game_loop.record_enemy_defeat({
+			"enemy_position": Vector2.ZERO,
+			"experience_value": 5,
+			"material_value": 999,
+			"is_boss": false,
+		})
+		runner.assert_eq(victory_save.save_calls, 1, "late defeats after run end should not resave rewards")
+		runner.assert_eq(game_loop.run_summary["defeated_enemies"], 1, "late defeats after run end should not change the summary")
 	else:
 		runner.assert_true(false, "game loop should record enemy defeat summaries")
 
 	var defeat_loop = game_loop_script.new()
 	var defeat_panel := FakeSettlementPanel.new()
+	var defeat_save := FakeSaveSystem.new(5)
 	if defeat_loop.has_method("set_settlement_panel"):
 		defeat_loop.set_settlement_panel(defeat_panel)
 	else:
 		runner.assert_true(false, "game loop should accept a settlement panel for defeat")
+	if defeat_loop.has_method("set_save_system"):
+		defeat_loop.set_save_system(defeat_save)
+	else:
+		runner.assert_true(false, "game loop should accept an injected save system for defeat")
 	defeat_loop.run_summary = {
 		"defeated_enemies": 3,
 		"base_materials": 7,
@@ -61,6 +106,10 @@ func run(runner) -> void:
 		runner.assert_eq(defeat_loop.run_ended, true, "player defeat should end the run")
 		runner.assert_eq(defeat_loop.settlement_rewards["materials"], 10, "player defeat should calculate settlement rewards")
 		runner.assert_eq(defeat_panel.last_title, "Run Failed", "player defeat should show defeat title")
+		runner.assert_eq(defeat_save.save_calls, 1, "player defeat should save rewards once")
+		runner.assert_eq(int(defeat_save.last_saved_data.get("materials", -1)), 15, "defeat rewards should be added to saved materials")
+		defeat_loop.record_player_defeat()
+		runner.assert_eq(defeat_save.save_calls, 1, "repeated player defeat should not resave rewards")
 	else:
 		runner.assert_true(false, "game loop should record player defeat")
 	defeat_panel.free()
