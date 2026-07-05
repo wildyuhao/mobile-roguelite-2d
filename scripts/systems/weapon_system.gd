@@ -1,0 +1,88 @@
+extends Node
+class_name WeaponSystem
+
+var weapons: Dictionary = {}
+
+func add_weapon(definition: Dictionary) -> void:
+	var id: String = definition["id"]
+	weapons[id] = {
+		"definition": definition.duplicate(true),
+		"level": 1,
+		"cooldown_remaining": float(definition.get("cooldown", 1.0)),
+	}
+
+func has_weapon(id: String) -> bool:
+	return weapons.has(id)
+
+func get_weapon_level(id: String) -> int:
+	if not weapons.has(id):
+		return 0
+	return int(weapons[id]["level"])
+
+func level_weapon(id: String) -> void:
+	if not weapons.has(id):
+		return
+
+	var state: Dictionary = weapons[id]
+	var definition: Dictionary = state["definition"]
+	var max_level := int(definition.get("max_level", 1))
+	state["level"] = min(max_level, int(state["level"]) + 1)
+
+func tick(delta: float) -> Array[Dictionary]:
+	var events: Array[Dictionary] = []
+	for id in weapons.keys():
+		var state: Dictionary = weapons[id]
+		state["cooldown_remaining"] = float(state["cooldown_remaining"]) - delta
+		if float(state["cooldown_remaining"]) <= 0.0:
+			events.append(_build_fire_event(id, state))
+			state["cooldown_remaining"] = float(state["cooldown_remaining"]) + get_weapon_cooldown(id)
+	return events
+
+func get_weapon_damage(id: String) -> int:
+	var value := int(_get_base_definition_value(id, "base_damage", 1))
+	for modifier in _get_active_level_modifiers(id):
+		if modifier.has("base_damage"):
+			value = int(modifier["base_damage"])
+	return value
+
+func get_weapon_cooldown(id: String) -> float:
+	var value := float(_get_base_definition_value(id, "cooldown", 1.0))
+	for modifier in _get_active_level_modifiers(id):
+		if modifier.has("cooldown"):
+			value = float(modifier["cooldown"])
+	return max(0.05, value)
+
+func _build_fire_event(id: String, state: Dictionary) -> Dictionary:
+	var definition: Dictionary = state["definition"]
+	return {
+		"weapon_id": id,
+		"damage": get_weapon_damage(id),
+		"range": int(definition.get("range", 320)),
+		"projectile_speed": int(definition.get("projectile_speed", 480)),
+		"projectile_count": _get_projectile_count(id),
+	}
+
+func _get_projectile_count(id: String) -> int:
+	var value := int(_get_base_definition_value(id, "projectile_count", 1))
+	for modifier in _get_active_level_modifiers(id):
+		if modifier.has("projectile_count"):
+			value = int(modifier["projectile_count"])
+	return value
+
+func _get_base_definition_value(id: String, key: String, fallback: Variant) -> Variant:
+	if not weapons.has(id):
+		return fallback
+	return weapons[id]["definition"].get(key, fallback)
+
+func _get_active_level_modifiers(id: String) -> Array:
+	if not weapons.has(id):
+		return []
+
+	var state: Dictionary = weapons[id]
+	var current_level := int(state["level"])
+	var definition: Dictionary = state["definition"]
+	var result := []
+	for modifier in definition.get("level_modifiers", []):
+		if int(modifier.get("level", 1)) <= current_level:
+			result.append(modifier)
+	return result
