@@ -1,0 +1,26 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/game_loop.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/BasicDemon.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="4"]
+[ext_resource type="Script" path="res://scripts/systems/enemy_director.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/systems/experience_system.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/systems/weapon_system.gd" id="7"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1")
+projectile_scene = ExtResource("4")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(360, 640)
+
+[node name="EnemyDirector" type="Node" parent="."]
+script = ExtResource("5")
+enemy_scene = ExtResource("3")
+
+[node name="ExperienceSystem" type="Node" parent="."]
+script = ExtResource("6")
+
+[node name="WeaponSystem" type="Node" parent="."]
+script = ExtResource("7")
