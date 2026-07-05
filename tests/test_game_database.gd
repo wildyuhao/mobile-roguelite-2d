@@ -15,3 +15,8 @@ func run(runner) -> void:
 	runner.assert_true(db.has_enemy("basic_demon"), "database should include basic_demon")
 	runner.assert_true(db.get_upgrades().size() >= 6, "database should include at least six upgrades")
 	runner.assert_true(db.get_wave_events().size() >= 2, "database should include wave events")
+	runner.assert_true(db.has_method("get_weapons"), "database should expose all weapons")
+	runner.assert_true(db.has_method("get_enemies"), "database should expose all enemies")
+	runner.assert_true(db.get_weapons().size() >= 4, "vertical slice should include at least four weapons")
+	runner.assert_true(db.get_enemies().size() >= 5, "vertical slice should include four enemies and one boss")
+	runner.assert_true(db.get_equipment().size() >= 6, "vertical slice should include six equipment items")

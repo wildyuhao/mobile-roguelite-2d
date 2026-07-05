@@ -1,0 +1,11 @@
+{
+  "id": "charging_demon",
+  "display_name": "Charging Demon",
+  "behavior": "charge",
+  "max_health": 38,
+  "move_speed": 95,
+  "charge_speed": 260,
+  "contact_damage": 14,
+  "experience_value": 2,
+  "material_value": 2
+}

@@ -10,5 +10,30 @@
     "enemy_id": "basic_demon",
     "spawn_count": 8,
     "spawn_interval": 0.8
+  },
+  {
+    "time": 120,
+    "enemy_id": "charging_demon",
+    "spawn_count": 4,
+    "spawn_interval": 1.0
+  },
+  {
+    "time": 180,
+    "enemy_id": "ranged_demon",
+    "spawn_count": 5,
+    "spawn_interval": 1.1
+  },
+  {
+    "time": 300,
+    "enemy_id": "elite_guardian",
+    "spawn_count": 1,
+    "spawn_interval": 1.0
+  },
+  {
+    "time": 480,
+    "enemy_id": "seal_boss",
+    "spawn_count": 1,
+    "spawn_interval": 1.0,
+    "is_boss": true
   }
 ]

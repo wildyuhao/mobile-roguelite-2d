@@ -8,5 +8,25 @@
     "id": "sword_gourd",
     "display_name": "Sword Gourd",
     "starting_weapon_id": "flying_sword"
+  },
+  {
+    "id": "jade_compass",
+    "display_name": "Jade Compass",
+    "stat_modifiers": { "pickup_radius": 24, "material_gain": 0.1 }
+  },
+  {
+    "id": "bronze_gear_core",
+    "display_name": "Bronze Gear Core",
+    "stat_modifiers": { "weapon_cooldown_multiplier": -0.05 }
+  },
+  {
+    "id": "cloudstep_boots",
+    "display_name": "Cloudstep Boots",
+    "stat_modifiers": { "move_speed": 18 }
+  },
+  {
+    "id": "bell_charm",
+    "display_name": "Bell Charm",
+    "stat_modifiers": { "control_duration": 0.1 }
   }
 ]

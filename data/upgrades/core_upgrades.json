@@ -45,5 +45,47 @@
     "kind": "weapon_level",
     "weapon_id": "flying_sword",
     "max_stacks": 4
+  },
+  {
+    "id": "talisman_fire_level",
+    "display_name": "Talisman Fire Mastery",
+    "kind": "weapon_level",
+    "weapon_id": "talisman_fire",
+    "max_stacks": 4
+  },
+  {
+    "id": "mechanism_crossbow_level",
+    "display_name": "Mechanism Crossbow Mastery",
+    "kind": "weapon_level",
+    "weapon_id": "mechanism_crossbow",
+    "max_stacks": 4
+  },
+  {
+    "id": "demon_sealing_bell_level",
+    "display_name": "Demon-Sealing Bell Mastery",
+    "kind": "weapon_level",
+    "weapon_id": "demon_sealing_bell",
+    "max_stacks": 4
+  },
+  {
+    "id": "unlock_talisman_fire",
+    "display_name": "Learn Talisman Fire",
+    "kind": "weapon_unlock",
+    "weapon_id": "talisman_fire",
+    "max_stacks": 1
+  },
+  {
+    "id": "unlock_mechanism_crossbow",
+    "display_name": "Build Mechanism Crossbow",
+    "kind": "weapon_unlock",
+    "weapon_id": "mechanism_crossbow",
+    "max_stacks": 1
+  },
+  {
+    "id": "unlock_demon_sealing_bell",
+    "display_name": "Attune Demon-Sealing Bell",
+    "kind": "weapon_unlock",
+    "weapon_id": "demon_sealing_bell",
+    "max_stacks": 1
   }
 ]

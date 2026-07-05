@@ -6,6 +6,9 @@ const TEST_SCRIPTS := [
 	"res://tests/test_game_database.gd",
 	"res://tests/test_health_component.gd",
 	"res://tests/test_experience_pickup.gd",
+	"res://tests/test_equipment_system.gd",
+	"res://tests/test_save_system.gd",
+	"res://tests/test_settlement_system.gd",
 	"res://tests/test_upgrade_system.gd",
 	"res://tests/test_weapon_system.gd",
 ]

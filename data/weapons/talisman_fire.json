@@ -1,0 +1,18 @@
+{
+  "id": "talisman_fire",
+  "display_name": "Talisman Fire",
+  "description": "A burning talisman that explodes when it reaches a demon.",
+  "type": "projectile",
+  "base_damage": 9,
+  "cooldown": 1.15,
+  "projectile_speed": 440,
+  "range": 360,
+  "area_size": 72,
+  "max_level": 5,
+  "level_modifiers": [
+    { "level": 2, "base_damage": 13 },
+    { "level": 3, "area_size": 96 },
+    { "level": 4, "cooldown": 0.95 },
+    { "level": 5, "projectile_count": 2 }
+  ]
+}

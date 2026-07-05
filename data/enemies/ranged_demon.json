@@ -1,0 +1,11 @@
+{
+  "id": "ranged_demon",
+  "display_name": "Ranged Demon",
+  "behavior": "ranged",
+  "max_health": 28,
+  "move_speed": 80,
+  "preferred_range": 320,
+  "contact_damage": 6,
+  "experience_value": 2,
+  "material_value": 2
+}

@@ -1,0 +1,10 @@
+{
+  "id": "elite_guardian",
+  "display_name": "Elite Guardian",
+  "behavior": "chase",
+  "max_health": 160,
+  "move_speed": 85,
+  "contact_damage": 20,
+  "experience_value": 8,
+  "material_value": 8
+}

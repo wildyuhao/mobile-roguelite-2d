@@ -23,11 +23,17 @@ func has_weapon(id: String) -> bool:
 func get_weapon(id: String) -> Dictionary:
 	return weapons.get(id, {})
 
+func get_weapons() -> Dictionary:
+	return weapons
+
 func has_enemy(id: String) -> bool:
 	return enemies.has(id)
 
 func get_enemy(id: String) -> Dictionary:
 	return enemies.get(id, {})
+
+func get_enemies() -> Dictionary:
+	return enemies
 
 func get_upgrades() -> Array[Dictionary]:
 	return upgrades

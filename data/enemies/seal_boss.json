@@ -1,0 +1,10 @@
+{
+  "id": "seal_boss",
+  "display_name": "Seal-Broken Warden",
+  "behavior": "boss",
+  "max_health": 1200,
+  "move_speed": 70,
+  "contact_damage": 24,
+  "experience_value": 30,
+  "material_value": 50
+}

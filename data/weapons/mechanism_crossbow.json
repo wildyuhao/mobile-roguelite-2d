@@ -1,0 +1,18 @@
+{
+  "id": "mechanism_crossbow",
+  "display_name": "Mechanism Crossbow",
+  "description": "A compact mechanism crossbow that fires piercing bolts.",
+  "type": "projectile",
+  "base_damage": 7,
+  "cooldown": 0.45,
+  "projectile_speed": 680,
+  "range": 520,
+  "pierce": 1,
+  "max_level": 5,
+  "level_modifiers": [
+    { "level": 2, "base_damage": 9 },
+    { "level": 3, "pierce": 2 },
+    { "level": 4, "cooldown": 0.35 },
+    { "level": 5, "projectile_count": 3 }
+  ]
+}
