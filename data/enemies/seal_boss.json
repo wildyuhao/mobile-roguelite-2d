@@ -8,5 +8,6 @@
   "experience_value": 30,
   "material_value": 50,
   "sprite_path": "res://art/enemies/seal_boss/seal_boss_front.png",
-  "sprite_scale": 0.32
+  "sprite_scale": 0.32,
+  "collision_radius": 44.0
 }

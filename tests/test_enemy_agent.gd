@@ -13,11 +13,17 @@ func run(runner) -> void:
 	var enemy = enemy_script.new()
 	var health = health_script.new()
 	var sprite := Sprite2D.new()
+	var collision := CollisionShape2D.new()
+	var collision_shape := CircleShape2D.new()
 	var target := Node2D.new()
 	health.name = "HealthComponent"
 	sprite.name = "Sprite2D"
+	collision.name = "CollisionShape2D"
+	collision_shape.radius = 16.0
+	collision.shape = collision_shape
 	enemy.add_child(health)
 	enemy.add_child(sprite)
+	enemy.add_child(collision)
 	enemy.health = health
 	enemy.global_position = Vector2(12, 34)
 	enemy.configure({
@@ -28,12 +34,14 @@ func run(runner) -> void:
 		"behavior": "boss",
 		"sprite_path": "res://art/enemies/seal_boss/seal_boss_front.png",
 		"sprite_scale": 0.32,
+		"collision_radius": 44.0,
 	}, target)
 
 	runner.assert_eq(enemy.get("material_value"), 50, "enemy configure should set material value")
 	runner.assert_eq(enemy.get("is_boss"), true, "enemy configure should mark boss enemies")
 	runner.assert_true(sprite.texture != null, "enemy configure should load sprite_path into Sprite2D")
 	runner.assert_eq(sprite.scale, Vector2(0.32, 0.32), "enemy configure should apply sprite scale")
+	runner.assert_eq((collision.shape as CircleShape2D).radius, 44.0, "enemy configure should apply collision radius")
 	if enemy.has_method("get_defeat_payload"):
 		var payload = enemy.get_defeat_payload()
 		runner.assert_eq(payload["enemy_position"], Vector2(12, 34), "defeat payload should include position")

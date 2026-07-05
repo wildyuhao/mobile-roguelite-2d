@@ -15,6 +15,7 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 @onready var health: Node = $HealthComponent
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 var target: Node2D
 var behavior: String = "chase"
@@ -24,6 +25,8 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		health = get_node_or_null("HealthComponent")
 	if sprite == null:
 		sprite = get_node_or_null("Sprite2D")
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D")
 	target = new_target
 	behavior = definition.get("behavior", "chase")
 	move_speed = float(definition.get("move_speed", move_speed))
@@ -36,6 +39,7 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 	if health != null:
 		health.configure(int(definition.get("max_health", 24)))
 	_configure_sprite(definition)
+	_configure_collision(definition)
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.ENEMY_GROUP)
@@ -90,3 +94,19 @@ func _configure_sprite(definition: Dictionary) -> void:
 	var sprite_scale := float(definition.get("sprite_scale", 0.0))
 	if sprite_scale > 0.0:
 		sprite.scale = Vector2(sprite_scale, sprite_scale)
+
+func _configure_collision(definition: Dictionary) -> void:
+	if collision_shape == null:
+		return
+
+	var collision_radius := float(definition.get("collision_radius", 0.0))
+	if collision_radius <= 0.0:
+		return
+
+	var circle_shape: CircleShape2D
+	if collision_shape.shape is CircleShape2D:
+		circle_shape = (collision_shape.shape as CircleShape2D).duplicate()
+	else:
+		circle_shape = CircleShape2D.new()
+	circle_shape.radius = collision_radius
+	collision_shape.shape = circle_shape
