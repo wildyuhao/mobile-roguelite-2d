@@ -1,6 +1,8 @@
 extends Node
 class_name EnemyDirector
 
+signal enemy_spawned(enemy: Node)
+
 @export var enemy_scene: PackedScene
 @export var spawn_radius: float = 520.0
 
@@ -35,3 +37,4 @@ func _spawn_wave(event: Dictionary) -> void:
 		get_parent().add_child(enemy)
 		enemy.global_position = player.global_position + Vector2.RIGHT.rotated(TAU * float(index) / max(1, count)) * spawn_radius
 		enemy.configure(definition, player)
+		enemy_spawned.emit(enemy)

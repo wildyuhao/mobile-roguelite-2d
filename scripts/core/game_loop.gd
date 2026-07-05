@@ -6,6 +6,7 @@ const GameDatabaseScript = preload("res://scripts/data/game_database.gd")
 const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
 
 @export var projectile_scene: PackedScene
+@export var experience_pickup_scene: PackedScene
 
 @onready var player: Node2D = $Player
 @onready var enemy_director: Node = $EnemyDirector
@@ -28,6 +29,7 @@ func _ready() -> void:
 
 	upgrade_system.configure(database.get_upgrades())
 	weapon_system.add_weapon(database.get_weapon("flying_sword"))
+	enemy_director.enemy_spawned.connect(_on_enemy_spawned)
 	enemy_director.configure(database, player)
 	experience_system.level_up.connect(_on_level_up)
 	experience_system.experience_changed.connect(hud.set_experience)
@@ -69,3 +71,18 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 	if upgrade.get("kind", "") == "weapon_level":
 		weapon_system.level_weapon(upgrade.get("weapon_id", ""))
 	get_tree().paused = false
+
+func _on_enemy_spawned(enemy: Node) -> void:
+	if enemy.has_signal("defeated"):
+		enemy.defeated.connect(_on_enemy_defeated)
+
+func _on_enemy_defeated(enemy_position: Vector2, experience_value: int) -> void:
+	if experience_pickup_scene == null:
+		experience_system.add_experience(experience_value)
+		return
+
+	var pickup = experience_pickup_scene.instantiate()
+	add_child(pickup)
+	pickup.global_position = enemy_position
+	pickup.configure(experience_value)
+	pickup.collected.connect(experience_system.add_experience)

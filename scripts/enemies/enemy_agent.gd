@@ -1,6 +1,8 @@
 extends CharacterBody2D
 class_name EnemyAgent
 
+signal defeated(enemy_position: Vector2, experience_value: int)
+
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 @export var move_speed: float = 110.0
@@ -20,7 +22,7 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.ENEMY_GROUP)
-	health.died.connect(queue_free)
+	health.died.connect(_on_died)
 
 func _physics_process(_delta: float) -> void:
 	if target == null:
@@ -28,3 +30,7 @@ func _physics_process(_delta: float) -> void:
 	else:
 		velocity = global_position.direction_to(target.global_position) * move_speed
 	move_and_slide()
+
+func _on_died() -> void:
+	defeated.emit(global_position, experience_value)
+	queue_free()
