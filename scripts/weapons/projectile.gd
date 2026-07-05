@@ -10,6 +10,7 @@ var remaining_lifetime: float = 1.5
 func configure(direction: Vector2, speed: float, new_damage: int) -> void:
 	velocity = direction.normalized() * speed
 	damage = new_damage
+	rotation = velocity.angle()
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.PROJECTILE_GROUP)
