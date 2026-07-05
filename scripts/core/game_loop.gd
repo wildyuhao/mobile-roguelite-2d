@@ -17,6 +17,7 @@ const SettlementSystemScript = preload("res://scripts/systems/settlement_system.
 @onready var hud: Node = $HUD
 @onready var upgrade_choice_panel: Node = $UpgradeChoicePanel
 @onready var virtual_joystick: Node = $VirtualJoystick/Stick
+@onready var settlement_panel: Node = $SettlementPanel
 
 var database = GameDatabaseScript.new()
 var upgrade_system = UpgradeSystemScript.new()
@@ -44,6 +45,8 @@ func _ready() -> void:
 	enemy_director.enemy_spawned.connect(_on_enemy_spawned)
 	enemy_director.configure(database, player)
 	virtual_joystick.move_vector_changed.connect(player.set_external_move_vector)
+	if settlement_panel != null and settlement_panel.has_signal("restart_requested"):
+		settlement_panel.restart_requested.connect(_on_settlement_restart_requested)
 	_connect_player_health()
 	experience_system.level_up.connect(_on_level_up)
 	experience_system.experience_changed.connect(hud.set_experience)
@@ -147,6 +150,7 @@ func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 		run_summary["boss_defeated"] = true
 		run_ended = true
 		settlement_rewards = settlement_system.calculate_rewards(run_summary)
+		_show_settlement_result("Boss Sealed")
 	return run_summary
 
 func record_player_defeat() -> Dictionary:
@@ -157,9 +161,13 @@ func record_player_defeat() -> Dictionary:
 	run_summary["player_defeated"] = true
 	run_ended = true
 	settlement_rewards = settlement_system.calculate_rewards(run_summary)
+	_show_settlement_result("Run Failed")
 	if is_inside_tree():
 		get_tree().paused = true
 	return run_summary
+
+func set_settlement_panel(panel: Node) -> void:
+	settlement_panel = panel
 
 func _connect_player_health() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")
@@ -188,3 +196,15 @@ func _on_player_died() -> void:
 func _update_player_health_hud(player_health: Node) -> void:
 	if hud != null and hud.has_method("set_health"):
 		hud.set_health(int(player_health.get("current_health")), int(player_health.get("max_health")))
+
+func _show_settlement_result(title: String) -> void:
+	if settlement_panel != null and settlement_panel.has_method("show_result"):
+		settlement_panel.show_result(title, settlement_rewards, run_summary)
+
+func _on_settlement_restart_requested() -> void:
+	if not is_inside_tree():
+		return
+
+	var tree := get_tree()
+	tree.paused = false
+	tree.reload_current_scene()

@@ -9,6 +9,7 @@ func run(runner) -> void:
 	var game = game_scene.instantiate()
 	runner.assert_true(game.has_node("Ground"), "game scene should include a ground sprite")
 	runner.assert_true(game.has_node("VirtualJoystick/Stick"), "game scene should include a virtual joystick stick")
+	runner.assert_true(game.has_node("SettlementPanel"), "game scene should include a settlement panel")
 
 	var ground = game.get_node_or_null("Ground")
 	if ground != null:
