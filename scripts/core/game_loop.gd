@@ -8,6 +8,7 @@ const CombatResolverScript = preload("res://scripts/systems/combat_resolver.gd")
 const SettlementSystemScript = preload("res://scripts/systems/settlement_system.gd")
 const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
 const EquipmentSystemScript = preload("res://scripts/systems/equipment_system.gd")
+const SETTLEMENT_UPGRADE_EQUIPMENT_ID := "talisman_robe"
 
 @export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
@@ -52,8 +53,7 @@ func _ready() -> void:
 	enemy_director.enemy_spawned.connect(_on_enemy_spawned)
 	enemy_director.configure(database, player)
 	virtual_joystick.move_vector_changed.connect(player.set_external_move_vector)
-	if settlement_panel != null and settlement_panel.has_signal("restart_requested"):
-		settlement_panel.restart_requested.connect(_on_settlement_restart_requested)
+	_connect_settlement_panel_signals()
 	_connect_player_health()
 	experience_system.level_up.connect(_on_level_up)
 	experience_system.experience_changed.connect(hud.set_experience)
@@ -180,9 +180,24 @@ func record_player_defeat() -> Dictionary:
 
 func set_settlement_panel(panel: Node) -> void:
 	settlement_panel = panel
+	_connect_settlement_panel_signals()
 
 func set_save_system(system: Object) -> void:
 	save_system = system
+
+func upgrade_settlement_equipment(equipment_id: String) -> Dictionary:
+	if not _ensure_database_loaded():
+		return { "success": false, "reason": "database_not_loaded" }
+	if save_system == null or not save_system.has_method("save_game"):
+		return { "success": false, "reason": "save_unavailable" }
+
+	var save_data := _load_save_data()
+	equipment_system.configure(database.get_equipment())
+	var result: Dictionary = equipment_system.upgrade_equipment_in_save(equipment_id, save_data)
+	if bool(result.get("success", false)):
+		save_system.save_game(save_data)
+	_refresh_settlement_upgrade_offer()
+	return result
 
 func apply_saved_equipment_to_player(save_data: Dictionary) -> Dictionary:
 	equipment_system.configure(database.get_equipment())
@@ -201,6 +216,19 @@ func _load_save_data() -> Dictionary:
 	if typeof(save_data) != TYPE_DICTIONARY:
 		return {}
 	return save_data
+
+func _ensure_database_loaded() -> bool:
+	if not database.get_equipment().is_empty():
+		return true
+	return database.load_all()
+
+func _connect_settlement_panel_signals() -> void:
+	if settlement_panel == null:
+		return
+	if settlement_panel.has_signal("restart_requested") and not settlement_panel.restart_requested.is_connected(_on_settlement_restart_requested):
+		settlement_panel.restart_requested.connect(_on_settlement_restart_requested)
+	if settlement_panel.has_signal("upgrade_requested") and not settlement_panel.upgrade_requested.is_connected(_on_settlement_upgrade_requested):
+		settlement_panel.upgrade_requested.connect(_on_settlement_upgrade_requested)
 
 func _connect_player_health() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")
@@ -233,6 +261,46 @@ func _update_player_health_hud(player_health: Node) -> void:
 func _show_settlement_result(title: String) -> void:
 	if settlement_panel != null and settlement_panel.has_method("show_result"):
 		settlement_panel.show_result(title, settlement_rewards, run_summary)
+	_refresh_settlement_upgrade_offer()
+
+func _refresh_settlement_upgrade_offer() -> Dictionary:
+	if settlement_panel == null or not settlement_panel.has_method("show_upgrade_offer"):
+		return {}
+	if not _ensure_database_loaded():
+		return {}
+
+	var save_data := _load_save_data()
+	equipment_system.configure(database.get_equipment())
+	var equipment_definition := _get_equipment_definition(SETTLEMENT_UPGRADE_EQUIPMENT_ID)
+	if equipment_definition.is_empty():
+		return {}
+
+	var levels: Dictionary = save_data.get("equipment_levels", {})
+	var level: int = max(1, int(levels.get(SETTLEMENT_UPGRADE_EQUIPMENT_ID, 1)))
+	var cost: int = equipment_system.get_upgrade_cost(SETTLEMENT_UPGRADE_EQUIPMENT_ID, save_data)
+	var total_materials := int(save_data.get("materials", 0))
+	var can_upgrade := equipment_system.can_upgrade(SETTLEMENT_UPGRADE_EQUIPMENT_ID, save_data)
+	settlement_panel.show_upgrade_offer(
+		SETTLEMENT_UPGRADE_EQUIPMENT_ID,
+		equipment_definition.get("display_name", SETTLEMENT_UPGRADE_EQUIPMENT_ID),
+		level,
+		cost,
+		total_materials,
+		can_upgrade
+	)
+	return {
+		"equipment_id": SETTLEMENT_UPGRADE_EQUIPMENT_ID,
+		"level": level,
+		"cost": cost,
+		"total_materials": total_materials,
+		"can_upgrade": can_upgrade,
+	}
+
+func _get_equipment_definition(equipment_id: String) -> Dictionary:
+	for definition in database.get_equipment():
+		if definition.get("id", "") == equipment_id:
+			return definition
+	return {}
 
 func _persist_settlement_rewards() -> bool:
 	if settlement_saved:
@@ -256,3 +324,6 @@ func _on_settlement_restart_requested() -> void:
 	var tree := get_tree()
 	tree.paused = false
 	tree.reload_current_scene()
+
+func _on_settlement_upgrade_requested(equipment_id: String) -> void:
+	upgrade_settlement_equipment(equipment_id)

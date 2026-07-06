@@ -33,4 +33,20 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "settlement panel should expose restart_requested")
 
+	var upgrade_requests: Array[String] = []
+	if panel.has_signal("upgrade_requested") and panel.has_method("show_upgrade_offer"):
+		panel.upgrade_requested.connect(func(equipment_id: String) -> void: upgrade_requests.append(equipment_id))
+		panel.show_upgrade_offer("talisman_robe", "Talisman Robe", 2, 20, 30, true)
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/TotalMaterialsLabel").text, "Materials 30", "panel should show total saved materials")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel").text, "Talisman Robe Lv.2", "panel should show equipment level")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").text, "Upgrade 20", "panel should show upgrade cost")
+		runner.assert_true(not panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").disabled, "upgrade button should be enabled when affordable")
+		panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").pressed.emit()
+		runner.assert_eq(upgrade_requests.size(), 1, "upgrade button should emit one request")
+		runner.assert_eq(upgrade_requests[0], "talisman_robe", "upgrade request should include equipment id")
+		panel.show_upgrade_offer("talisman_robe", "Talisman Robe", 2, 20, 5, false)
+		runner.assert_true(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").disabled, "upgrade button should disable when unaffordable")
+	else:
+		runner.assert_true(false, "settlement panel should expose an equipment upgrade offer")
+
 	panel.queue_free()

@@ -3,16 +3,30 @@ extends RefCounted
 class FakeSettlementPanel:
 	extends Node
 
+	signal restart_requested
+	signal upgrade_requested(equipment_id: String)
+
 	var show_count: int = 0
 	var last_title: String = ""
 	var last_rewards: Dictionary = {}
 	var last_summary: Dictionary = {}
+	var last_upgrade_offer: Dictionary = {}
 
 	func show_result(title: String, rewards: Dictionary, summary: Dictionary) -> void:
 		show_count += 1
 		last_title = title
 		last_rewards = rewards
 		last_summary = summary
+
+	func show_upgrade_offer(equipment_id: String, display_name: String, level: int, cost: int, total_materials: int, can_upgrade: bool) -> void:
+		last_upgrade_offer = {
+			"equipment_id": equipment_id,
+			"display_name": display_name,
+			"level": level,
+			"cost": cost,
+			"total_materials": total_materials,
+			"can_upgrade": can_upgrade,
+		}
 
 class FakePlayer:
 	extends Node2D
@@ -81,13 +95,21 @@ func run(runner) -> void:
 		runner.assert_eq(victory_panel.last_title, "Boss Sealed", "boss defeat should show victory title")
 		runner.assert_eq(victory_save.save_calls, 1, "boss defeat should save rewards once")
 		runner.assert_eq(int(victory_save.last_saved_data.get("materials", -1)), 80, "boss rewards should be added to saved materials")
+		runner.assert_eq(victory_panel.last_upgrade_offer.get("equipment_id", ""), "talisman_robe", "settlement should show robe upgrade offer")
+		runner.assert_eq(int(victory_panel.last_upgrade_offer.get("total_materials", -1)), 80, "settlement upgrade offer should show saved materials after rewards")
+		runner.assert_true(bool(victory_panel.last_upgrade_offer.get("can_upgrade", false)), "settlement upgrade offer should be affordable after rewards")
+		victory_panel.upgrade_requested.emit("talisman_robe")
+		runner.assert_eq(victory_save.save_calls, 2, "upgrade request should save upgraded equipment")
+		runner.assert_eq(victory_save.last_saved_data["materials"], 70, "upgrade request should spend materials")
+		runner.assert_eq(int(victory_save.last_saved_data.get("equipment_levels", {}).get("talisman_robe", -1)), 2, "upgrade request should increase robe level")
+		runner.assert_eq(int(victory_panel.last_upgrade_offer.get("level", -1)), 2, "upgrade request should refresh shown robe level")
 		game_loop.record_enemy_defeat({
 			"enemy_position": Vector2.ZERO,
 			"experience_value": 5,
 			"material_value": 999,
 			"is_boss": false,
 		})
-		runner.assert_eq(victory_save.save_calls, 1, "late defeats after run end should not resave rewards")
+		runner.assert_eq(victory_save.save_calls, 2, "late defeats after run end should not resave rewards")
 		runner.assert_eq(game_loop.run_summary["defeated_enemies"], 1, "late defeats after run end should not change the summary")
 	else:
 		runner.assert_true(false, "game loop should record enemy defeat summaries")
