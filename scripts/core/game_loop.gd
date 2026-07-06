@@ -206,7 +206,8 @@ func upgrade_settlement_equipment(equipment_id: String) -> Dictionary:
 	var result: Dictionary = equipment_system.upgrade_equipment_in_save(equipment_id, save_data)
 	if bool(result.get("success", false)):
 		save_system.save_game(save_data)
-	_refresh_settlement_upgrade_offer()
+		_refresh_settlement_upgrade_offer()
+		_show_settlement_upgrade_feedback(equipment_id, int(result.get("level", 1)))
 	return result
 
 func apply_saved_equipment_to_player(save_data: Dictionary) -> Dictionary:
@@ -322,6 +323,13 @@ func _refresh_settlement_upgrade_offer() -> Dictionary:
 	if settlement_panel.has_method("show_upgrade_offers"):
 		settlement_panel.show_upgrade_offers(offers)
 	return first_offer
+
+func _show_settlement_upgrade_feedback(equipment_id: String, level: int) -> void:
+	if settlement_panel == null or not settlement_panel.has_method("show_upgrade_feedback"):
+		return
+	var equipment_definition := _get_equipment_definition(equipment_id)
+	var display_name := String(equipment_definition.get("display_name", equipment_id))
+	settlement_panel.show_upgrade_feedback(display_name, level)
 
 func _build_settlement_upgrade_offers(save_data: Dictionary) -> Array[Dictionary]:
 	var offers: Array[Dictionary] = []

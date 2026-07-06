@@ -10,6 +10,7 @@ signal upgrade_requested(equipment_id: String)
 @onready var defeated_label: Label = $PanelContainer/VBoxContainer/DefeatedLabel
 @onready var boss_label: Label = $PanelContainer/VBoxContainer/BossLabel
 @onready var total_materials_label: Label = $PanelContainer/VBoxContainer/TotalMaterialsLabel
+@onready var upgrade_feedback_label: Label = $PanelContainer/VBoxContainer/UpgradeFeedbackLabel
 @onready var upgrade_label: Label = $PanelContainer/VBoxContainer/UpgradeLabel
 @onready var upgrade_button: Button = $PanelContainer/VBoxContainer/UpgradeButton
 @onready var upgrade_route_labels: Array[Label] = [
@@ -49,7 +50,17 @@ func show_result(title: String, rewards: Dictionary, _summary: Dictionary) -> vo
 	material_bonus_label.text = "Material Bonus +%d" % material_bonus
 	defeated_label.text = "Defeated %d" % int(rewards.get("defeated_enemies", 0))
 	boss_label.text = "Boss Sealed" if bool(rewards.get("boss_defeated", false)) else "Boss Escaped"
+	if upgrade_feedback_label != null:
+		upgrade_feedback_label.text = ""
+		upgrade_feedback_label.hide()
 	show()
+
+func show_upgrade_feedback(display_name: String, level: int) -> void:
+	_resolve_nodes()
+	if upgrade_feedback_label == null:
+		return
+	upgrade_feedback_label.text = "Upgraded %s Lv.%d" % [display_name, level]
+	upgrade_feedback_label.show()
 
 func show_upgrade_offer(equipment_id: String, display_name: String, level: int, cost: int, total_materials: int, can_upgrade: bool) -> void:
 	_resolve_nodes()
@@ -130,6 +141,8 @@ func _resolve_nodes() -> void:
 		boss_label = get_node_or_null("PanelContainer/VBoxContainer/BossLabel")
 	if total_materials_label == null:
 		total_materials_label = get_node_or_null("PanelContainer/VBoxContainer/TotalMaterialsLabel")
+	if upgrade_feedback_label == null:
+		upgrade_feedback_label = get_node_or_null("PanelContainer/VBoxContainer/UpgradeFeedbackLabel")
 	if upgrade_label == null:
 		upgrade_label = get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel")
 	if upgrade_button == null:

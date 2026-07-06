@@ -12,6 +12,7 @@ class FakeSettlementPanel:
 	var last_summary: Dictionary = {}
 	var last_upgrade_offer: Dictionary = {}
 	var last_upgrade_offers: Array = []
+	var last_upgrade_feedback: String = ""
 
 	func show_result(title: String, rewards: Dictionary, summary: Dictionary) -> void:
 		show_count += 1
@@ -31,6 +32,9 @@ class FakeSettlementPanel:
 
 	func show_upgrade_offers(offers: Array) -> void:
 		last_upgrade_offers = offers.duplicate(true)
+
+	func show_upgrade_feedback(display_name: String, level: int) -> void:
+		last_upgrade_feedback = "Upgraded %s Lv.%d" % [display_name, level]
 
 class FakePlayer:
 	extends Node2D
@@ -144,6 +148,7 @@ func run(runner) -> void:
 		if victory_panel.last_upgrade_offers.size() > 1:
 			refreshed_boot_level = int(victory_panel.last_upgrade_offers[1]["level"])
 		runner.assert_eq(refreshed_boot_level, 2, "upgrade request should refresh shown boot level")
+		runner.assert_eq(victory_panel.last_upgrade_feedback, "Upgraded Cloudstep Boots Lv.2", "upgrade request should show success feedback")
 		victory_panel.upgrade_requested.emit("jade_compass")
 		runner.assert_eq(int(victory_save.last_saved_data.get("equipment_levels", {}).get("jade_compass", -1)), 2, "upgrade request should increase compass level")
 		game_loop.record_enemy_defeat({

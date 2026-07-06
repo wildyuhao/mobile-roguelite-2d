@@ -35,6 +35,11 @@ text = "Boss Escaped"
 [node name="TotalMaterialsLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 text = "Materials 0"
 
+[node name="UpgradeFeedbackLabel" type="Label" parent="PanelContainer/VBoxContainer"]
+visible = false
+theme_override_colors/font_color = Color(0.552941, 0.941176, 0.662745, 1)
+text = ""
+
 [node name="UpgradeLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 text = "Talisman Robe Lv.1"
 

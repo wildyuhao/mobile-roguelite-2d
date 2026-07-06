@@ -26,6 +26,11 @@ func run(runner) -> void:
 		runner.assert_true(material_bonus_label != null, "settlement panel should include material bonus label")
 		if material_bonus_label != null:
 			runner.assert_true(not material_bonus_label.visible, "material bonus label should hide when there is no bonus")
+		var upgrade_feedback_label = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeFeedbackLabel")
+		runner.assert_true(upgrade_feedback_label != null, "settlement panel should include upgrade feedback label")
+		if upgrade_feedback_label != null:
+			runner.assert_true(not upgrade_feedback_label.visible, "upgrade feedback should hide before an upgrade succeeds")
+			runner.assert_eq(upgrade_feedback_label.text, "", "upgrade feedback should reset when showing a result")
 		panel.show_result("Boss Sealed", {
 			"materials": 49,
 			"material_bonus": 10,
@@ -35,6 +40,19 @@ func run(runner) -> void:
 		if material_bonus_label != null:
 			runner.assert_true(material_bonus_label.visible, "material bonus label should show when there is a bonus")
 			runner.assert_eq(material_bonus_label.text, "Material Bonus +10", "panel should show material bonus amount")
+		if panel.has_method("show_upgrade_feedback") and upgrade_feedback_label != null:
+			panel.show_upgrade_feedback("Cloudstep Boots", 2)
+			runner.assert_true(upgrade_feedback_label.visible, "upgrade feedback should show after a successful upgrade")
+			runner.assert_eq(upgrade_feedback_label.text, "Upgraded Cloudstep Boots Lv.2", "upgrade feedback should show the upgraded equipment and level")
+			panel.show_result("Run Failed", {
+				"materials": 3,
+				"defeated_enemies": 1,
+				"boss_defeated": false,
+			}, {})
+			runner.assert_true(not upgrade_feedback_label.visible, "upgrade feedback should reset on a new settlement result")
+			runner.assert_eq(upgrade_feedback_label.text, "", "upgrade feedback text should clear on a new settlement result")
+		else:
+			runner.assert_true(false, "settlement panel should expose show_upgrade_feedback")
 	else:
 		runner.assert_true(false, "settlement panel should expose show_result")
 
