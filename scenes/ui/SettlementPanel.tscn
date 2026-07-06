@@ -21,6 +21,10 @@ horizontal_alignment = 1
 [node name="MaterialsLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 text = "Materials +0"
 
+[node name="MaterialBonusLabel" type="Label" parent="PanelContainer/VBoxContainer"]
+visible = false
+text = "Material Bonus +0"
+
 [node name="DefeatedLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 text = "Defeated 0"
 

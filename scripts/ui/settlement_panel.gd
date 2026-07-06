@@ -6,6 +6,7 @@ signal upgrade_requested(equipment_id: String)
 
 @onready var title_label: Label = $PanelContainer/VBoxContainer/TitleLabel
 @onready var materials_label: Label = $PanelContainer/VBoxContainer/MaterialsLabel
+@onready var material_bonus_label: Label = $PanelContainer/VBoxContainer/MaterialBonusLabel
 @onready var defeated_label: Label = $PanelContainer/VBoxContainer/DefeatedLabel
 @onready var boss_label: Label = $PanelContainer/VBoxContainer/BossLabel
 @onready var total_materials_label: Label = $PanelContainer/VBoxContainer/TotalMaterialsLabel
@@ -37,6 +38,9 @@ func show_result(title: String, rewards: Dictionary, _summary: Dictionary) -> vo
 	_resolve_nodes()
 	title_label.text = title
 	materials_label.text = "Materials +%d" % int(rewards.get("materials", 0))
+	var material_bonus := int(rewards.get("material_bonus", 0))
+	material_bonus_label.visible = material_bonus > 0
+	material_bonus_label.text = "Material Bonus +%d" % material_bonus
 	defeated_label.text = "Defeated %d" % int(rewards.get("defeated_enemies", 0))
 	boss_label.text = "Boss Sealed" if bool(rewards.get("boss_defeated", false)) else "Boss Escaped"
 	show()
@@ -109,6 +113,8 @@ func _resolve_nodes() -> void:
 		title_label = get_node_or_null("PanelContainer/VBoxContainer/TitleLabel")
 	if materials_label == null:
 		materials_label = get_node_or_null("PanelContainer/VBoxContainer/MaterialsLabel")
+	if material_bonus_label == null:
+		material_bonus_label = get_node_or_null("PanelContainer/VBoxContainer/MaterialBonusLabel")
 	if defeated_label == null:
 		defeated_label = get_node_or_null("PanelContainer/VBoxContainer/DefeatedLabel")
 	if boss_label == null:

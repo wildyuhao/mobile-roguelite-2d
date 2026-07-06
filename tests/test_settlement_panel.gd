@@ -22,6 +22,19 @@ func run(runner) -> void:
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/MaterialsLabel").text, "Materials +10", "panel should show materials")
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/DefeatedLabel").text, "Defeated 3", "panel should show defeated count")
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/BossLabel").text, "Boss Escaped", "panel should show boss status")
+		var material_bonus_label = panel.get_node_or_null("PanelContainer/VBoxContainer/MaterialBonusLabel")
+		runner.assert_true(material_bonus_label != null, "settlement panel should include material bonus label")
+		if material_bonus_label != null:
+			runner.assert_true(not material_bonus_label.visible, "material bonus label should hide when there is no bonus")
+		panel.show_result("Boss Sealed", {
+			"materials": 49,
+			"material_bonus": 10,
+			"defeated_enemies": 12,
+			"boss_defeated": true,
+		}, {})
+		if material_bonus_label != null:
+			runner.assert_true(material_bonus_label.visible, "material bonus label should show when there is a bonus")
+			runner.assert_eq(material_bonus_label.text, "Material Bonus +10", "panel should show material bonus amount")
 	else:
 		runner.assert_true(false, "settlement panel should expose show_result")
 
