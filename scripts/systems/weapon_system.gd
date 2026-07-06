@@ -47,7 +47,8 @@ func get_weapon_damage(id: String) -> int:
 	for modifier in _get_active_level_modifiers(id):
 		if modifier.has("base_damage"):
 			value = int(modifier["base_damage"])
-	return value
+	var multiplier := 1.0 + float(stat_modifiers.get("weapon_damage_multiplier", 0.0))
+	return max(1, int(round(value * multiplier)))
 
 func get_weapon_cooldown(id: String) -> float:
 	var value := float(_get_modified_definition_value(id, "cooldown", 1.0))

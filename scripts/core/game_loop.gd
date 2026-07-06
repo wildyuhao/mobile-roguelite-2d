@@ -38,6 +38,8 @@ var run_summary := {
 	"base_materials": 0,
 	"boss_defeated": false,
 }
+var equipment_modifiers: Dictionary = {}
+var active_stat_modifiers: Dictionary = {}
 var settlement_rewards := {}
 var settlement_saved: bool = false
 var run_ended: bool = false
@@ -131,6 +133,7 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 		var weapon_id: String = upgrade.get("weapon_id", "")
 		if weapon_id != "" and not weapon_system.has_weapon(weapon_id):
 			weapon_system.add_weapon(database.get_weapon(weapon_id))
+	_apply_total_stat_modifiers()
 	get_tree().paused = false
 
 func _on_enemy_spawned(enemy: Node) -> void:
@@ -149,6 +152,7 @@ func _on_enemy_defeated(payload: Dictionary) -> void:
 	add_child(pickup)
 	pickup.global_position = enemy_position
 	pickup.configure(experience_value)
+	configure_pickup_collection_radius(pickup)
 	pickup.collected.connect(experience_system.add_experience)
 
 func record_enemy_defeat(payload: Dictionary) -> Dictionary:
@@ -204,12 +208,34 @@ func apply_saved_equipment_to_player(save_data: Dictionary) -> Dictionary:
 	equipment_system.configure(database.get_equipment())
 	equipment_system.set_equipment_levels(save_data.get("equipment_levels", {}))
 	equipment_system.equip(save_data.get("unlocked_equipment", []))
-	var modifiers := equipment_system.get_total_modifiers()
+	equipment_modifiers = equipment_system.get_total_modifiers()
+	return _apply_total_stat_modifiers()
+
+func configure_pickup_collection_radius(pickup: Node) -> void:
+	if pickup != null and pickup.has_method("set_collection_radius_bonus"):
+		pickup.set_collection_radius_bonus(float(active_stat_modifiers.get("pickup_radius", 0.0)))
+
+func _apply_total_stat_modifiers() -> Dictionary:
+	var modifiers := _merge_stat_modifiers(equipment_modifiers, upgrade_system.get_stat_modifiers(runtime_state))
+	active_stat_modifiers = modifiers.duplicate(true)
 	if player != null and player.has_method("apply_stat_modifiers"):
 		player.apply_stat_modifiers(modifiers)
 	if weapon_system != null and weapon_system.has_method("set_stat_modifiers"):
 		weapon_system.set_stat_modifiers(modifiers)
 	return modifiers
+
+func _merge_stat_modifiers(base_modifiers: Dictionary, extra_modifiers: Dictionary) -> Dictionary:
+	var merged := base_modifiers.duplicate(true)
+	for key in extra_modifiers.keys():
+		merged[key] = float(merged.get(key, 0.0)) + float(extra_modifiers[key])
+	return _normalize_number_types(merged)
+
+func _normalize_number_types(values: Dictionary) -> Dictionary:
+	var normalized: Dictionary = {}
+	for key in values.keys():
+		var value := float(values[key])
+		normalized[key] = int(value) if is_equal_approx(value, round(value)) else value
+	return normalized
 
 func _load_save_data() -> Dictionary:
 	if save_system == null or not save_system.has_method("load_game"):

@@ -68,4 +68,10 @@ func run(runner) -> void:
 	runner.assert_eq(bell_events[0].get("range", 0), 220, "bell level 2 range modifier applies")
 	runner.assert_eq(bell_events[0].get("knockback", 0), 80, "bell event includes knockback")
 	bell_system.free()
+
+	var damage_system = weapon_system_script.new()
+	damage_system.add_weapon(db.get_weapon("flying_sword"))
+	damage_system.set_stat_modifiers({ "weapon_damage_multiplier": 0.25 })
+	runner.assert_eq(damage_system.get_weapon_damage("flying_sword"), 15, "stat damage multiplier should increase weapon damage")
+	damage_system.free()
 	system.free()

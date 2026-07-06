@@ -38,6 +38,24 @@ func apply_upgrade(runtime_state: Dictionary, upgrade: Dictionary) -> void:
 			owned_weapons[weapon_id] = 1
 		runtime_state["owned_weapons"] = owned_weapons
 
+func get_stat_modifiers(runtime_state: Dictionary) -> Dictionary:
+	var totals: Dictionary = {}
+	var stacks: Dictionary = runtime_state.get("upgrade_stacks", {})
+
+	for upgrade in upgrades:
+		if upgrade.get("kind", "") != "stat":
+			continue
+		var id: String = upgrade.get("id", "")
+		var stack_count := int(stacks.get(id, 0))
+		if stack_count <= 0:
+			continue
+		var stat: String = upgrade.get("stat", "")
+		if stat == "":
+			continue
+		totals[stat] = float(totals.get(stat, 0.0)) + float(upgrade.get("value", 0.0)) * stack_count
+
+	return _normalize_number_types(totals)
+
 func _get_available_upgrades(runtime_state: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var stacks: Dictionary = runtime_state.get("upgrade_stacks", {})
@@ -62,3 +80,10 @@ func _get_available_upgrades(runtime_state: Dictionary) -> Array[Dictionary]:
 		result.append(upgrade)
 
 	return result
+
+func _normalize_number_types(values: Dictionary) -> Dictionary:
+	var normalized: Dictionary = {}
+	for key in values.keys():
+		var value := float(values[key])
+		normalized[key] = int(value) if is_equal_approx(value, round(value)) else value
+	return normalized

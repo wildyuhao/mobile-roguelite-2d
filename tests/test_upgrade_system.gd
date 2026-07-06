@@ -43,6 +43,15 @@ func run(runner) -> void:
 	if runtime_state["owned_weapons"].has("talisman_fire"):
 		runner.assert_eq(runtime_state["owned_weapons"]["talisman_fire"], 1, "weapon unlock should add weapon at level 1")
 
+	var pickup_upgrade := _find_upgrade(db.get_upgrades(), "pickup_radius_1")
+	system.apply_upgrade(runtime_state, pickup_upgrade)
+	system.apply_upgrade(runtime_state, pickup_upgrade)
+	if system.has_method("get_stat_modifiers"):
+		var modifiers: Dictionary = system.get_stat_modifiers(runtime_state)
+		runner.assert_eq(modifiers["pickup_radius"], 48, "stacked stat upgrades should produce pickup radius modifiers")
+	else:
+		runner.assert_true(false, "upgrade system should expose stat modifiers from selected upgrades")
+
 func _all_unique(choices: Array) -> bool:
 	var seen := {}
 	for choice in choices:
@@ -55,4 +64,10 @@ func _find_choice(choices: Array, id: String) -> Dictionary:
 	for choice in choices:
 		if choice["id"] == id:
 			return choice
+	return {}
+
+func _find_upgrade(upgrades: Array, id: String) -> Dictionary:
+	for upgrade in upgrades:
+		if upgrade["id"] == id:
+			return upgrade
 	return {}

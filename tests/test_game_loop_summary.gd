@@ -48,6 +48,14 @@ class FakeWeaponSystem:
 	func set_stat_modifiers(modifiers: Dictionary) -> void:
 		last_modifiers = modifiers.duplicate(true)
 
+class FakePickup:
+	extends Node
+
+	var last_bonus: float = -1.0
+
+	func set_collection_radius_bonus(bonus: float) -> void:
+		last_bonus = bonus
+
 class FakeSaveSystem:
 	extends RefCounted
 
@@ -188,6 +196,34 @@ func run(runner) -> void:
 	equipment_player.free()
 	equipment_weapon_system.free()
 	equipment_loop.free()
+
+	var stat_loop = game_loop_script.new()
+	var stat_player := FakePlayer.new()
+	var stat_weapon_system := FakeWeaponSystem.new()
+	stat_loop.player = stat_player
+	stat_loop.weapon_system = stat_weapon_system
+	runner.assert_true(stat_loop.database.load_all(), "database should load before applying runtime stat upgrades")
+	stat_loop.upgrade_system.configure(stat_loop.database.get_upgrades())
+	stat_loop.runtime_state["upgrade_stacks"] = {
+		"pickup_radius_1": 2,
+		"weapon_damage_1": 1,
+	}
+	stat_loop.apply_saved_equipment_to_player({
+		"unlocked_equipment": [],
+		"equipment_levels": {},
+	})
+	runner.assert_eq(stat_player.last_modifiers.get("pickup_radius", 0), 48, "runtime pickup radius should be included in player modifiers")
+	runner.assert_near(float(stat_weapon_system.last_modifiers.get("weapon_damage_multiplier", 0.0)), 0.15, 0.001, "runtime damage should be included in weapon modifiers")
+	var fake_pickup := FakePickup.new()
+	if stat_loop.has_method("configure_pickup_collection_radius"):
+		stat_loop.configure_pickup_collection_radius(fake_pickup)
+		runner.assert_near(fake_pickup.last_bonus, 48.0, 0.001, "game loop should pass pickup radius to spawned pickups")
+	else:
+		runner.assert_true(false, "game loop should configure pickup collection radius")
+	fake_pickup.free()
+	stat_player.free()
+	stat_weapon_system.free()
+	stat_loop.free()
 
 	victory_panel.free()
 	game_loop.free()
