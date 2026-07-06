@@ -101,22 +101,49 @@ func run(runner) -> void:
 				"stat_summary": "Pickup +24, Mat +10%",
 			},
 		])
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel1").text, "Talisman Robe Lv.2 - HP +10", "first offer should show robe")
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton1").text, "Upgrade 20", "first offer should show cost")
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel2").text, "Cloudstep Boots Lv.1 - Speed +18", "second offer should show boots")
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").text, "Upgrade 10", "second offer should show cost")
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel3").text, "Bronze Gear Core Lv.4 - CD -5%", "third offer should show gear core")
-		runner.assert_true(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton3").disabled, "third offer should be disabled when unaffordable")
-		var fourth_label = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel4")
-		var fourth_button = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton4")
+		var row1 = _get_offer_row(panel, 1)
+		var row2 = _get_offer_row(panel, 2)
+		var row3 = _get_offer_row(panel, 3)
+		var row4 = _get_offer_row(panel, 4)
+		runner.assert_true(row1 is HBoxContainer, "first settlement offer should use a compact row")
+		runner.assert_true(row2 is HBoxContainer, "second settlement offer should use a compact row")
+		runner.assert_true(row3 is HBoxContainer, "third settlement offer should use a compact row")
+		runner.assert_true(row4 is HBoxContainer, "fourth settlement offer should use a compact row")
+		var label1 = _get_offer_label(panel, 1)
+		var label2 = _get_offer_label(panel, 2)
+		var label3 = _get_offer_label(panel, 3)
+		var button1 = _get_offer_button(panel, 1)
+		var button2 = _get_offer_button(panel, 2)
+		var button3 = _get_offer_button(panel, 3)
+		var fourth_label = _get_offer_label(panel, 4)
+		var fourth_button = _get_offer_button(panel, 4)
+		runner.assert_true(label1 != null, "first offer should include a label")
+		runner.assert_true(button1 != null, "first offer should include a button")
+		if label1 != null:
+			runner.assert_eq(label1.text, "Talisman Robe Lv.2 - HP +10", "first offer should show robe")
+		if button1 != null:
+			runner.assert_eq(button1.text, "Upgrade 20", "first offer should show cost")
+			runner.assert_true(button1.custom_minimum_size.x >= 112.0, "first offer upgrade button should keep a stable tap width")
+		if label2 != null:
+			runner.assert_eq(label2.text, "Cloudstep Boots Lv.1 - Speed +18", "second offer should show boots")
+		if button2 != null:
+			runner.assert_eq(button2.text, "Upgrade 10", "second offer should show cost")
+			runner.assert_true(button2.custom_minimum_size.x >= 112.0, "second offer upgrade button should keep a stable tap width")
+		if label3 != null:
+			runner.assert_eq(label3.text, "Bronze Gear Core Lv.4 - CD -5%", "third offer should show gear core")
+		if button3 != null:
+			runner.assert_true(button3.disabled, "third offer should be disabled when unaffordable")
+			runner.assert_true(button3.custom_minimum_size.x >= 112.0, "third offer upgrade button should keep a stable tap width")
 		runner.assert_true(fourth_label != null, "settlement panel should include fourth offer label")
 		runner.assert_true(fourth_button != null, "settlement panel should include fourth offer button")
 		if fourth_label != null:
 			runner.assert_eq(fourth_label.text, "Jade Compass Lv.1 - Pickup +24, Mat +10%", "fourth offer should show compass")
 		if fourth_button != null:
 			runner.assert_eq(fourth_button.text, "Upgrade 10", "fourth offer should show cost")
+			runner.assert_true(fourth_button.custom_minimum_size.x >= 112.0, "fourth offer upgrade button should keep a stable tap width")
 		runner.assert_true(not panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").visible, "multi-offer mode should hide the legacy single upgrade button")
-		panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").pressed.emit()
+		if button2 != null:
+			button2.pressed.emit()
 		runner.assert_eq(upgrade_requests.back(), "cloudstep_boots", "second upgrade button should emit its equipment id")
 		if fourth_button != null:
 			fourth_button.pressed.emit()
@@ -125,3 +152,12 @@ func run(runner) -> void:
 		runner.assert_true(false, "settlement panel should expose multiple equipment upgrade offers")
 
 	panel.queue_free()
+
+func _get_offer_row(panel: Node, index: int) -> Node:
+	return panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow%d" % index)
+
+func _get_offer_label(panel: Node, index: int) -> Label:
+	return panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow%d/UpgradeLabel%d" % [index, index]) as Label
+
+func _get_offer_button(panel: Node, index: int) -> Button:
+	return panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow%d/UpgradeButton%d" % [index, index]) as Button

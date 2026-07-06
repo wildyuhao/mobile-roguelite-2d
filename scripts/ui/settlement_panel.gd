@@ -13,16 +13,16 @@ signal upgrade_requested(equipment_id: String)
 @onready var upgrade_label: Label = $PanelContainer/VBoxContainer/UpgradeLabel
 @onready var upgrade_button: Button = $PanelContainer/VBoxContainer/UpgradeButton
 @onready var upgrade_labels: Array[Label] = [
-	$PanelContainer/VBoxContainer/UpgradeLabel1,
-	$PanelContainer/VBoxContainer/UpgradeLabel2,
-	$PanelContainer/VBoxContainer/UpgradeLabel3,
-	$PanelContainer/VBoxContainer/UpgradeLabel4,
+	$PanelContainer/VBoxContainer/UpgradeRow1/UpgradeLabel1,
+	$PanelContainer/VBoxContainer/UpgradeRow2/UpgradeLabel2,
+	$PanelContainer/VBoxContainer/UpgradeRow3/UpgradeLabel3,
+	$PanelContainer/VBoxContainer/UpgradeRow4/UpgradeLabel4,
 ]
 @onready var upgrade_buttons: Array[Button] = [
-	$PanelContainer/VBoxContainer/UpgradeButton1,
-	$PanelContainer/VBoxContainer/UpgradeButton2,
-	$PanelContainer/VBoxContainer/UpgradeButton3,
-	$PanelContainer/VBoxContainer/UpgradeButton4,
+	$PanelContainer/VBoxContainer/UpgradeRow1/UpgradeButton1,
+	$PanelContainer/VBoxContainer/UpgradeRow2/UpgradeButton2,
+	$PanelContainer/VBoxContainer/UpgradeRow3/UpgradeButton3,
+	$PanelContainer/VBoxContainer/UpgradeRow4/UpgradeButton4,
 ]
 @onready var restart_button: Button = $PanelContainer/VBoxContainer/RestartButton
 
@@ -127,17 +127,17 @@ func _resolve_nodes() -> void:
 		upgrade_button = get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton")
 	if upgrade_labels.is_empty():
 		upgrade_labels = [
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel1"),
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel2"),
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel3"),
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel4"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow1/UpgradeLabel1"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow2/UpgradeLabel2"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow3/UpgradeLabel3"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow4/UpgradeLabel4"),
 		]
 	if upgrade_buttons.is_empty():
 		upgrade_buttons = [
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton1"),
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton2"),
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton3"),
-			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton4"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow1/UpgradeButton1"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow2/UpgradeButton2"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow3/UpgradeButton3"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow4/UpgradeButton4"),
 		]
 	if restart_button == null:
 		restart_button = get_node_or_null("PanelContainer/VBoxContainer/RestartButton")

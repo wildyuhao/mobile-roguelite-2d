@@ -13,6 +13,7 @@ offset_right = 640.0
 offset_bottom = 940.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 text = "Run Complete"
@@ -40,28 +41,48 @@ text = "Talisman Robe Lv.1"
 [node name="UpgradeButton" type="Button" parent="PanelContainer/VBoxContainer"]
 text = "Upgrade 10"
 
-[node name="UpgradeLabel1" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeRow1" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+theme_override_constants/separation = 8
+
+[node name="UpgradeLabel1" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
+size_flags_horizontal = 3
 text = "Talisman Robe Lv.1"
 
-[node name="UpgradeButton1" type="Button" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeButton1" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
+custom_minimum_size = Vector2(112, 40)
 text = "Upgrade 10"
 
-[node name="UpgradeLabel2" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeRow2" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+theme_override_constants/separation = 8
+
+[node name="UpgradeLabel2" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
+size_flags_horizontal = 3
 text = "Cloudstep Boots Lv.1"
 
-[node name="UpgradeButton2" type="Button" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeButton2" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
+custom_minimum_size = Vector2(112, 40)
 text = "Upgrade 10"
 
-[node name="UpgradeLabel3" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeRow3" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+theme_override_constants/separation = 8
+
+[node name="UpgradeLabel3" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
+size_flags_horizontal = 3
 text = "Bronze Gear Core Lv.1"
 
-[node name="UpgradeButton3" type="Button" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeButton3" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
+custom_minimum_size = Vector2(112, 40)
 text = "Upgrade 10"
 
-[node name="UpgradeLabel4" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeRow4" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+theme_override_constants/separation = 8
+
+[node name="UpgradeLabel4" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
+size_flags_horizontal = 3
 text = "Jade Compass Lv.1"
 
-[node name="UpgradeButton4" type="Button" parent="PanelContainer/VBoxContainer"]
+[node name="UpgradeButton4" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
+custom_minimum_size = Vector2(112, 40)
 text = "Upgrade 10"
 
 [node name="RestartButton" type="Button" parent="PanelContainer/VBoxContainer"]
