@@ -125,6 +125,10 @@ func run(runner) -> void:
 		if victory_panel.last_upgrade_offers.size() > 3:
 			fourth_offer_id = victory_panel.last_upgrade_offers[3].get("equipment_id", "")
 		runner.assert_eq(fourth_offer_id, "jade_compass", "fourth settlement offer should upgrade compass")
+		runner.assert_eq(victory_panel.last_upgrade_offers[0].get("stat_summary", ""), "HP +10", "robe offer should describe health gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[1].get("stat_summary", ""), "Speed +18", "boot offer should describe speed gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[2].get("stat_summary", ""), "CD -5%", "gear core offer should describe cooldown gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[3].get("stat_summary", ""), "Pickup +24, Mat +10%", "compass offer should describe pickup and material gain")
 		runner.assert_eq(int(victory_panel.last_upgrade_offer.get("total_materials", -1)), 80, "settlement upgrade offer should show saved materials after rewards")
 		runner.assert_true(bool(victory_panel.last_upgrade_offer.get("can_upgrade", false)), "settlement upgrade offer should be affordable after rewards")
 		victory_panel.upgrade_requested.emit("cloudstep_boots")

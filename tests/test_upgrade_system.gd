@@ -26,6 +26,37 @@ func run(runner) -> void:
 	runner.assert_eq(choices.size(), 3, "upgrade system should return three choices")
 	runner.assert_true(_all_unique(choices), "choices should be unique")
 
+	var summary_system = upgrade_system_script.new()
+	var summary_upgrades: Array[Dictionary] = [
+		{
+			"id": "weapon_damage_1",
+			"display_name": "Sharpened Edge",
+			"kind": "stat",
+			"stat": "weapon_damage_multiplier",
+			"value": 0.15,
+			"max_stacks": 1,
+		},
+		{
+			"id": "flying_sword_level",
+			"display_name": "Flying Sword Mastery",
+			"kind": "weapon_level",
+			"weapon_id": "flying_sword",
+			"max_stacks": 1,
+		},
+		{
+			"id": "unlock_talisman_fire",
+			"display_name": "Learn Talisman Fire",
+			"kind": "weapon_unlock",
+			"weapon_id": "talisman_fire",
+			"max_stacks": 1,
+		},
+	]
+	summary_system.configure(summary_upgrades)
+	var summary_choices = summary_system.get_choices(runtime_state, 3, 99)
+	runner.assert_eq(_find_choice(summary_choices, "weapon_damage_1").get("effect_summary", ""), "Damage +15%", "stat upgrade choices should describe their effect")
+	runner.assert_eq(_find_choice(summary_choices, "flying_sword_level").get("effect_summary", ""), "Weapon Lv +1", "weapon level choices should describe their effect")
+	runner.assert_eq(_find_choice(summary_choices, "unlock_talisman_fire").get("effect_summary", ""), "Unlock Weapon", "weapon unlock choices should describe their effect")
+
 	var damage_upgrade := _find_choice(choices, "weapon_damage_1")
 	if damage_upgrade.is_empty():
 		damage_upgrade = db.get_upgrades()[0]

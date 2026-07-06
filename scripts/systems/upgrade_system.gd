@@ -14,7 +14,7 @@ func get_choices(runtime_state: Dictionary, count: int = 3, seed_value: int = 0)
 	var choices: Array[Dictionary] = []
 	while not available.is_empty() and choices.size() < count:
 		var index := rng.randi_range(0, available.size() - 1)
-		choices.append(available[index])
+		choices.append(_with_effect_summary(available[index]))
 		available.remove_at(index)
 	return choices
 
@@ -87,3 +87,45 @@ func _normalize_number_types(values: Dictionary) -> Dictionary:
 		var value := float(values[key])
 		normalized[key] = int(value) if is_equal_approx(value, round(value)) else value
 	return normalized
+
+func _with_effect_summary(upgrade: Dictionary) -> Dictionary:
+	var result := upgrade.duplicate(true)
+	var summary := _build_effect_summary(result)
+	if summary != "":
+		result["effect_summary"] = summary
+	return result
+
+func _build_effect_summary(upgrade: Dictionary) -> String:
+	var kind := String(upgrade.get("kind", ""))
+	if kind == "weapon_level":
+		return "Weapon Lv +1"
+	if kind == "weapon_unlock":
+		return "Unlock Weapon"
+	if kind != "stat":
+		return ""
+
+	var stat := String(upgrade.get("stat", ""))
+	var value := float(upgrade.get("value", 0.0))
+	match stat:
+		"weapon_damage_multiplier":
+			return "Damage %s" % _format_signed_value(value, true)
+		"weapon_cooldown_multiplier":
+			return "CD %s" % _format_signed_value(value, true)
+		"pickup_radius":
+			return "Pickup %s" % _format_signed_value(value, false)
+		"move_speed":
+			return "Speed %s" % _format_signed_value(value, false)
+		"max_health":
+			return "HP %s" % _format_signed_value(value, false)
+		"material_gain":
+			return "Mat %s" % _format_signed_value(value, true)
+		"control_duration":
+			return "Control %s" % _format_signed_value(value, true)
+	return ""
+
+func _format_signed_value(value: float, as_percent: bool) -> String:
+	var scale := 100.0 if as_percent else 1.0
+	var amount := int(round(value * scale))
+	var prefix := "+" if amount > 0 else ""
+	var suffix := "%" if as_percent else ""
+	return "%s%d%s" % [prefix, amount, suffix]

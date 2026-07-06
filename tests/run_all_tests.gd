@@ -19,6 +19,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_virtual_joystick.gd",
 	"res://tests/test_player_controller.gd",
 	"res://tests/test_hud.gd",
+	"res://tests/test_upgrade_choice_panel.gd",
 	"res://tests/test_settlement_panel.gd",
 	"res://tests/test_game_scene_composition.gd",
 ]

@@ -81,7 +81,7 @@ func show_upgrade_offers(offers: Array) -> void:
 		if index < offers.size():
 			var offer: Dictionary = offers[index]
 			upgrade_offer_ids.append(offer.get("equipment_id", ""))
-			label.text = "%s Lv.%d" % [offer.get("display_name", offer.get("equipment_id", "Equipment")), int(offer.get("level", 1))]
+			label.text = _format_offer_label(offer)
 			button.text = "Upgrade %d" % int(offer.get("cost", 0))
 			button.disabled = not bool(offer.get("can_upgrade", false))
 		else:
@@ -148,3 +148,10 @@ func _resolve_nodes() -> void:
 			upgrade_buttons[index].pressed.connect(_on_upgrade_offer_pressed.bind(index))
 	if restart_button != null and not restart_button.pressed.is_connected(_on_restart_pressed):
 		restart_button.pressed.connect(_on_restart_pressed)
+
+func _format_offer_label(offer: Dictionary) -> String:
+	var label := "%s Lv.%d" % [offer.get("display_name", offer.get("equipment_id", "Equipment")), int(offer.get("level", 1))]
+	var summary := String(offer.get("stat_summary", ""))
+	if summary == "":
+		return label
+	return "%s - %s" % [label, summary]

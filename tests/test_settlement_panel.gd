@@ -71,6 +71,7 @@ func run(runner) -> void:
 				"cost": 20,
 				"total_materials": 30,
 				"can_upgrade": true,
+				"stat_summary": "HP +10",
 			},
 			{
 				"equipment_id": "cloudstep_boots",
@@ -79,6 +80,7 @@ func run(runner) -> void:
 				"cost": 10,
 				"total_materials": 30,
 				"can_upgrade": true,
+				"stat_summary": "Speed +18",
 			},
 			{
 				"equipment_id": "bronze_gear_core",
@@ -87,6 +89,7 @@ func run(runner) -> void:
 				"cost": 40,
 				"total_materials": 30,
 				"can_upgrade": false,
+				"stat_summary": "CD -5%",
 			},
 			{
 				"equipment_id": "jade_compass",
@@ -95,20 +98,21 @@ func run(runner) -> void:
 				"cost": 10,
 				"total_materials": 30,
 				"can_upgrade": true,
+				"stat_summary": "Pickup +24, Mat +10%",
 			},
 		])
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel1").text, "Talisman Robe Lv.2", "first offer should show robe")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel1").text, "Talisman Robe Lv.2 - HP +10", "first offer should show robe")
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton1").text, "Upgrade 20", "first offer should show cost")
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel2").text, "Cloudstep Boots Lv.1", "second offer should show boots")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel2").text, "Cloudstep Boots Lv.1 - Speed +18", "second offer should show boots")
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").text, "Upgrade 10", "second offer should show cost")
-		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel3").text, "Bronze Gear Core Lv.4", "third offer should show gear core")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel3").text, "Bronze Gear Core Lv.4 - CD -5%", "third offer should show gear core")
 		runner.assert_true(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton3").disabled, "third offer should be disabled when unaffordable")
 		var fourth_label = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel4")
 		var fourth_button = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton4")
 		runner.assert_true(fourth_label != null, "settlement panel should include fourth offer label")
 		runner.assert_true(fourth_button != null, "settlement panel should include fourth offer button")
 		if fourth_label != null:
-			runner.assert_eq(fourth_label.text, "Jade Compass Lv.1", "fourth offer should show compass")
+			runner.assert_eq(fourth_label.text, "Jade Compass Lv.1 - Pickup +24, Mat +10%", "fourth offer should show compass")
 		if fourth_button != null:
 			runner.assert_eq(fourth_button.text, "Upgrade 10", "fourth offer should show cost")
 		runner.assert_true(not panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").visible, "multi-offer mode should hide the legacy single upgrade button")

@@ -343,6 +343,7 @@ func _build_settlement_upgrade_offers(save_data: Dictionary) -> Array[Dictionary
 			"cost": equipment_system.get_upgrade_cost(equipment_id, save_data),
 			"total_materials": total_materials,
 			"can_upgrade": equipment_system.can_upgrade(equipment_id, save_data),
+			"stat_summary": _build_equipment_stat_summary(equipment_definition),
 		})
 	return offers
 
@@ -351,6 +352,43 @@ func _get_equipment_definition(equipment_id: String) -> Dictionary:
 		if definition.get("id", "") == equipment_id:
 			return definition
 	return {}
+
+func _build_equipment_stat_summary(equipment_definition: Dictionary) -> String:
+	var modifiers: Dictionary = equipment_definition.get("stat_modifiers", {})
+	var parts: Array[String] = []
+	for stat in modifiers.keys():
+		var value := float(modifiers[stat])
+		match String(stat):
+			"max_health":
+				parts.append("HP %s" % _format_signed_stat_value(value, false))
+			"move_speed":
+				parts.append("Speed %s" % _format_signed_stat_value(value, false))
+			"weapon_cooldown_multiplier":
+				parts.append("CD %s" % _format_signed_stat_value(value, true))
+			"pickup_radius":
+				parts.append("Pickup %s" % _format_signed_stat_value(value, false))
+			"material_gain":
+				parts.append("Mat %s" % _format_signed_stat_value(value, true))
+			"weapon_damage_multiplier":
+				parts.append("Damage %s" % _format_signed_stat_value(value, true))
+			"control_duration":
+				parts.append("Control %s" % _format_signed_stat_value(value, true))
+	return _join_summary_parts(parts)
+
+func _format_signed_stat_value(value: float, as_percent: bool) -> String:
+	var scale := 100.0 if as_percent else 1.0
+	var amount := int(round(value * scale))
+	var prefix := "+" if amount > 0 else ""
+	var suffix := "%" if as_percent else ""
+	return "%s%d%s" % [prefix, amount, suffix]
+
+func _join_summary_parts(parts: Array[String]) -> String:
+	var text := ""
+	for part in parts:
+		if text != "":
+			text += ", "
+		text += part
+	return text
 
 func _persist_settlement_rewards() -> bool:
 	if settlement_saved:
