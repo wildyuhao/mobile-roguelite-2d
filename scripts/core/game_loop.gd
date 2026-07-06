@@ -164,7 +164,7 @@ func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 	if bool(payload.get("is_boss", false)):
 		run_summary["boss_defeated"] = true
 		run_ended = true
-		settlement_rewards = settlement_system.calculate_rewards(run_summary)
+		settlement_rewards = _calculate_settlement_rewards()
 		_persist_settlement_rewards()
 		_show_settlement_result("Boss Sealed")
 	return run_summary
@@ -176,12 +176,17 @@ func record_player_defeat() -> Dictionary:
 	run_summary["boss_defeated"] = false
 	run_summary["player_defeated"] = true
 	run_ended = true
-	settlement_rewards = settlement_system.calculate_rewards(run_summary)
+	settlement_rewards = _calculate_settlement_rewards()
 	_persist_settlement_rewards()
 	_show_settlement_result("Run Failed")
 	if is_inside_tree():
 		get_tree().paused = true
 	return run_summary
+
+func _calculate_settlement_rewards() -> Dictionary:
+	var summary := run_summary.duplicate(true)
+	summary["material_gain"] = float(active_stat_modifiers.get("material_gain", 0.0))
+	return settlement_system.calculate_rewards(summary)
 
 func set_settlement_panel(panel: Node) -> void:
 	settlement_panel = panel

@@ -11,9 +11,12 @@ func calculate_rewards(run_summary: Dictionary) -> Dictionary:
 	var materials := base_materials + defeated_enemies * MATERIALS_PER_ENEMY
 	if boss_defeated:
 		materials += BOSS_CLEAR_BONUS
+	var material_gain: float = max(0.0, float(run_summary.get("material_gain", 0.0)))
+	var material_bonus := int(round(materials * material_gain))
 
 	return {
-		"materials": materials,
+		"materials": materials + material_bonus,
+		"material_bonus": material_bonus,
 		"boss_defeated": boss_defeated,
 		"defeated_enemies": defeated_enemies
 	}

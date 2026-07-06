@@ -197,6 +197,31 @@ func run(runner) -> void:
 	equipment_weapon_system.free()
 	equipment_loop.free()
 
+	var gain_loop = game_loop_script.new()
+	var gain_panel := FakeSettlementPanel.new()
+	var gain_save := FakeSaveSystem.new(0)
+	if gain_loop.has_method("set_settlement_panel"):
+		gain_loop.set_settlement_panel(gain_panel)
+	if gain_loop.has_method("set_save_system"):
+		gain_loop.set_save_system(gain_save)
+	runner.assert_true(gain_loop.database.load_all(), "database should load before testing material gain")
+	gain_loop.apply_saved_equipment_to_player({
+		"unlocked_equipment": ["jade_compass"],
+		"equipment_levels": {
+			"jade_compass": 2,
+		},
+	})
+	gain_loop.record_enemy_defeat({
+		"enemy_position": Vector2.ZERO,
+		"experience_value": 0,
+		"material_value": 50,
+		"is_boss": true,
+	})
+	runner.assert_eq(gain_loop.settlement_rewards["materials"], 83, "saved material gain should boost settlement rewards")
+	runner.assert_eq(gain_save.last_saved_data["materials"], 83, "boosted settlement rewards should be saved")
+	gain_panel.free()
+	gain_loop.free()
+
 	var stat_loop = game_loop_script.new()
 	var stat_player := FakePlayer.new()
 	var stat_weapon_system := FakeWeaponSystem.new()
