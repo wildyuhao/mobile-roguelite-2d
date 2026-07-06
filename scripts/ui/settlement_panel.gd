@@ -15,11 +15,13 @@ signal upgrade_requested(equipment_id: String)
 	$PanelContainer/VBoxContainer/UpgradeLabel1,
 	$PanelContainer/VBoxContainer/UpgradeLabel2,
 	$PanelContainer/VBoxContainer/UpgradeLabel3,
+	$PanelContainer/VBoxContainer/UpgradeLabel4,
 ]
 @onready var upgrade_buttons: Array[Button] = [
 	$PanelContainer/VBoxContainer/UpgradeButton1,
 	$PanelContainer/VBoxContainer/UpgradeButton2,
 	$PanelContainer/VBoxContainer/UpgradeButton3,
+	$PanelContainer/VBoxContainer/UpgradeButton4,
 ]
 @onready var restart_button: Button = $PanelContainer/VBoxContainer/RestartButton
 
@@ -122,12 +124,14 @@ func _resolve_nodes() -> void:
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel1"),
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel2"),
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel3"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel4"),
 		]
 	if upgrade_buttons.is_empty():
 		upgrade_buttons = [
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton1"),
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton2"),
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton3"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton4"),
 		]
 	if restart_button == null:
 		restart_button = get_node_or_null("PanelContainer/VBoxContainer/RestartButton")

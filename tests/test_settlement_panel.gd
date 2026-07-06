@@ -75,6 +75,14 @@ func run(runner) -> void:
 				"total_materials": 30,
 				"can_upgrade": false,
 			},
+			{
+				"equipment_id": "jade_compass",
+				"display_name": "Jade Compass",
+				"level": 1,
+				"cost": 10,
+				"total_materials": 30,
+				"can_upgrade": true,
+			},
 		])
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel1").text, "Talisman Robe Lv.2", "first offer should show robe")
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton1").text, "Upgrade 20", "first offer should show cost")
@@ -82,9 +90,20 @@ func run(runner) -> void:
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").text, "Upgrade 10", "second offer should show cost")
 		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel3").text, "Bronze Gear Core Lv.4", "third offer should show gear core")
 		runner.assert_true(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton3").disabled, "third offer should be disabled when unaffordable")
+		var fourth_label = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel4")
+		var fourth_button = panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton4")
+		runner.assert_true(fourth_label != null, "settlement panel should include fourth offer label")
+		runner.assert_true(fourth_button != null, "settlement panel should include fourth offer button")
+		if fourth_label != null:
+			runner.assert_eq(fourth_label.text, "Jade Compass Lv.1", "fourth offer should show compass")
+		if fourth_button != null:
+			runner.assert_eq(fourth_button.text, "Upgrade 10", "fourth offer should show cost")
 		runner.assert_true(not panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").visible, "multi-offer mode should hide the legacy single upgrade button")
 		panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").pressed.emit()
 		runner.assert_eq(upgrade_requests.back(), "cloudstep_boots", "second upgrade button should emit its equipment id")
+		if fourth_button != null:
+			fourth_button.pressed.emit()
+			runner.assert_eq(upgrade_requests.back(), "jade_compass", "fourth upgrade button should emit its equipment id")
 	else:
 		runner.assert_true(false, "settlement panel should expose multiple equipment upgrade offers")
 

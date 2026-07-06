@@ -54,5 +54,11 @@ text = "Bronze Gear Core Lv.1"
 [node name="UpgradeButton3" type="Button" parent="PanelContainer/VBoxContainer"]
 text = "Upgrade 10"
 
+[node name="UpgradeLabel4" type="Label" parent="PanelContainer/VBoxContainer"]
+text = "Jade Compass Lv.1"
+
+[node name="UpgradeButton4" type="Button" parent="PanelContainer/VBoxContainer"]
+text = "Upgrade 10"
+
 [node name="RestartButton" type="Button" parent="PanelContainer/VBoxContainer"]
 text = "Restart"

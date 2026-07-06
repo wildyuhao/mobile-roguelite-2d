@@ -68,7 +68,7 @@ class FakeSaveSystem:
 			"version": 1,
 			"materials": starting_materials,
 			"equipment_levels": {},
-			"unlocked_equipment": ["talisman_robe", "cloudstep_boots", "bronze_gear_core", "sword_gourd"],
+			"unlocked_equipment": ["talisman_robe", "cloudstep_boots", "bronze_gear_core", "jade_compass", "sword_gourd"],
 			"settings": {},
 		}
 
@@ -116,11 +116,15 @@ func run(runner) -> void:
 		runner.assert_eq(victory_save.save_calls, 1, "boss defeat should save rewards once")
 		runner.assert_eq(int(victory_save.last_saved_data.get("materials", -1)), 80, "boss rewards should be added to saved materials")
 		runner.assert_eq(victory_panel.last_upgrade_offer.get("equipment_id", ""), "talisman_robe", "settlement should show robe upgrade offer")
-		runner.assert_eq(victory_panel.last_upgrade_offers.size(), 3, "settlement should show three equipment upgrade offers")
+		runner.assert_eq(victory_panel.last_upgrade_offers.size(), 4, "settlement should show four equipment upgrade offers")
 		var second_offer_id := ""
 		if victory_panel.last_upgrade_offers.size() > 1:
 			second_offer_id = victory_panel.last_upgrade_offers[1].get("equipment_id", "")
 		runner.assert_eq(second_offer_id, "cloudstep_boots", "second settlement offer should upgrade boots")
+		var fourth_offer_id := ""
+		if victory_panel.last_upgrade_offers.size() > 3:
+			fourth_offer_id = victory_panel.last_upgrade_offers[3].get("equipment_id", "")
+		runner.assert_eq(fourth_offer_id, "jade_compass", "fourth settlement offer should upgrade compass")
 		runner.assert_eq(int(victory_panel.last_upgrade_offer.get("total_materials", -1)), 80, "settlement upgrade offer should show saved materials after rewards")
 		runner.assert_true(bool(victory_panel.last_upgrade_offer.get("can_upgrade", false)), "settlement upgrade offer should be affordable after rewards")
 		victory_panel.upgrade_requested.emit("cloudstep_boots")
@@ -131,13 +135,15 @@ func run(runner) -> void:
 		if victory_panel.last_upgrade_offers.size() > 1:
 			refreshed_boot_level = int(victory_panel.last_upgrade_offers[1]["level"])
 		runner.assert_eq(refreshed_boot_level, 2, "upgrade request should refresh shown boot level")
+		victory_panel.upgrade_requested.emit("jade_compass")
+		runner.assert_eq(int(victory_save.last_saved_data.get("equipment_levels", {}).get("jade_compass", -1)), 2, "upgrade request should increase compass level")
 		game_loop.record_enemy_defeat({
 			"enemy_position": Vector2.ZERO,
 			"experience_value": 5,
 			"material_value": 999,
 			"is_boss": false,
 		})
-		runner.assert_eq(victory_save.save_calls, 2, "late defeats after run end should not resave rewards")
+		runner.assert_eq(victory_save.save_calls, 3, "late defeats after run end should not resave rewards")
 		runner.assert_eq(game_loop.run_summary["defeated_enemies"], 1, "late defeats after run end should not change the summary")
 	else:
 		runner.assert_true(false, "game loop should record enemy defeat summaries")

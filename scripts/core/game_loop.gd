@@ -9,7 +9,7 @@ const SettlementSystemScript = preload("res://scripts/systems/settlement_system.
 const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
 const EquipmentSystemScript = preload("res://scripts/systems/equipment_system.gd")
 const SETTLEMENT_UPGRADE_EQUIPMENT_ID := "talisman_robe"
-const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "bronze_gear_core"]
+const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "bronze_gear_core", "jade_compass"]
 
 @export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
