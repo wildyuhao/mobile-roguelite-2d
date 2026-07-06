@@ -7,6 +7,7 @@ const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
 const CombatResolverScript = preload("res://scripts/systems/combat_resolver.gd")
 const SettlementSystemScript = preload("res://scripts/systems/settlement_system.gd")
 const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
+const EquipmentSystemScript = preload("res://scripts/systems/equipment_system.gd")
 
 @export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
@@ -25,6 +26,7 @@ var upgrade_system = UpgradeSystemScript.new()
 var combat_resolver = CombatResolverScript.new()
 var settlement_system = SettlementSystemScript.new()
 var save_system: Object = SaveSystemScript.new()
+var equipment_system = EquipmentSystemScript.new()
 var runtime_state := {
 	"owned_weapons": { "flying_sword": 1 },
 	"upgrade_stacks": {},
@@ -43,6 +45,8 @@ func _ready() -> void:
 	var loaded = database.load_all()
 	assert(loaded, "Game database failed to load: %s" % str(database.errors))
 
+	var save_data := _load_save_data()
+	apply_saved_equipment_to_player(save_data)
 	upgrade_system.configure(database.get_upgrades())
 	weapon_system.add_weapon(database.get_weapon("flying_sword"))
 	enemy_director.enemy_spawned.connect(_on_enemy_spawned)
@@ -179,6 +183,24 @@ func set_settlement_panel(panel: Node) -> void:
 
 func set_save_system(system: Object) -> void:
 	save_system = system
+
+func apply_saved_equipment_to_player(save_data: Dictionary) -> Dictionary:
+	equipment_system.configure(database.get_equipment())
+	equipment_system.set_equipment_levels(save_data.get("equipment_levels", {}))
+	equipment_system.equip(save_data.get("unlocked_equipment", []))
+	var modifiers := equipment_system.get_total_modifiers()
+	if player != null and player.has_method("apply_stat_modifiers"):
+		player.apply_stat_modifiers(modifiers)
+	return modifiers
+
+func _load_save_data() -> Dictionary:
+	if save_system == null or not save_system.has_method("load_game"):
+		return {}
+
+	var save_data = save_system.load_game()
+	if typeof(save_data) != TYPE_DICTIONARY:
+		return {}
+	return save_data
 
 func _connect_player_health() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")

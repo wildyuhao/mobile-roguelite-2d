@@ -4,6 +4,7 @@ class_name PlayerController
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 @export var move_speed: float = 260.0
+@export var base_max_health: int = 100
 @export var contact_invulnerability_seconds: float = 0.6
 
 @onready var health: Node = $HealthComponent
@@ -11,15 +12,17 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 var external_move_vector: Vector2 = Vector2.ZERO
 var damage_invulnerability_remaining: float = 0.0
+var base_move_speed: float = 260.0
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.PLAYER_GROUP)
+	base_move_speed = move_speed
 	if health == null:
 		health = get_node_or_null("HealthComponent")
 	if collision_shape == null:
 		collision_shape = get_node_or_null("CollisionShape2D")
 	if health != null:
-		health.configure(100)
+		health.configure(base_max_health)
 
 func _physics_process(_delta: float) -> void:
 	tick_damage_invulnerability(_delta)
@@ -46,6 +49,14 @@ func set_external_move_vector(new_vector: Vector2) -> void:
 	if new_vector.length() > 1.0:
 		new_vector = new_vector.normalized()
 	external_move_vector = new_vector
+
+func apply_stat_modifiers(modifiers: Dictionary) -> void:
+	if health == null:
+		health = get_node_or_null("HealthComponent")
+
+	move_speed = base_move_speed + float(modifiers.get("move_speed", 0.0))
+	if health != null and health.has_method("configure"):
+		health.configure(base_max_health + int(modifiers.get("max_health", 0)))
 
 func take_contact_damage(amount: int) -> bool:
 	if amount <= 0 or damage_invulnerability_remaining > 0.0:

@@ -14,6 +14,14 @@ class FakeSettlementPanel:
 		last_rewards = rewards
 		last_summary = summary
 
+class FakePlayer:
+	extends Node2D
+
+	var last_modifiers: Dictionary = {}
+
+	func apply_stat_modifiers(modifiers: Dictionary) -> void:
+		last_modifiers = modifiers.duplicate(true)
+
 class FakeSaveSystem:
 	extends RefCounted
 
@@ -114,6 +122,25 @@ func run(runner) -> void:
 		runner.assert_true(false, "game loop should record player defeat")
 	defeat_panel.free()
 	defeat_loop.free()
+
+	var equipment_loop = game_loop_script.new()
+	var equipment_player := FakePlayer.new()
+	equipment_loop.player = equipment_player
+	runner.assert_true(equipment_loop.database.load_all(), "database should load before applying saved equipment")
+	if equipment_loop.has_method("apply_saved_equipment_to_player"):
+		equipment_loop.apply_saved_equipment_to_player({
+			"unlocked_equipment": ["talisman_robe", "cloudstep_boots"],
+			"equipment_levels": {
+				"talisman_robe": 3,
+				"cloudstep_boots": 2,
+			},
+		})
+		runner.assert_eq(equipment_player.last_modifiers["max_health"], 30, "saved robe level should apply health to the player")
+		runner.assert_eq(equipment_player.last_modifiers["move_speed"], 36, "saved boot level should apply speed to the player")
+	else:
+		runner.assert_true(false, "game loop should apply saved equipment to the player")
+	equipment_player.free()
+	equipment_loop.free()
 
 	victory_panel.free()
 	game_loop.free()

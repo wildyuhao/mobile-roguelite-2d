@@ -17,6 +17,26 @@ func run(runner) -> void:
 	player.health = health
 	health.configure(100)
 
+	if player.has_method("apply_stat_modifiers"):
+		player.apply_stat_modifiers({
+			"max_health": 30,
+			"move_speed": 18,
+		})
+		runner.assert_eq(health.max_health, 130, "equipment max health should increase player max health")
+		runner.assert_eq(health.current_health, 130, "equipment max health should refill starting health")
+		runner.assert_eq(player.move_speed, 278.0, "equipment move speed should increase player speed")
+		player.apply_stat_modifiers({
+			"max_health": 10,
+			"move_speed": 5,
+		})
+		runner.assert_eq(health.max_health, 110, "reapplying modifiers should use base max health")
+		runner.assert_eq(player.move_speed, 265.0, "reapplying modifiers should use base move speed")
+		player.apply_stat_modifiers({})
+		runner.assert_eq(health.max_health, 100, "empty modifiers should restore base max health")
+		runner.assert_eq(player.move_speed, 260.0, "empty modifiers should restore base move speed")
+	else:
+		runner.assert_true(false, "player should accept equipment stat modifiers")
+
 	if player.has_method("set_external_move_vector"):
 		player.set_external_move_vector(Vector2(3, 4))
 		runner.assert_near(player.external_move_vector.length(), 1.0, 0.001, "external movement vector should clamp")
