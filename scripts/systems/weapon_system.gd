@@ -2,6 +2,10 @@ extends Node
 class_name WeaponSystem
 
 var weapons: Dictionary = {}
+var stat_modifiers: Dictionary = {}
+
+func set_stat_modifiers(modifiers: Dictionary) -> void:
+	stat_modifiers = modifiers.duplicate(true)
 
 func add_weapon(definition: Dictionary) -> void:
 	var id: String = definition["id"]
@@ -47,7 +51,8 @@ func get_weapon_damage(id: String) -> int:
 
 func get_weapon_cooldown(id: String) -> float:
 	var value := float(_get_modified_definition_value(id, "cooldown", 1.0))
-	return max(0.05, value)
+	var multiplier := 1.0 + float(stat_modifiers.get("weapon_cooldown_multiplier", 0.0))
+	return max(0.05, value * multiplier)
 
 func get_weapon_pierce(id: String) -> int:
 	return int(_get_modified_definition_value(id, "pierce", 0))

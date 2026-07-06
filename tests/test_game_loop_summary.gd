@@ -40,6 +40,14 @@ class FakePlayer:
 	func apply_stat_modifiers(modifiers: Dictionary) -> void:
 		last_modifiers = modifiers.duplicate(true)
 
+class FakeWeaponSystem:
+	extends Node
+
+	var last_modifiers: Dictionary = {}
+
+	func set_stat_modifiers(modifiers: Dictionary) -> void:
+		last_modifiers = modifiers.duplicate(true)
+
 class FakeSaveSystem:
 	extends RefCounted
 
@@ -159,21 +167,26 @@ func run(runner) -> void:
 
 	var equipment_loop = game_loop_script.new()
 	var equipment_player := FakePlayer.new()
+	var equipment_weapon_system := FakeWeaponSystem.new()
 	equipment_loop.player = equipment_player
+	equipment_loop.weapon_system = equipment_weapon_system
 	runner.assert_true(equipment_loop.database.load_all(), "database should load before applying saved equipment")
 	if equipment_loop.has_method("apply_saved_equipment_to_player"):
 		equipment_loop.apply_saved_equipment_to_player({
-			"unlocked_equipment": ["talisman_robe", "cloudstep_boots"],
+			"unlocked_equipment": ["talisman_robe", "cloudstep_boots", "bronze_gear_core"],
 			"equipment_levels": {
 				"talisman_robe": 3,
 				"cloudstep_boots": 2,
+				"bronze_gear_core": 2,
 			},
 		})
 		runner.assert_eq(equipment_player.last_modifiers["max_health"], 30, "saved robe level should apply health to the player")
 		runner.assert_eq(equipment_player.last_modifiers["move_speed"], 36, "saved boot level should apply speed to the player")
+		runner.assert_near(float(equipment_weapon_system.last_modifiers.get("weapon_cooldown_multiplier", 0.0)), -0.1, 0.001, "saved gear core level should apply cooldown to weapons")
 	else:
 		runner.assert_true(false, "game loop should apply saved equipment to the player")
 	equipment_player.free()
+	equipment_weapon_system.free()
 	equipment_loop.free()
 
 	victory_panel.free()

@@ -18,6 +18,12 @@ func run(runner) -> void:
 	system.add_weapon(db.get_weapon("flying_sword"))
 
 	runner.assert_eq(system.get_weapon_level("flying_sword"), 1, "new weapon starts at level 1")
+	runner.assert_near(system.get_weapon_cooldown("flying_sword"), 0.9, 0.001, "flying sword starts with base cooldown")
+	if system.has_method("set_stat_modifiers"):
+		system.set_stat_modifiers({ "weapon_cooldown_multiplier": -0.1 })
+		runner.assert_near(system.get_weapon_cooldown("flying_sword"), 0.81, 0.001, "equipment cooldown modifier should reduce weapon cooldown")
+	else:
+		runner.assert_true(false, "weapon system should accept equipment stat modifiers")
 	runner.assert_eq(system.tick(0.4).size(), 0, "weapon should not fire before cooldown")
 
 	var fire_events = system.tick(0.6)

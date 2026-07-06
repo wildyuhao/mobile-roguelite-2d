@@ -207,6 +207,8 @@ func apply_saved_equipment_to_player(save_data: Dictionary) -> Dictionary:
 	var modifiers := equipment_system.get_total_modifiers()
 	if player != null and player.has_method("apply_stat_modifiers"):
 		player.apply_stat_modifiers(modifiers)
+	if weapon_system != null and weapon_system.has_method("set_stat_modifiers"):
+		weapon_system.set_stat_modifiers(modifiers)
 	return modifiers
 
 func _load_save_data() -> Dictionary:
