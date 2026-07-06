@@ -72,6 +72,8 @@ func run(runner) -> void:
 				"total_materials": 30,
 				"can_upgrade": true,
 				"stat_summary": "HP +10",
+				"route_label": "HP",
+				"route_color": "#ff8a8a",
 			},
 			{
 				"equipment_id": "cloudstep_boots",
@@ -81,6 +83,8 @@ func run(runner) -> void:
 				"total_materials": 30,
 				"can_upgrade": true,
 				"stat_summary": "Speed +18",
+				"route_label": "SPD",
+				"route_color": "#8fd6ff",
 			},
 			{
 				"equipment_id": "bronze_gear_core",
@@ -90,6 +94,8 @@ func run(runner) -> void:
 				"total_materials": 30,
 				"can_upgrade": false,
 				"stat_summary": "CD -5%",
+				"route_label": "CD",
+				"route_color": "#ffd166",
 			},
 			{
 				"equipment_id": "jade_compass",
@@ -99,6 +105,8 @@ func run(runner) -> void:
 				"total_materials": 30,
 				"can_upgrade": true,
 				"stat_summary": "Pickup +24, Mat +10%",
+				"route_label": "LOOT",
+				"route_color": "#8df0a9",
 			},
 		])
 		var row1 = _get_offer_row(panel, 1)
@@ -112,11 +120,31 @@ func run(runner) -> void:
 		var label1 = _get_offer_label(panel, 1)
 		var label2 = _get_offer_label(panel, 2)
 		var label3 = _get_offer_label(panel, 3)
+		var route1 = _get_route_label(panel, 1)
+		var route2 = _get_route_label(panel, 2)
+		var route3 = _get_route_label(panel, 3)
+		var route4 = _get_route_label(panel, 4)
 		var button1 = _get_offer_button(panel, 1)
 		var button2 = _get_offer_button(panel, 2)
 		var button3 = _get_offer_button(panel, 3)
 		var fourth_label = _get_offer_label(panel, 4)
 		var fourth_button = _get_offer_button(panel, 4)
+		runner.assert_true(route1 != null, "first offer should include a route tag")
+		runner.assert_true(route2 != null, "second offer should include a route tag")
+		runner.assert_true(route3 != null, "third offer should include a route tag")
+		runner.assert_true(route4 != null, "fourth offer should include a route tag")
+		if route1 != null:
+			runner.assert_eq(route1.text, "HP", "first route tag should show health route")
+			runner.assert_true(route1.custom_minimum_size.x >= 48.0, "first route tag should keep a stable scan width")
+		if route2 != null:
+			runner.assert_eq(route2.text, "SPD", "second route tag should show speed route")
+			runner.assert_true(route2.custom_minimum_size.x >= 48.0, "second route tag should keep a stable scan width")
+		if route3 != null:
+			runner.assert_eq(route3.text, "CD", "third route tag should show cooldown route")
+			runner.assert_true(route3.custom_minimum_size.x >= 48.0, "third route tag should keep a stable scan width")
+		if route4 != null:
+			runner.assert_eq(route4.text, "LOOT", "fourth route tag should show loot route")
+			runner.assert_true(route4.custom_minimum_size.x >= 48.0, "fourth route tag should keep a stable scan width")
 		runner.assert_true(label1 != null, "first offer should include a label")
 		runner.assert_true(button1 != null, "first offer should include a button")
 		if label1 != null:
@@ -158,6 +186,9 @@ func _get_offer_row(panel: Node, index: int) -> Node:
 
 func _get_offer_label(panel: Node, index: int) -> Label:
 	return panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow%d/UpgradeLabel%d" % [index, index]) as Label
+
+func _get_route_label(panel: Node, index: int) -> Label:
+	return panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow%d/UpgradeRouteLabel%d" % [index, index]) as Label
 
 func _get_offer_button(panel: Node, index: int) -> Button:
 	return panel.get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow%d/UpgradeButton%d" % [index, index]) as Button

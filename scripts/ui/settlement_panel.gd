@@ -12,6 +12,12 @@ signal upgrade_requested(equipment_id: String)
 @onready var total_materials_label: Label = $PanelContainer/VBoxContainer/TotalMaterialsLabel
 @onready var upgrade_label: Label = $PanelContainer/VBoxContainer/UpgradeLabel
 @onready var upgrade_button: Button = $PanelContainer/VBoxContainer/UpgradeButton
+@onready var upgrade_route_labels: Array[Label] = [
+	$PanelContainer/VBoxContainer/UpgradeRow1/UpgradeRouteLabel1,
+	$PanelContainer/VBoxContainer/UpgradeRow2/UpgradeRouteLabel2,
+	$PanelContainer/VBoxContainer/UpgradeRow3/UpgradeRouteLabel3,
+	$PanelContainer/VBoxContainer/UpgradeRow4/UpgradeRouteLabel4,
+]
 @onready var upgrade_labels: Array[Label] = [
 	$PanelContainer/VBoxContainer/UpgradeRow1/UpgradeLabel1,
 	$PanelContainer/VBoxContainer/UpgradeRow2/UpgradeLabel2,
@@ -76,16 +82,19 @@ func show_upgrade_offers(offers: Array) -> void:
 	total_materials_label.text = "Materials %d" % total_materials
 
 	for index in range(upgrade_buttons.size()):
+		var route_label := upgrade_route_labels[index]
 		var label := upgrade_labels[index]
 		var button := upgrade_buttons[index]
 		if index < offers.size():
 			var offer: Dictionary = offers[index]
 			upgrade_offer_ids.append(offer.get("equipment_id", ""))
+			_apply_route_label(route_label, offer)
 			label.text = _format_offer_label(offer)
 			button.text = "Upgrade %d" % int(offer.get("cost", 0))
 			button.disabled = not bool(offer.get("can_upgrade", false))
 		else:
 			upgrade_offer_ids.append("")
+			route_label.hide()
 			label.text = "-"
 			button.text = "Upgrade"
 			button.disabled = true
@@ -125,6 +134,13 @@ func _resolve_nodes() -> void:
 		upgrade_label = get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel")
 	if upgrade_button == null:
 		upgrade_button = get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton")
+	if upgrade_route_labels.is_empty():
+		upgrade_route_labels = [
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow1/UpgradeRouteLabel1"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow2/UpgradeRouteLabel2"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow3/UpgradeRouteLabel3"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow4/UpgradeRouteLabel4"),
+		]
 	if upgrade_labels.is_empty():
 		upgrade_labels = [
 			get_node_or_null("PanelContainer/VBoxContainer/UpgradeRow1/UpgradeLabel1"),
@@ -155,3 +171,12 @@ func _format_offer_label(offer: Dictionary) -> String:
 	if summary == "":
 		return label
 	return "%s - %s" % [label, summary]
+
+func _apply_route_label(route_label: Label, offer: Dictionary) -> void:
+	var route_text := String(offer.get("route_label", ""))
+	if route_text == "":
+		route_label.hide()
+		return
+	route_label.show()
+	route_label.text = route_text
+	route_label.modulate = Color.html(String(offer.get("route_color", "#ffffff")))

@@ -344,6 +344,8 @@ func _build_settlement_upgrade_offers(save_data: Dictionary) -> Array[Dictionary
 			"total_materials": total_materials,
 			"can_upgrade": equipment_system.can_upgrade(equipment_id, save_data),
 			"stat_summary": _build_equipment_stat_summary(equipment_definition),
+			"route_label": _get_equipment_route_label(equipment_id),
+			"route_color": _get_equipment_route_color(equipment_id),
 		})
 	return offers
 
@@ -352,6 +354,30 @@ func _get_equipment_definition(equipment_id: String) -> Dictionary:
 		if definition.get("id", "") == equipment_id:
 			return definition
 	return {}
+
+func _get_equipment_route_label(equipment_id: String) -> String:
+	match equipment_id:
+		"talisman_robe":
+			return "HP"
+		"cloudstep_boots":
+			return "SPD"
+		"bronze_gear_core":
+			return "CD"
+		"jade_compass":
+			return "LOOT"
+	return ""
+
+func _get_equipment_route_color(equipment_id: String) -> String:
+	match equipment_id:
+		"talisman_robe":
+			return "#ff8a8a"
+		"cloudstep_boots":
+			return "#8fd6ff"
+		"bronze_gear_core":
+			return "#ffd166"
+		"jade_compass":
+			return "#8df0a9"
+	return "#ffffff"
 
 func _build_equipment_stat_summary(equipment_definition: Dictionary) -> String:
 	var modifiers: Dictionary = equipment_definition.get("stat_modifiers", {})

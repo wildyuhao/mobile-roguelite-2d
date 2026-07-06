@@ -44,6 +44,13 @@ text = "Upgrade 10"
 [node name="UpgradeRow1" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
 
+[node name="UpgradeRouteLabel1" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
+custom_minimum_size = Vector2(48, 32)
+theme_override_font_sizes/font_size = 12
+text = "HP"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="UpgradeLabel1" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
 size_flags_horizontal = 3
 text = "Talisman Robe Lv.1"
@@ -54,6 +61,13 @@ text = "Upgrade 10"
 
 [node name="UpgradeRow2" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
+
+[node name="UpgradeRouteLabel2" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
+custom_minimum_size = Vector2(48, 32)
+theme_override_font_sizes/font_size = 12
+text = "SPD"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="UpgradeLabel2" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
 size_flags_horizontal = 3
@@ -66,6 +80,13 @@ text = "Upgrade 10"
 [node name="UpgradeRow3" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
 
+[node name="UpgradeRouteLabel3" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
+custom_minimum_size = Vector2(48, 32)
+theme_override_font_sizes/font_size = 12
+text = "CD"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="UpgradeLabel3" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
 size_flags_horizontal = 3
 text = "Bronze Gear Core Lv.1"
@@ -76,6 +97,13 @@ text = "Upgrade 10"
 
 [node name="UpgradeRow4" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
+
+[node name="UpgradeRouteLabel4" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
+custom_minimum_size = Vector2(48, 32)
+theme_override_font_sizes/font_size = 12
+text = "LOOT"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="UpgradeLabel4" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
 size_flags_horizontal = 3
