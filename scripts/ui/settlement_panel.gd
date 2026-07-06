@@ -11,9 +11,20 @@ signal upgrade_requested(equipment_id: String)
 @onready var total_materials_label: Label = $PanelContainer/VBoxContainer/TotalMaterialsLabel
 @onready var upgrade_label: Label = $PanelContainer/VBoxContainer/UpgradeLabel
 @onready var upgrade_button: Button = $PanelContainer/VBoxContainer/UpgradeButton
+@onready var upgrade_labels: Array[Label] = [
+	$PanelContainer/VBoxContainer/UpgradeLabel1,
+	$PanelContainer/VBoxContainer/UpgradeLabel2,
+	$PanelContainer/VBoxContainer/UpgradeLabel3,
+]
+@onready var upgrade_buttons: Array[Button] = [
+	$PanelContainer/VBoxContainer/UpgradeButton1,
+	$PanelContainer/VBoxContainer/UpgradeButton2,
+	$PanelContainer/VBoxContainer/UpgradeButton3,
+]
 @onready var restart_button: Button = $PanelContainer/VBoxContainer/RestartButton
 
 var upgrade_equipment_id: String = ""
+var upgrade_offer_ids: Array[String] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -35,6 +46,43 @@ func show_upgrade_offer(equipment_id: String, display_name: String, level: int, 
 	upgrade_label.text = "%s Lv.%d" % [display_name, level]
 	upgrade_button.text = "Upgrade %d" % cost
 	upgrade_button.disabled = not can_upgrade
+	show_upgrade_offers([
+		{
+			"equipment_id": equipment_id,
+			"display_name": display_name,
+			"level": level,
+			"cost": cost,
+			"total_materials": total_materials,
+			"can_upgrade": can_upgrade,
+		}
+	])
+
+func show_upgrade_offers(offers: Array) -> void:
+	_resolve_nodes()
+	if upgrade_label != null:
+		upgrade_label.hide()
+	if upgrade_button != null:
+		upgrade_button.hide()
+	upgrade_offer_ids.clear()
+	var total_materials := 0
+	if not offers.is_empty():
+		total_materials = int(offers[0].get("total_materials", 0))
+	total_materials_label.text = "Materials %d" % total_materials
+
+	for index in range(upgrade_buttons.size()):
+		var label := upgrade_labels[index]
+		var button := upgrade_buttons[index]
+		if index < offers.size():
+			var offer: Dictionary = offers[index]
+			upgrade_offer_ids.append(offer.get("equipment_id", ""))
+			label.text = "%s Lv.%d" % [offer.get("display_name", offer.get("equipment_id", "Equipment")), int(offer.get("level", 1))]
+			button.text = "Upgrade %d" % int(offer.get("cost", 0))
+			button.disabled = not bool(offer.get("can_upgrade", false))
+		else:
+			upgrade_offer_ids.append("")
+			label.text = "-"
+			button.text = "Upgrade"
+			button.disabled = true
 
 func _on_restart_pressed() -> void:
 	restart_requested.emit()
@@ -43,6 +91,16 @@ func _on_upgrade_pressed() -> void:
 	if upgrade_equipment_id == "" or (upgrade_button != null and upgrade_button.disabled):
 		return
 	upgrade_requested.emit(upgrade_equipment_id)
+
+func _on_upgrade_offer_pressed(index: int) -> void:
+	if index < 0 or index >= upgrade_offer_ids.size():
+		return
+	if upgrade_buttons[index].disabled:
+		return
+	var equipment_id := upgrade_offer_ids[index]
+	if equipment_id == "":
+		return
+	upgrade_requested.emit(equipment_id)
 
 func _resolve_nodes() -> void:
 	if title_label == null:
@@ -59,9 +117,24 @@ func _resolve_nodes() -> void:
 		upgrade_label = get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel")
 	if upgrade_button == null:
 		upgrade_button = get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton")
+	if upgrade_labels.is_empty():
+		upgrade_labels = [
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel1"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel2"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeLabel3"),
+		]
+	if upgrade_buttons.is_empty():
+		upgrade_buttons = [
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton1"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton2"),
+			get_node_or_null("PanelContainer/VBoxContainer/UpgradeButton3"),
+		]
 	if restart_button == null:
 		restart_button = get_node_or_null("PanelContainer/VBoxContainer/RestartButton")
 	if upgrade_button != null and not upgrade_button.pressed.is_connected(_on_upgrade_pressed):
 		upgrade_button.pressed.connect(_on_upgrade_pressed)
+	for index in range(upgrade_buttons.size()):
+		if upgrade_buttons[index] != null and not upgrade_buttons[index].pressed.is_connected(_on_upgrade_offer_pressed.bind(index)):
+			upgrade_buttons[index].pressed.connect(_on_upgrade_offer_pressed.bind(index))
 	if restart_button != null and not restart_button.pressed.is_connected(_on_restart_pressed):
 		restart_button.pressed.connect(_on_restart_pressed)

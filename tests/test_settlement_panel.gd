@@ -49,4 +49,43 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "settlement panel should expose an equipment upgrade offer")
 
+	if panel.has_method("show_upgrade_offers"):
+		panel.show_upgrade_offers([
+			{
+				"equipment_id": "talisman_robe",
+				"display_name": "Talisman Robe",
+				"level": 2,
+				"cost": 20,
+				"total_materials": 30,
+				"can_upgrade": true,
+			},
+			{
+				"equipment_id": "cloudstep_boots",
+				"display_name": "Cloudstep Boots",
+				"level": 1,
+				"cost": 10,
+				"total_materials": 30,
+				"can_upgrade": true,
+			},
+			{
+				"equipment_id": "bronze_gear_core",
+				"display_name": "Bronze Gear Core",
+				"level": 4,
+				"cost": 40,
+				"total_materials": 30,
+				"can_upgrade": false,
+			},
+		])
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel1").text, "Talisman Robe Lv.2", "first offer should show robe")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton1").text, "Upgrade 20", "first offer should show cost")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel2").text, "Cloudstep Boots Lv.1", "second offer should show boots")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").text, "Upgrade 10", "second offer should show cost")
+		runner.assert_eq(panel.get_node("PanelContainer/VBoxContainer/UpgradeLabel3").text, "Bronze Gear Core Lv.4", "third offer should show gear core")
+		runner.assert_true(panel.get_node("PanelContainer/VBoxContainer/UpgradeButton3").disabled, "third offer should be disabled when unaffordable")
+		runner.assert_true(not panel.get_node("PanelContainer/VBoxContainer/UpgradeButton").visible, "multi-offer mode should hide the legacy single upgrade button")
+		panel.get_node("PanelContainer/VBoxContainer/UpgradeButton2").pressed.emit()
+		runner.assert_eq(upgrade_requests.back(), "cloudstep_boots", "second upgrade button should emit its equipment id")
+	else:
+		runner.assert_true(false, "settlement panel should expose multiple equipment upgrade offers")
+
 	panel.queue_free()

@@ -9,6 +9,7 @@ const SettlementSystemScript = preload("res://scripts/systems/settlement_system.
 const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
 const EquipmentSystemScript = preload("res://scripts/systems/equipment_system.gd")
 const SETTLEMENT_UPGRADE_EQUIPMENT_ID := "talisman_robe"
+const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "bronze_gear_core"]
 
 @export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
@@ -264,37 +265,53 @@ func _show_settlement_result(title: String) -> void:
 	_refresh_settlement_upgrade_offer()
 
 func _refresh_settlement_upgrade_offer() -> Dictionary:
-	if settlement_panel == null or not settlement_panel.has_method("show_upgrade_offer"):
+	if settlement_panel == null:
 		return {}
 	if not _ensure_database_loaded():
 		return {}
 
 	var save_data := _load_save_data()
 	equipment_system.configure(database.get_equipment())
-	var equipment_definition := _get_equipment_definition(SETTLEMENT_UPGRADE_EQUIPMENT_ID)
-	if equipment_definition.is_empty():
+	var offers := _build_settlement_upgrade_offers(save_data)
+	if offers.is_empty():
 		return {}
 
-	var levels: Dictionary = save_data.get("equipment_levels", {})
-	var level: int = max(1, int(levels.get(SETTLEMENT_UPGRADE_EQUIPMENT_ID, 1)))
-	var cost: int = equipment_system.get_upgrade_cost(SETTLEMENT_UPGRADE_EQUIPMENT_ID, save_data)
+	var first_offer: Dictionary = offers[0]
+	if settlement_panel.has_method("show_upgrade_offer"):
+		settlement_panel.show_upgrade_offer(
+			first_offer.get("equipment_id", ""),
+			first_offer.get("display_name", ""),
+			int(first_offer.get("level", 1)),
+			int(first_offer.get("cost", 0)),
+			int(first_offer.get("total_materials", 0)),
+			bool(first_offer.get("can_upgrade", false))
+		)
+	if settlement_panel.has_method("show_upgrade_offers"):
+		settlement_panel.show_upgrade_offers(offers)
+	return first_offer
+
+func _build_settlement_upgrade_offers(save_data: Dictionary) -> Array[Dictionary]:
+	var offers: Array[Dictionary] = []
 	var total_materials := int(save_data.get("materials", 0))
-	var can_upgrade := equipment_system.can_upgrade(SETTLEMENT_UPGRADE_EQUIPMENT_ID, save_data)
-	settlement_panel.show_upgrade_offer(
-		SETTLEMENT_UPGRADE_EQUIPMENT_ID,
-		equipment_definition.get("display_name", SETTLEMENT_UPGRADE_EQUIPMENT_ID),
-		level,
-		cost,
-		total_materials,
-		can_upgrade
-	)
-	return {
-		"equipment_id": SETTLEMENT_UPGRADE_EQUIPMENT_ID,
-		"level": level,
-		"cost": cost,
-		"total_materials": total_materials,
-		"can_upgrade": can_upgrade,
-	}
+	var levels: Dictionary = save_data.get("equipment_levels", {})
+	var unlocked: Array = save_data.get("unlocked_equipment", [])
+
+	for equipment_id in SETTLEMENT_UPGRADE_EQUIPMENT_IDS:
+		if not unlocked.has(equipment_id):
+			continue
+		var equipment_definition := _get_equipment_definition(equipment_id)
+		if equipment_definition.is_empty():
+			continue
+		var level: int = max(1, int(levels.get(equipment_id, 1)))
+		offers.append({
+			"equipment_id": equipment_id,
+			"display_name": equipment_definition.get("display_name", equipment_id),
+			"level": level,
+			"cost": equipment_system.get_upgrade_cost(equipment_id, save_data),
+			"total_materials": total_materials,
+			"can_upgrade": equipment_system.can_upgrade(equipment_id, save_data),
+		})
+	return offers
 
 func _get_equipment_definition(equipment_id: String) -> Dictionary:
 	for definition in database.get_equipment():

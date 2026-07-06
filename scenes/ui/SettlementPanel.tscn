@@ -10,7 +10,7 @@ script = ExtResource("1")
 offset_left = 80.0
 offset_top = 360.0
 offset_right = 640.0
-offset_bottom = 840.0
+offset_bottom = 940.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
 
@@ -34,6 +34,24 @@ text = "Materials 0"
 text = "Talisman Robe Lv.1"
 
 [node name="UpgradeButton" type="Button" parent="PanelContainer/VBoxContainer"]
+text = "Upgrade 10"
+
+[node name="UpgradeLabel1" type="Label" parent="PanelContainer/VBoxContainer"]
+text = "Talisman Robe Lv.1"
+
+[node name="UpgradeButton1" type="Button" parent="PanelContainer/VBoxContainer"]
+text = "Upgrade 10"
+
+[node name="UpgradeLabel2" type="Label" parent="PanelContainer/VBoxContainer"]
+text = "Cloudstep Boots Lv.1"
+
+[node name="UpgradeButton2" type="Button" parent="PanelContainer/VBoxContainer"]
+text = "Upgrade 10"
+
+[node name="UpgradeLabel3" type="Label" parent="PanelContainer/VBoxContainer"]
+text = "Bronze Gear Core Lv.1"
+
+[node name="UpgradeButton3" type="Button" parent="PanelContainer/VBoxContainer"]
 text = "Upgrade 10"
 
 [node name="RestartButton" type="Button" parent="PanelContainer/VBoxContainer"]
