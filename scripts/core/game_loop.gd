@@ -149,12 +149,22 @@ func _on_enemy_defeated(payload: Dictionary) -> void:
 		experience_system.add_experience(experience_value)
 		return
 
+	call_deferred("_spawn_experience_pickup", enemy_position, experience_value)
+
+func _spawn_experience_pickup(enemy_position: Vector2, experience_value: int) -> void:
+	if experience_pickup_scene == null:
+		if experience_system != null and experience_system.has_method("add_experience"):
+			experience_system.add_experience(experience_value)
+		return
+
 	var pickup = experience_pickup_scene.instantiate()
 	add_child(pickup)
 	pickup.global_position = enemy_position
-	pickup.configure(experience_value)
+	if pickup.has_method("configure"):
+		pickup.configure(experience_value)
 	configure_pickup_collection_radius(pickup)
-	pickup.collected.connect(experience_system.add_experience)
+	if experience_system != null and pickup.has_signal("collected") and experience_system.has_method("add_experience"):
+		pickup.collected.connect(experience_system.add_experience)
 
 func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 	if run_ended:

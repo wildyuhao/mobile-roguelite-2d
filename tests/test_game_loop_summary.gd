@@ -68,6 +68,20 @@ class FakePickup:
 	func set_collection_radius_bonus(bonus: float) -> void:
 		last_bonus = bonus
 
+class FakeExperiencePickup:
+	extends Node2D
+
+	signal collected(amount: int)
+
+	var configured_value: int = 0
+	var last_bonus: float = -1.0
+
+	func configure(value: int) -> void:
+		configured_value = value
+
+	func set_collection_radius_bonus(bonus: float) -> void:
+		last_bonus = bonus
+
 class FakeSaveSystem:
 	extends RefCounted
 
@@ -275,6 +289,21 @@ func run(runner) -> void:
 		runner.assert_near(fake_pickup.last_bonus, 48.0, 0.001, "game loop should pass pickup radius to spawned pickups")
 	else:
 		runner.assert_true(false, "game loop should configure pickup collection radius")
+	if stat_loop.has_method("_spawn_experience_pickup"):
+		var fake_pickup_scene := PackedScene.new()
+		var fake_pickup_source := FakeExperiencePickup.new()
+		runner.assert_eq(fake_pickup_scene.pack(fake_pickup_source), OK, "fake pickup scene should pack for game loop spawn test")
+		fake_pickup_source.free()
+		stat_loop.experience_pickup_scene = fake_pickup_scene
+		stat_loop._spawn_experience_pickup(Vector2(12, 34), 7)
+		var spawned_pickup = stat_loop.get_child(stat_loop.get_child_count() - 1)
+		runner.assert_true(spawned_pickup is FakeExperiencePickup, "game loop should spawn an experience pickup instance")
+		if spawned_pickup is FakeExperiencePickup:
+			runner.assert_eq(spawned_pickup.configured_value, 7, "spawned pickup should receive experience value")
+			runner.assert_eq(spawned_pickup.global_position, Vector2(12, 34), "spawned pickup should appear at enemy position")
+			runner.assert_near(spawned_pickup.last_bonus, 48.0, 0.001, "spawned pickup should receive pickup radius bonus")
+	else:
+		runner.assert_true(false, "game loop should expose safe experience pickup spawn helper")
 	if stat_loop.has_method("_show_runtime_upgrade_feedback"):
 		stat_loop._show_runtime_upgrade_feedback({
 			"id": "weapon_damage_1",

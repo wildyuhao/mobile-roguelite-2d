@@ -6,6 +6,36 @@
     "spawn_interval": 1.2
   },
   {
+    "time": 10,
+    "enemy_id": "basic_demon",
+    "spawn_count": 4,
+    "spawn_interval": 1.0
+  },
+  {
+    "time": 20,
+    "enemy_id": "basic_demon",
+    "spawn_count": 5,
+    "spawn_interval": 0.9
+  },
+  {
+    "time": 30,
+    "enemy_id": "basic_demon",
+    "spawn_count": 5,
+    "spawn_interval": 0.8
+  },
+  {
+    "time": 40,
+    "enemy_id": "basic_demon",
+    "spawn_count": 6,
+    "spawn_interval": 0.8
+  },
+  {
+    "time": 50,
+    "enemy_id": "charging_demon",
+    "spawn_count": 2,
+    "spawn_interval": 1.2
+  },
+  {
     "time": 60,
     "enemy_id": "basic_demon",
     "spawn_count": 8,

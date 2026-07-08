@@ -31,6 +31,7 @@ position = Vector2(360, 640)
 [node name="EnemyDirector" type="Node" parent="."]
 script = ExtResource("5")
 enemy_scene = ExtResource("3")
+spawn_radius = 360.0
 
 [node name="ExperienceSystem" type="Node" parent="."]
 script = ExtResource("6")
