@@ -45,7 +45,7 @@ func _format_choice_text(choice: Dictionary) -> String:
 	var summary := String(choice.get("effect_summary", ""))
 	if summary == "":
 		return label
-	return "%s - %s" % [label, summary]
+	return "%s\n%s" % [label, summary]
 
 func _resolve_buttons() -> void:
 	if buttons.size() == 3 and buttons[0] != null and buttons[1] != null and buttons[2] != null:
