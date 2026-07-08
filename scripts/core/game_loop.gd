@@ -134,6 +134,7 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 		if weapon_id != "" and not weapon_system.has_weapon(weapon_id):
 			weapon_system.add_weapon(database.get_weapon(weapon_id))
 	_apply_total_stat_modifiers()
+	_show_runtime_upgrade_feedback(upgrade)
 	get_tree().paused = false
 
 func _on_enemy_spawned(enemy: Node) -> void:
@@ -297,6 +298,12 @@ func _show_settlement_result(title: String) -> void:
 	if settlement_panel != null and settlement_panel.has_method("show_result"):
 		settlement_panel.show_result(title, settlement_rewards, run_summary)
 	_refresh_settlement_upgrade_offer()
+
+func _show_runtime_upgrade_feedback(upgrade: Dictionary) -> void:
+	if hud == null or not hud.has_method("show_upgrade_feedback"):
+		return
+	var display_name := String(upgrade.get("display_name", upgrade.get("id", "Upgrade")))
+	hud.show_upgrade_feedback(display_name)
 
 func _refresh_settlement_upgrade_offer() -> Dictionary:
 	if settlement_panel == null:

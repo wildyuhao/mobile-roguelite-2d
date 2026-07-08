@@ -52,6 +52,14 @@ class FakeWeaponSystem:
 	func set_stat_modifiers(modifiers: Dictionary) -> void:
 		last_modifiers = modifiers.duplicate(true)
 
+class FakeHUD:
+	extends Node
+
+	var last_upgrade_feedback: String = ""
+
+	func show_upgrade_feedback(display_name: String) -> void:
+		last_upgrade_feedback = display_name
+
 class FakePickup:
 	extends Node
 
@@ -245,8 +253,10 @@ func run(runner) -> void:
 	var stat_loop = game_loop_script.new()
 	var stat_player := FakePlayer.new()
 	var stat_weapon_system := FakeWeaponSystem.new()
+	var stat_hud := FakeHUD.new()
 	stat_loop.player = stat_player
 	stat_loop.weapon_system = stat_weapon_system
+	stat_loop.hud = stat_hud
 	runner.assert_true(stat_loop.database.load_all(), "database should load before applying runtime stat upgrades")
 	stat_loop.upgrade_system.configure(stat_loop.database.get_upgrades())
 	stat_loop.runtime_state["upgrade_stacks"] = {
@@ -265,7 +275,16 @@ func run(runner) -> void:
 		runner.assert_near(fake_pickup.last_bonus, 48.0, 0.001, "game loop should pass pickup radius to spawned pickups")
 	else:
 		runner.assert_true(false, "game loop should configure pickup collection radius")
+	if stat_loop.has_method("_show_runtime_upgrade_feedback"):
+		stat_loop._show_runtime_upgrade_feedback({
+			"id": "weapon_damage_1",
+			"display_name": "Sharpened Edge",
+		})
+		runner.assert_eq(stat_hud.last_upgrade_feedback, "Sharpened Edge", "runtime upgrade selection should show HUD feedback")
+	else:
+		runner.assert_true(false, "game loop should expose runtime upgrade feedback helper")
 	fake_pickup.free()
+	stat_hud.free()
 	stat_player.free()
 	stat_weapon_system.free()
 	stat_loop.free()

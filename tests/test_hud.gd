@@ -18,4 +18,16 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "HUD should expose set_health")
 
+	var upgrade_feedback_label = hud.get_node_or_null("MarginContainer/VBoxContainer/UpgradeFeedbackLabel")
+	runner.assert_true(upgrade_feedback_label != null, "HUD should include runtime upgrade feedback label")
+	if hud.has_method("show_upgrade_feedback") and upgrade_feedback_label != null:
+		runner.assert_true(not upgrade_feedback_label.visible, "upgrade feedback should start hidden")
+		hud.show_upgrade_feedback("Sharpened Edge")
+		runner.assert_true(upgrade_feedback_label.visible, "upgrade feedback should show after selecting an upgrade")
+		runner.assert_eq(upgrade_feedback_label.text, "Sharpened Edge selected", "upgrade feedback should show selected upgrade name")
+		hud._process(2.0)
+		runner.assert_true(not upgrade_feedback_label.visible, "upgrade feedback should hide after its timer expires")
+	else:
+		runner.assert_true(false, "HUD should expose show_upgrade_feedback")
+
 	hud.queue_free()
