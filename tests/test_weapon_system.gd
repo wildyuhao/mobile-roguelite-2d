@@ -106,4 +106,138 @@ func run(runner) -> void:
 		if not level_three_events.is_empty():
 			runner.assert_eq(level_three_events[0].get("projectile_count", 0), 8, "Spirit Needle Array level three should fire eight needles")
 		needle_system.free()
+
+	var modular_system = weapon_system_script.new()
+	modular_system.set_stat_modifiers({
+		"weapon_damage_multiplier": 0.25,
+		"weapon_cooldown_multiplier": -0.1,
+	})
+	runner.assert_true(modular_system.add_weapon(_modular_fixture()), "modular fixture should equip")
+	var first_requests = modular_system.tick(0.0)
+	runner.assert_eq(_count_effect(first_requests, "orbit"), 1, "persistent effect should emit once")
+	runner.assert_eq(_request_damage(first_requests, "orbit"), 10, "persistent request should include global damage modifier")
+	runner.assert_eq(modular_system.tick(0.5).size(), 0, "periodic effect should wait")
+	var periodic = modular_system.tick(0.6)
+	runner.assert_eq(_count_effect(periodic, "bolt"), 1, "periodic effect should emit after modified cooldown")
+	runner.assert_eq(_request_damage(periodic, "bolt"), 13, "periodic request should include rounded global damage modifier")
+	var bolt_request := _find_request(periodic, "bolt")
+	runner.assert_true(int(bolt_request.get("request_id", 0)) > 0, "effect request should have a positive request id")
+	runner.assert_near(
+		float(Dictionary(bolt_request.get("trigger", {})).get("cooldown", 0.0)),
+		0.9,
+		0.001,
+		"effect request should include global cooldown modifier"
+	)
+
+	if modular_system.has_method("acknowledge_request"):
+		modular_system.acknowledge_request(int(bolt_request.get("request_id", 0)), "no_target")
+		runner.assert_eq(_count_effect(modular_system.tick(0.11), "bolt"), 1, "no target should retry after 0.1 seconds")
+	else:
+		runner.assert_true(false, "weapon system should acknowledge effect request results")
+
+	if modular_system.has_method("notify_trigger"):
+		var retaliation = modular_system.notify_trigger("on_player_hit", { "damage": 8 })
+		runner.assert_eq(_count_effect(retaliation, "retaliate"), 1, "player hit trigger should emit")
+		var retaliation_request := _find_request(retaliation, "retaliate")
+		runner.assert_eq(
+			Dictionary(retaliation_request.get("trigger_payload", {})).get("damage", 0),
+			8,
+			"event request should preserve its trigger payload"
+		)
+		runner.assert_eq(
+			modular_system.notify_trigger("on_player_hit", { "damage": 8 }).size(),
+			0,
+			"event effect should respect its independent cooldown"
+		)
+		modular_system.tick(4.1)
+		runner.assert_eq(
+			_count_effect(modular_system.notify_trigger("on_player_hit", { "damage": 3 }), "retaliate"),
+			1,
+			"event effect should become ready after its cooldown"
+		)
+	else:
+		runner.assert_true(false, "weapon system should accept explicit trigger events")
+
+	modular_system.level_weapon("fixture_weapon")
+	var refreshed = modular_system.tick(0.0)
+	runner.assert_eq(_count_effect(refreshed, "orbit"), 1, "leveling should refresh a persistent effect")
+	runner.assert_eq(_request_damage(refreshed, "orbit"), 18, "level override should apply before global damage modifier")
+	modular_system.free()
+
+	var cooldown_level_system = weapon_system_script.new()
+	cooldown_level_system.set_stat_modifiers({ "weapon_cooldown_multiplier": -0.1 })
+	cooldown_level_system.add_weapon(_modular_fixture())
+	cooldown_level_system.tick(0.0)
+	cooldown_level_system.tick(0.2)
+	cooldown_level_system.level_weapon("fixture_weapon")
+	runner.assert_eq(
+		_count_effect(cooldown_level_system.tick(0.37), "bolt"),
+		1,
+		"cooldown upgrades should clamp the current wait to the new cooldown"
+	)
+	cooldown_level_system.free()
 	system.free()
+
+func _modular_fixture() -> Dictionary:
+	return {
+		"id": "fixture_weapon",
+		"version": 1,
+		"display_name": "模块测试武器",
+		"description": "覆盖周期、常驻和受击触发。",
+		"school": "sword",
+		"max_level": 5,
+		"effects": [
+			{
+				"effect_id": "bolt",
+				"trigger": { "id": "periodic", "cooldown": 1.0 },
+				"target": { "id": "nearest", "range": 320.0 },
+				"carrier": { "id": "projectile", "speed": 500.0, "count": 1 },
+				"hit": { "damage": 10, "statuses": [] },
+			},
+			{
+				"effect_id": "orbit",
+				"trigger": { "id": "persistent" },
+				"target": { "id": "self" },
+				"carrier": { "id": "orbit", "count": 2, "hit_interval": 0.5 },
+				"hit": { "damage": 8, "statuses": [] },
+			},
+			{
+				"effect_id": "retaliate",
+				"trigger": { "id": "on_player_hit", "event_cooldown": 4.0 },
+				"target": { "id": "radial", "range": 280.0 },
+				"carrier": { "id": "projectile", "speed": 460.0, "count": 4 },
+				"hit": { "damage": 6, "statuses": [] },
+			},
+		],
+		"visual": {
+			"carrier": "res://art/weapons/flying_sword/flying_sword_projectile.png",
+		},
+		"levels": [{
+			"level": 2,
+			"effect_id": "orbit",
+			"section": "hit",
+			"values": { "damage": 14 },
+		}, {
+			"level": 2,
+			"effect_id": "bolt",
+			"section": "trigger",
+			"values": { "cooldown": 0.4 },
+		}],
+	}
+
+func _count_effect(requests: Array, effect_id: String) -> int:
+	var count := 0
+	for request in requests:
+		if String(request.get("effect_id", "")) == effect_id:
+			count += 1
+	return count
+
+func _find_request(requests: Array, effect_id: String) -> Dictionary:
+	for request in requests:
+		if String(request.get("effect_id", "")) == effect_id:
+			return request
+	return {}
+
+func _request_damage(requests: Array, effect_id: String) -> int:
+	var request := _find_request(requests, effect_id)
+	return int(Dictionary(request.get("hit", {})).get("damage", 0))

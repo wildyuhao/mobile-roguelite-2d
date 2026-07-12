@@ -57,6 +57,18 @@ func run(runner) -> void:
 		"missing production visuals should fail"
 	)
 
+	invalid = valid.duplicate(true)
+	invalid["levels"] = [{
+		"level": 2,
+		"effect_id": "main",
+		"section": "carrier",
+		"values": { "count": 13 },
+	}]
+	runner.assert_true(
+		_contains(validator.validate(invalid), "carrier count"),
+		"level overrides should not bypass carrier bounds"
+	)
+
 	invalid["id"] = "invalid_weapon"
 	var catalog := {
 		"test_weapon": valid,

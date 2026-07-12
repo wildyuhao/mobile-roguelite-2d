@@ -1,6 +1,7 @@
 extends RefCounted
 class_name WeaponDefinitionValidator
 
+const WeaponRequestBuilderScript = preload("res://scripts/weapons/weapon_request_builder.gd")
 const TRIGGERS := {
 	"periodic": true,
 	"persistent": true,
@@ -81,6 +82,7 @@ func validate(definition: Dictionary) -> Array[String]:
 
 	var effect_ids := _validate_effects(errors, weapon_id, definition.get("effects", []))
 	_validate_levels(errors, weapon_id, definition.get("levels", []), effect_ids)
+	_validate_resolved_levels(errors, weapon_id, definition)
 	_validate_visuals(errors, weapon_id, definition.get("visual", {}))
 	return errors
 
@@ -181,6 +183,25 @@ func _validate_visuals(
 			or not ResourceLoader.exists(resource_path)
 		):
 			errors.append("%s references missing visual %s" % [weapon_id, resource_path])
+
+func _validate_resolved_levels(
+	errors: Array[String],
+	weapon_id: String,
+	definition: Dictionary
+) -> void:
+	var builder = WeaponRequestBuilderScript.new()
+	for level in range(2, int(definition.get("max_level", 1)) + 1):
+		for effect in builder.resolve_effects(definition, level):
+			var level_errors: Array[String] = []
+			var effect_id := String(effect.get("effect_id", ""))
+			_validate_module(level_errors, weapon_id, effect_id, "trigger", effect.get("trigger", {}), TRIGGERS)
+			_validate_module(level_errors, weapon_id, effect_id, "target", effect.get("target", {}), TARGETS)
+			_validate_module(level_errors, weapon_id, effect_id, "carrier", effect.get("carrier", {}), CARRIERS)
+			_validate_effect_bounds(level_errors, weapon_id, effect_id, effect)
+			_validate_hit(level_errors, weapon_id, effect_id, effect.get("hit", {}))
+			for error in level_errors:
+				if not errors.has(error):
+					errors.append(error)
 
 func _validate_module(
 	errors: Array[String],
