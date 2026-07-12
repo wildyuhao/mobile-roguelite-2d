@@ -287,7 +287,7 @@ func _connect_player_health() -> void:
 		return
 
 	if player_health.has_signal("damaged"):
-		player_health.damaged.connect(_on_player_health_changed.unbind(1))
+		player_health.damaged.connect(_on_player_damaged)
 	if player_health.has_signal("healed"):
 		player_health.healed.connect(_on_player_health_changed.unbind(1))
 	if player_health.has_signal("died"):
@@ -298,6 +298,21 @@ func _on_player_health_changed() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")
 	if player_health != null:
 		_update_player_health_hud(player_health)
+
+func _on_player_damaged(amount: int) -> void:
+	var player_health := player.get_node_or_null("HealthComponent")
+	if player_health == null:
+		return
+	_update_player_health_hud(player_health)
+	var heavy_threshold := int(
+		ceil(float(player_health.get("max_health")) * 0.25)
+	)
+	if (
+		amount >= heavy_threshold
+		and enemy_director != null
+		and enemy_director.has_method("notify_player_heavy_damage")
+	):
+		enemy_director.notify_player_heavy_damage()
 
 func _on_player_died() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")

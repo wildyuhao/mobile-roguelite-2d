@@ -4,22 +4,56 @@ class FakeDatabase:
 	extends RefCounted
 
 	var events: Array[Dictionary] = []
+	var encounters: Array[Dictionary] = []
+	var formations: Dictionary = {
+		"surround_gap": {
+			"id": "surround_gap",
+			"pattern": "ring_gap",
+			"gap_degrees": 70.0,
+		},
+	}
+	var enemies: Dictionary = {
+		"basic_demon": {
+			"id": "basic_demon",
+			"role": "swarm",
+			"behavior": "chase",
+			"max_health": 24,
+			"move_speed": 70,
+			"experience_value": 1,
+			"material_value": 1,
+		},
+		"seal_boss": {
+			"id": "seal_boss",
+			"role": "boss",
+			"behavior": "boss",
+			"max_health": 1200,
+			"move_speed": 70,
+			"experience_value": 30,
+			"material_value": 50,
+		},
+	}
 
-	func _init(new_events: Array[Dictionary] = []) -> void:
+	func _init(
+		new_events: Array[Dictionary] = [],
+		new_encounters: Array[Dictionary] = []
+	) -> void:
 		events = new_events
+		encounters = new_encounters
 
 	func get_wave_events() -> Array[Dictionary]:
 		return events
 
 	func get_enemy(id: String) -> Dictionary:
-		return {
-			"id": id,
-			"behavior": "chase",
-			"max_health": 1200,
-			"move_speed": 70,
-			"experience_value": 30,
-			"material_value": 50,
-		}
+		return enemies.get(id, {})
+
+	func get_enemies() -> Dictionary:
+		return enemies
+
+	func get_encounters() -> Array[Dictionary]:
+		return encounters
+
+	func get_formations() -> Dictionary:
+		return formations
 
 func run(runner) -> void:
 	if not ResourceLoader.exists("res://scripts/systems/enemy_director.gd"):
@@ -58,6 +92,7 @@ func run(runner) -> void:
 	parent.queue_free()
 
 	_assert_spawn_interval_batches_enemies(runner, director_script)
+	_assert_budgeted_encounter(runner, director_script)
 
 func _assert_spawn_interval_batches_enemies(runner, director_script) -> void:
 	var parent := Node2D.new()
@@ -90,4 +125,67 @@ func _assert_spawn_interval_batches_enemies(runner, director_script) -> void:
 	director._process(0.5)
 	runner.assert_eq(spawned_enemies.size(), 3, "wave should finish after repeated intervals")
 
+	parent.queue_free()
+
+func _assert_budgeted_encounter(runner, director_script) -> void:
+	var parent := Node2D.new()
+	var player := Node2D.new()
+	var director = director_script.new()
+	var spawned_enemies: Array[Node] = []
+	var started: Array[String] = []
+	parent.add_child(player)
+	parent.add_child(director)
+	Engine.get_main_loop().root.add_child(parent)
+	director.enemy_scene = load("res://scenes/enemies/BasicDemon.tscn")
+	director.configure(FakeDatabase.new([], [{
+		"id": "test_surround",
+		"weight": 1,
+		"min_time": 45.0,
+		"max_time": 300.0,
+		"cooldown_draws": 0,
+		"pressure_cost": 10,
+		"formation_id": "surround_gap",
+		"groups": [{"enemy_id": "basic_demon", "count": 10}],
+	}]), player)
+	director.enemy_spawned.connect(
+		func(enemy: Node) -> void: spawned_enemies.append(enemy)
+	)
+	if not director.has_signal("encounter_started"):
+		runner.assert_true(false, "enemy director should emit encounter_started")
+		parent.queue_free()
+		return
+	director.encounter_started.connect(
+		func(id: String) -> void: started.append(id)
+	)
+	director.next_encounter_time = 45.0
+	director._process(45.0)
+	runner.assert_eq(
+		started,
+		["test_surround"],
+		"director should schedule an eligible encounter"
+	)
+	runner.assert_true(
+		director.pending_spawn_waves.size() > 0,
+		"encounter should enter the spawn queue"
+	)
+	director._process(0.0)
+	runner.assert_true(
+		spawned_enemies.size() > 0,
+		"queued encounter should begin spawning"
+	)
+	runner.assert_true(
+		spawned_enemies.size() <= 6,
+		"one frame should respect the spawn burst cap"
+	)
+	var snapshot: Dictionary = director._get_active_snapshot()
+	runner.assert_eq(
+		snapshot.get("total", -1),
+		spawned_enemies.size(),
+		"director should track every active enemy it spawned"
+	)
+	for enemy in spawned_enemies:
+		runner.assert_true(
+			enemy.has_meta("encounter_id"),
+			"director enemy should record encounter provenance"
+		)
 	parent.queue_free()

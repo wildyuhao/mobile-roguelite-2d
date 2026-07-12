@@ -60,6 +60,14 @@ class FakeHUD:
 	func show_upgrade_feedback(display_name: String) -> void:
 		last_upgrade_feedback = display_name
 
+class FakeEnemyDirector:
+	extends Node
+
+	var heavy_damage_calls: int = 0
+
+	func notify_player_heavy_damage() -> void:
+		heavy_damage_calls += 1
+
 class FakePickup:
 	extends Node
 
@@ -317,6 +325,34 @@ func run(runner) -> void:
 	stat_player.free()
 	stat_weapon_system.free()
 	stat_loop.free()
+
+	var pressure_loop = game_loop_script.new()
+	var pressure_player := Node2D.new()
+	var pressure_health = load("res://scripts/components/health_component.gd").new()
+	var pressure_director := FakeEnemyDirector.new()
+	pressure_health.name = "HealthComponent"
+	pressure_player.add_child(pressure_health)
+	pressure_health.configure(100)
+	pressure_loop.player = pressure_player
+	pressure_loop.enemy_director = pressure_director
+	if pressure_loop.has_method("_on_player_damaged"):
+		pressure_loop._on_player_damaged(24)
+		runner.assert_eq(
+			pressure_director.heavy_damage_calls,
+			0,
+			"small hit should not suppress pressure"
+		)
+		pressure_loop._on_player_damaged(25)
+		runner.assert_eq(
+			pressure_director.heavy_damage_calls,
+			1,
+			"quarter-health hit should suppress pressure"
+		)
+	else:
+		runner.assert_true(false, "game loop should forward heavy damage to pressure")
+	pressure_director.free()
+	pressure_player.free()
+	pressure_loop.free()
 
 	victory_panel.free()
 	game_loop.free()
