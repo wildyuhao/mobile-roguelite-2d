@@ -46,6 +46,17 @@ func release(node: Node) -> bool:
 	if not active_by_id.has(instance_id):
 		return false
 	active_by_id.erase(instance_id)
+	if node.has_method("begin_pool_release"):
+		node.begin_pool_release()
+	if Engine.is_in_physics_frame():
+		call_deferred("_complete_release", node)
+	else:
+		_complete_release(node)
+	return true
+
+func _complete_release(node: Node) -> void:
+	if node == null or not is_instance_valid(node):
+		return
 	var pool_key := String(node.get_meta(POOL_KEY_META, ""))
 	if node.has_method("deactivate_for_pool"):
 		node.deactivate_for_pool()
@@ -54,7 +65,6 @@ func release(node: Node) -> bool:
 		bucket.append(node)
 	available[pool_key] = bucket
 	node_released.emit(pool_key, node)
-	return true
 
 func prewarm(
 	pool_key: String,
@@ -87,6 +97,12 @@ func get_stats(pool_key: String) -> Dictionary:
 		"active": active_count,
 		"available": bucket.size(),
 	}
+
+func get_all_stats() -> Dictionary:
+	var result: Dictionary = {}
+	for pool_key in created_counts.keys():
+		result[String(pool_key)] = get_stats(String(pool_key))
+	return result
 
 func _connect_release_signal(node: Node) -> void:
 	if not node.has_signal("release_requested"):

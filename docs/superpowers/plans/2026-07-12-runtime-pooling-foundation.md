@@ -18,6 +18,7 @@
 - External gameplay signal connections are connected at most once and remain valid across reuse.
 - A release request without an attached pool falls back to `queue_free()` for test and scene compatibility.
 - Pool release is idempotent; duplicate release requests never place the same node in an available bucket twice.
+- A release requested inside a physics callback becomes logically inactive immediately, then completes collision/process shutdown and bucket return after the physics frame. Pending nodes cannot be reacquired in the same frame.
 - Game scene prewarms 32 enemies, 48 projectiles, and 32 pickups before combat.
 - Stress verification reaches concurrent peaks of 140 enemies, 250 projectiles, and 100 pickups for three cycles without creating beyond the peak.
 - The service remains scene-local; no Autoload or global singleton is introduced.
@@ -865,6 +866,7 @@ git -c http.proxy=http://127.0.0.1:7897 -c https.proxy=http://127.0.0.1:7897 -c 
 - Scope coverage: implements the approved `PoolService` boundary for enemies, projectiles, and pickups, including prewarm, release, lifecycle reset, fallback free, statistics, and peak churn evidence.
 - Scope boundary: common visual effects remain non-pooled until a reusable effect scene exists; pooling an absent effect type would create dead abstraction.
 - Lifecycle consistency: each type owns its mutable state reset; the generic service only owns membership, creation, reuse, and callbacks.
+- Physics consistency: poolables expose an immediate logical-release phase, while `PoolService` defers physical shutdown and bucket return when Godot is inside a physics frame.
 - Signal consistency: pool release signal is connected once at creation; gameplay signals are guarded with `is_connected` before reuse.
 - Director consistency: inactive enemies leave gameplay groups and are pruned from the active registry without relying on `tree_exited`.
 - Mobile consistency: prewarm avoids first-combat spikes and production churn proves no allocation growth beyond 140 enemy, 250 projectile, and 100 pickup peaks.

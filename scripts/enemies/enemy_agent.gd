@@ -88,6 +88,8 @@ func _ready() -> void:
 	health.died.connect(_on_died)
 
 func _physics_process(delta: float) -> void:
+	if not pool_active:
+		return
 	velocity = calculate_action_velocity(delta)
 	move_and_slide()
 
@@ -200,14 +202,8 @@ func activate_from_pool() -> void:
 		sprite.modulate = Color.WHITE
 
 func deactivate_for_pool() -> void:
-	pool_active = false
-	target = null
-	velocity = Vector2.ZERO
-	action_state.mark_dead()
-	damage_applied_this_action = false
-	visible = false
+	begin_pool_release()
 	process_mode = Node.PROCESS_MODE_DISABLED
-	remove_from_group(GameConstantsScript.ENEMY_GROUP)
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
 	if has_meta("encounter_id"):
@@ -215,10 +211,20 @@ func deactivate_for_pool() -> void:
 	if has_meta("enemy_role"):
 		remove_meta("enemy_role")
 
+func begin_pool_release() -> void:
+	pool_active = false
+	target = null
+	velocity = Vector2.ZERO
+	action_state.mark_dead()
+	damage_applied_this_action = false
+	visible = false
+	remove_from_group(GameConstantsScript.ENEMY_GROUP)
+
 func is_pool_active() -> bool:
 	return pool_active
 
 func _release_or_free() -> void:
+	begin_pool_release()
 	if release_requested.get_connections().is_empty():
 		queue_free()
 	else:

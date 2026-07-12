@@ -69,14 +69,18 @@ func activate_from_pool() -> void:
 		collection_shape.set_deferred("disabled", false)
 
 func deactivate_for_pool() -> void:
-	pool_active = false
-	visible = false
+	begin_pool_release()
 	process_mode = Node.PROCESS_MODE_DISABLED
-	remove_from_group(GameConstantsScript.PICKUP_GROUP)
 	if collection_shape != null:
 		collection_shape.set_deferred("disabled", true)
 
+func begin_pool_release() -> void:
+	pool_active = false
+	visible = false
+	remove_from_group(GameConstantsScript.PICKUP_GROUP)
+
 func _release_or_free() -> void:
+	begin_pool_release()
 	if release_requested.get_connections().is_empty():
 		queue_free()
 	else:

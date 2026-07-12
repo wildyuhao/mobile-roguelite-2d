@@ -52,6 +52,8 @@ func _ready() -> void:
 	_capture_base_visual()
 
 func _physics_process(delta: float) -> void:
+	if not pool_active:
+		return
 	global_position += velocity * delta
 	remaining_lifetime -= delta
 	if remaining_lifetime <= 0.0 or _has_reached_max_range():
@@ -65,6 +67,8 @@ func _on_body_entered(body: Node) -> void:
 	_damage_if_possible(body)
 
 func _damage_if_possible(target_node: Node) -> void:
+	if not pool_active:
+		return
 	if target_node == null or not target_node.is_in_group(GameConstantsScript.ENEMY_GROUP):
 		return
 
@@ -109,17 +113,21 @@ func activate_from_pool() -> void:
 		sprite.modulate = Color.WHITE
 
 func deactivate_for_pool() -> void:
-	pool_active = false
-	velocity = Vector2.ZERO
-	hit_targets.clear()
-	visible = false
+	begin_pool_release()
 	process_mode = Node.PROCESS_MODE_DISABLED
-	remove_from_group(GameConstantsScript.PROJECTILE_GROUP)
 	var collision := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision != null:
 		collision.set_deferred("disabled", true)
 
+func begin_pool_release() -> void:
+	pool_active = false
+	velocity = Vector2.ZERO
+	hit_targets.clear()
+	visible = false
+	remove_from_group(GameConstantsScript.PROJECTILE_GROUP)
+
 func _release_or_free() -> void:
+	begin_pool_release()
 	if release_requested.get_connections().is_empty():
 		queue_free()
 	else:
