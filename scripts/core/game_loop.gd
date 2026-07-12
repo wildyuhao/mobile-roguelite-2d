@@ -1,17 +1,14 @@
 extends Node2D
 class_name GameLoop
 
-const GameConstantsScript = preload("res://scripts/core/constants.gd")
 const GameDatabaseScript = preload("res://scripts/data/game_database.gd")
 const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
-const CombatResolverScript = preload("res://scripts/systems/combat_resolver.gd")
 const SettlementSystemScript = preload("res://scripts/systems/settlement_system.gd")
 const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
 const EquipmentSystemScript = preload("res://scripts/systems/equipment_system.gd")
 const SETTLEMENT_UPGRADE_EQUIPMENT_ID := "talisman_robe"
 const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "bronze_gear_core", "jade_compass"]
 
-@export var projectile_scene: PackedScene
 @export var experience_pickup_scene: PackedScene
 
 @onready var player: Node2D = $Player
@@ -23,10 +20,10 @@ const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "
 @onready var virtual_joystick: Node = $VirtualJoystick/Stick
 @onready var settlement_panel: Node = $SettlementPanel
 @onready var pool_service: Node = get_node_or_null("PoolService")
+@onready var combat_effect_pipeline: Node = get_node_or_null("CombatEffectPipeline")
 
 var database = GameDatabaseScript.new()
 var upgrade_system = UpgradeSystemScript.new()
-var combat_resolver = CombatResolverScript.new()
 var settlement_system = SettlementSystemScript.new()
 var save_system: Object = SaveSystemScript.new()
 var equipment_system = EquipmentSystemScript.new()
@@ -51,8 +48,12 @@ func _ready() -> void:
 	var loaded = database.load_all()
 	assert(loaded, "Game database failed to load: %s" % str(database.errors))
 	if pool_service != null and pool_service.has_method("prewarm"):
-		pool_service.prewarm("projectile", projectile_scene, self, 48)
 		pool_service.prewarm("pickup", experience_pickup_scene, self, 32)
+	if (
+		combat_effect_pipeline != null
+		and combat_effect_pipeline.has_method("prepare_runtime")
+	):
+		combat_effect_pipeline.prepare_runtime(pool_service, self)
 
 	var save_data := _load_save_data()
 	apply_saved_equipment_to_player(save_data)
@@ -76,38 +77,47 @@ func _process(delta: float) -> void:
 	run_time += delta
 	hud.set_run_time(run_time)
 
-	var fire_events = weapon_system.tick(delta)
-	for event in fire_events:
-		if event.get("weapon_type", "projectile") == "pulse":
-			_apply_pulse_event(event)
-		else:
-			_spawn_projectiles(event)
+	var combat_context := _build_combat_context()
+	if combat_effect_pipeline != null:
+		combat_effect_pipeline.update_context(combat_context)
+	_execute_effect_requests(weapon_system.tick(delta), combat_context)
 
-func _spawn_projectiles(event: Dictionary) -> void:
-	var enemies = get_tree().get_nodes_in_group(GameConstantsScript.ENEMY_GROUP)
-	if enemies.is_empty() or projectile_scene == null:
+func _build_combat_context() -> Dictionary:
+	var targets: Array = []
+	if is_inside_tree():
+		targets = get_tree().get_nodes_in_group("enemy")
+	var origin := player.global_position if player != null else Vector2.ZERO
+	return {
+		"origin": origin,
+		"owner": player,
+		"targets": targets,
+		"pool_service": pool_service,
+		"parent": self,
+		"run_time": run_time,
+		"aim_direction": Vector2.ZERO,
+	}
+
+func _execute_effect_requests(requests: Array, context: Dictionary) -> void:
+	if combat_effect_pipeline == null:
 		return
-
-	var count := int(event.get("projectile_count", 1))
-	var directions: Array[Vector2] = []
-	if String(event.get("aim_mode", "target")) == "radial":
-		directions = combat_resolver.build_radial_directions(count, run_time * 0.8)
-	else:
-		var target = combat_resolver.find_closest_enemy(player.global_position, enemies, float(event.get("range", 320.0)))
-		if target == null:
-			return
-		var direction: Vector2 = player.global_position.direction_to(target.global_position)
-		directions = combat_resolver.build_spread_directions(direction, count, 8.0)
-
-	for projectile_direction in directions:
-		var projectile = _acquire_runtime_node("projectile", projectile_scene)
-		if projectile == null:
+	for request_value in requests:
+		if typeof(request_value) != TYPE_DICTIONARY:
 			continue
-		projectile.global_position = player.global_position
-		if projectile.has_method("configure_from_event"):
-			projectile.configure_from_event(projectile_direction, event)
-		else:
-			projectile.configure(projectile_direction, float(event["projectile_speed"]), int(event["damage"]))
+		var request: Dictionary = request_value
+		var result := String(combat_effect_pipeline.execute_request(request, context))
+		if weapon_system != null and weapon_system.has_method("acknowledge_request"):
+			weapon_system.acknowledge_request(
+				int(request.get("request_id", 0)),
+				result
+			)
+
+func _forward_weapon_trigger(trigger_id: String, payload: Dictionary) -> void:
+	if weapon_system == null or not weapon_system.has_method("notify_trigger"):
+		return
+	_execute_effect_requests(
+		weapon_system.notify_trigger(trigger_id, payload),
+		_build_combat_context()
+	)
 
 func set_pool_service(service: Node) -> void:
 	pool_service = service
@@ -120,27 +130,6 @@ func _acquire_runtime_node(pool_key: String, scene: PackedScene) -> Node:
 	var node = scene.instantiate()
 	add_child(node)
 	return node
-
-func _apply_pulse_event(event: Dictionary) -> void:
-	var enemies = get_tree().get_nodes_in_group(GameConstantsScript.ENEMY_GROUP)
-	var targets = combat_resolver.get_enemies_in_radius(player.global_position, enemies, float(event.get("range", 0.0)))
-	for target in targets:
-		_damage_enemy(target, int(event.get("damage", 1)))
-		_apply_knockback(target, float(event.get("knockback", 0.0)))
-
-func _damage_enemy(enemy: Node, amount: int) -> void:
-	var target_health := enemy.get_node_or_null("HealthComponent")
-	if target_health != null and target_health.has_method("take_damage"):
-		target_health.take_damage(amount)
-
-func _apply_knockback(enemy: Node2D, amount: float) -> void:
-	if amount <= 0.0:
-		return
-
-	var direction := player.global_position.direction_to(enemy.global_position)
-	if direction == Vector2.ZERO:
-		direction = Vector2.RIGHT
-	enemy.global_position += direction * amount
 
 func _on_level_up(new_level: int) -> void:
 	hud.set_level(new_level)
@@ -179,6 +168,8 @@ func _try_apply_runtime_upgrade(upgrade: Dictionary) -> bool:
 	return true
 
 func _on_enemy_spawned(enemy: Node) -> void:
+	if combat_effect_pipeline != null:
+		combat_effect_pipeline.register_target(enemy)
 	if not enemy.has_signal("defeated"):
 		return
 	var callback := Callable(self, "_on_enemy_defeated")
@@ -186,6 +177,7 @@ func _on_enemy_spawned(enemy: Node) -> void:
 		enemy.connect("defeated", callback)
 
 func _on_enemy_defeated(payload: Dictionary) -> void:
+	_forward_weapon_trigger("on_kill", payload)
 	record_enemy_defeat(payload)
 	var enemy_position: Vector2 = payload.get("enemy_position", Vector2.ZERO)
 	var experience_value := int(payload.get("experience_value", 0))
@@ -355,6 +347,7 @@ func _on_player_damaged(amount: int) -> void:
 	_update_player_health_hud(player_health)
 	if hud != null and hud.has_method("show_damage_feedback"):
 		hud.show_damage_feedback(amount)
+	_forward_weapon_trigger("on_player_hit", { "damage": amount })
 	var heavy_threshold := int(
 		ceil(float(player_health.get("max_health")) * 0.25)
 	)

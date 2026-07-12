@@ -2,6 +2,7 @@ extends Area2D
 class_name ProjectileCarrier
 
 signal hit_requested(target: Node, packet: Dictionary)
+signal area_requested(center: Vector2, source_request: Dictionary)
 signal release_requested(node: Node)
 
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
@@ -50,7 +51,14 @@ func try_hit(target: Node) -> bool:
 	if hit_targets.has(target_id):
 		return false
 	hit_targets[target_id] = true
-	hit_requested.emit(target, _build_hit_packet())
+	var hit: Dictionary = request.get("hit", {})
+	if float(hit.get("splash_radius", 0.0)) > 0.0:
+		var impact_position := global_position
+		if target is Node2D:
+			impact_position = (target as Node2D).global_position
+		area_requested.emit(impact_position, request.duplicate(true))
+	else:
+		hit_requested.emit(target, _build_hit_packet())
 	if remaining_pierce <= 0:
 		_release_or_free()
 	else:
@@ -141,12 +149,13 @@ func _configure_visual() -> void:
 	if sprite == null:
 		return
 	var visual: Dictionary = request.get("visual", {})
+	var carrier: Dictionary = request.get("carrier", {})
 	var texture_path := String(visual.get("carrier", ""))
 	if texture_path != "" and ResourceLoader.exists(texture_path):
 		sprite.texture = load(texture_path)
-	var scale_value := float(visual.get("scale", 0.08))
+	var scale_value := float(visual.get("scale", carrier.get("scale", 0.08)))
 	sprite.scale = Vector2.ONE * maxf(0.01, scale_value)
-	var tint_text := String(visual.get("tint", "#ffffff"))
+	var tint_text := String(visual.get("tint", carrier.get("tint", "#ffffff")))
 	if Color.html_is_valid(tint_text):
 		sprite.modulate = Color.html(tint_text)
 

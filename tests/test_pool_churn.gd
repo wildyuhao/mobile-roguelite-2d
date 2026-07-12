@@ -15,7 +15,7 @@ func run(runner) -> void:
 		},
 		{
 			"key": "projectile",
-			"scene": load("res://scenes/weapons/Projectile.tscn"),
+			"scene": load("res://scenes/weapons/ProjectileCarrier.tscn"),
 			"peak": 24,
 		},
 		{

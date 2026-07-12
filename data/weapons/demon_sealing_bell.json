@@ -1,18 +1,48 @@
 {
   "id": "demon_sealing_bell",
+  "version": 1,
   "display_name": "封魔铃",
-  "description": "周期释放具有击退效果的封魔声波。",
-  "type": "pulse",
-  "base_damage": 8,
-  "cooldown": 2.2,
-  "projectile_speed": 0,
-  "range": 180,
-  "knockback": 80,
+  "description": "周期释放具有击退与封印效果的镇魔声波。",
+  "school": "soul",
   "max_level": 5,
-  "level_modifiers": [
-    { "level": 2, "range": 220 },
-    { "level": 3, "base_damage": 12 },
-    { "level": 4, "cooldown": 1.8 },
-    { "level": 5, "stun_chance": 0.2 }
+  "effects": [
+    {
+      "effect_id": "bell_wave",
+      "trigger": { "id": "periodic", "cooldown": 2.2 },
+      "target": { "id": "self", "range": 180 },
+      "carrier": {
+        "id": "area",
+        "radius": 180,
+        "duration": 0,
+        "hit_interval": 0.5,
+        "count": 1
+      },
+      "hit": {
+        "damage": 8,
+        "knockback": 80,
+        "statuses": [],
+        "hit_effect_id": "enemy_weapon_hit_spark"
+      }
+    }
+  ],
+  "visual": {
+    "carrier": "res://art/effects/hit/enemy_weapon_hit_spark.png",
+    "hit": "res://art/effects/hit/enemy_weapon_hit_spark.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "bell_wave", "section": "target", "values": { "range": 220 } },
+    { "level": 2, "effect_id": "bell_wave", "section": "carrier", "values": { "radius": 220 } },
+    { "level": 3, "effect_id": "bell_wave", "section": "hit", "values": { "damage": 12 } },
+    { "level": 4, "effect_id": "bell_wave", "section": "trigger", "values": { "cooldown": 1.8 } },
+    {
+      "level": 5,
+      "effect_id": "bell_wave",
+      "section": "hit",
+      "values": {
+        "statuses": [
+          { "id": "seal", "stacks": 1, "duration": 1.2 }
+        ]
+      }
+    }
   ]
 }

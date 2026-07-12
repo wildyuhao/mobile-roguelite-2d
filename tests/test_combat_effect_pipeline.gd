@@ -65,6 +65,23 @@ func run(runner) -> void:
 	var area_request := _area_request(4)
 	runner.assert_eq(pipeline.execute_request(area_request, context), "executed", "area request should execute")
 	runner.assert_eq(enemy.get_node("HealthComponent").current_health, 86, "instant area should resolve one hit")
+	var nearby_enemy := _enemy(Vector2(112, 0))
+	root.add_child(nearby_enemy)
+	var splash_context := _context(root, pool, [enemy, nearby_enemy])
+	var splash_request := _projectile_request(10)
+	splash_request["hit"]["splash_radius"] = 32.0
+	runner.assert_eq(pipeline.execute_request(splash_request, splash_context), "pool_queued", "splash projectile should queue while projectile pool is occupied")
+	var active_projectile: Node = pool.active_by_id.values().filter(
+		func(node: Node) -> bool: return String(node.get_meta("_pool_key", "")) == "projectile"
+	)[0]
+	active_projectile.try_hit(enemy)
+	pipeline._physics_process(0.0)
+	active_projectile = pool.active_by_id.values().filter(
+		func(node: Node) -> bool: return String(node.get_meta("_pool_key", "")) == "projectile"
+	)[0]
+	active_projectile.try_hit(enemy)
+	runner.assert_eq(enemy.get_node("HealthComponent").current_health, 66, "splash should damage primary target once after queued bolt")
+	runner.assert_eq(nearby_enemy.get_node("HealthComponent").current_health, 90, "splash should damage nearby target once")
 
 	pipeline.register_target(enemy)
 	var status = enemy.get_node("StatusController")
@@ -74,7 +91,7 @@ func run(runner) -> void:
 			{ "weapon_id": "talisman_fire" }
 		)
 	status.tick_statuses(0.5)
-	runner.assert_eq(enemy.get_node("HealthComponent").current_health, 80, "status signal should return through hit resolver")
+	runner.assert_eq(enemy.get_node("HealthComponent").current_health, 60, "status signal should return through hit resolver")
 
 	runner.assert_eq(
 		pipeline.execute_request(_orbit_request(5, 2), context),

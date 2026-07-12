@@ -19,15 +19,20 @@ func run(runner) -> void:
 		"spirit_needle_array": "灵针阵",
 	}
 	for weapon_id in expected_weapon_names.keys():
+		var definition: Dictionary = db.get_weapon(weapon_id)
 		runner.assert_eq(
-			db.get_weapon(weapon_id).get("display_name", ""),
+			definition.get("display_name", ""),
 			expected_weapon_names[weapon_id],
 			"%s should use its Chinese display name" % weapon_id
 		)
 		runner.assert_true(
-			_has_cjk(String(db.get_weapon(weapon_id).get("description", ""))),
+			_has_cjk(String(definition.get("description", ""))),
 			"%s description should contain Chinese text" % weapon_id
 		)
+		runner.assert_eq(definition.get("version", 0), 1, "%s should use modular schema version one" % weapon_id)
+		runner.assert_true(not Array(definition.get("effects", [])).is_empty(), "%s should define modular effects" % weapon_id)
+		for legacy_key in ["type", "base_damage", "cooldown", "projectile_speed"]:
+			runner.assert_true(not definition.has(legacy_key), "%s should not keep legacy field %s" % [weapon_id, legacy_key])
 	for upgrade in db.get_upgrades():
 		runner.assert_true(
 			_has_cjk(String(upgrade.get("display_name", ""))),
@@ -42,8 +47,10 @@ func run(runner) -> void:
 	runner.assert_true(db.has_method("get_enemies"), "database should expose all enemies")
 	runner.assert_true(db.has_weapon("spirit_needle_array"), "database should include spirit_needle_array")
 	runner.assert_true(db.get_weapons().size() >= 5, "combat density foundation should include five weapons")
+	var validator = load("res://scripts/weapons/weapon_definition_validator.gd").new()
+	runner.assert_true(validator.validate_catalog(db.get_weapons()).is_empty(), "loaded weapon catalog should pass modular validation")
 	for weapon_id in ["flying_sword", "talisman_fire", "mechanism_crossbow", "spirit_needle_array"]:
-		var texture_path := String(db.get_weapon(weapon_id).get("projectile_texture_path", ""))
+		var texture_path := String(Dictionary(db.get_weapon(weapon_id).get("visual", {})).get("carrier", ""))
 		runner.assert_true(texture_path != "", "%s should declare a projectile texture" % weapon_id)
 		runner.assert_true(ResourceLoader.exists(texture_path), "%s projectile texture should exist" % weapon_id)
 	runner.assert_true(db.get_enemies().size() >= 5, "vertical slice should include four enemies and one boss")

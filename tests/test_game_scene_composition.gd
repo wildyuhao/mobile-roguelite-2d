@@ -9,6 +9,7 @@ func run(runner) -> void:
 	var game = game_scene.instantiate()
 	runner.assert_true(game.has_node("Ground"), "game scene should include a ground sprite")
 	runner.assert_true(game.has_node("PoolService"), "game scene should include a local pool service")
+	runner.assert_true(game.has_node("CombatEffectPipeline"), "game scene should include a combat effect pipeline")
 	runner.assert_true(game.has_node("VirtualJoystick/Stick"), "game scene should include a virtual joystick stick")
 	runner.assert_true(game.has_node("SettlementPanel"), "game scene should include a settlement panel")
 
@@ -41,6 +42,14 @@ func run(runner) -> void:
 			player.get_node_or_null("DamageLabel") is Label,
 			"player should include a floating damage label"
 		)
+	var pipeline = game.get_node_or_null("CombatEffectPipeline")
+	if pipeline != null:
+		for scene_property in ["projectile_scene", "area_scene", "orbit_scene", "summon_scene"]:
+			runner.assert_true(pipeline.get(scene_property) is PackedScene, "pipeline should configure %s" % scene_property)
+	var game_loop_source := FileAccess.get_file_as_string("res://scripts/core/game_loop.gd")
+	runner.assert_true(not game_loop_source.contains("weapon_type"), "game loop should not branch on weapon type")
+	runner.assert_true(not game_loop_source.contains("_apply_pulse_event"), "game loop should not execute pulse damage")
+	runner.assert_true(not game_loop_source.contains("_spawn_projectiles"), "game loop should not spawn weapon carriers")
 
 	var enemy_scene: PackedScene = load("res://scenes/enemies/BasicDemon.tscn")
 	var enemy = enemy_scene.instantiate()

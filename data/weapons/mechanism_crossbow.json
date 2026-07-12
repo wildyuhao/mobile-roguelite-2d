@@ -1,21 +1,49 @@
 {
   "id": "mechanism_crossbow",
+  "version": 1,
   "display_name": "机关连弩",
   "description": "高速发射可贯穿敌人的机关弩矢。",
-  "type": "projectile",
-  "base_damage": 7,
-  "cooldown": 0.45,
-  "projectile_speed": 680,
-  "projectile_texture_path": "res://art/weapons/mechanism_crossbow/mechanism_bolt_projectile.png",
-  "projectile_scale": 0.09,
-  "projectile_tint": "#e5f6ff",
-  "range": 520,
-  "pierce": 1,
+  "school": "mechanism",
   "max_level": 5,
-  "level_modifiers": [
-    { "level": 2, "base_damage": 9 },
-    { "level": 3, "pierce": 2 },
-    { "level": 4, "cooldown": 0.35 },
-    { "level": 5, "projectile_count": 3 }
+  "effects": [
+    {
+      "effect_id": "crossbow_bolt",
+      "trigger": { "id": "periodic", "cooldown": 0.45 },
+      "target": { "id": "lowest_health", "range": 520 },
+      "carrier": {
+        "id": "projectile",
+        "speed": 680,
+        "count": 1,
+        "pierce": 1,
+        "scale": 0.09,
+        "tint": "#e5f6ff"
+      },
+      "hit": {
+        "damage": 7,
+        "knockback": 0,
+        "statuses": [],
+        "hit_effect_id": "enemy_weapon_hit_spark"
+      }
+    }
+  ],
+  "visual": {
+    "carrier": "res://art/weapons/mechanism_crossbow/mechanism_bolt_projectile.png",
+    "hit": "res://art/effects/hit/enemy_weapon_hit_spark.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "crossbow_bolt", "section": "hit", "values": { "damage": 9 } },
+    { "level": 3, "effect_id": "crossbow_bolt", "section": "carrier", "values": { "pierce": 2 } },
+    { "level": 4, "effect_id": "crossbow_bolt", "section": "trigger", "values": { "cooldown": 0.35 } },
+    { "level": 5, "effect_id": "crossbow_bolt", "section": "carrier", "values": { "count": 3 } },
+    {
+      "level": 5,
+      "effect_id": "crossbow_bolt",
+      "section": "hit",
+      "values": {
+        "statuses": [
+          { "id": "armor_break", "stacks": 1, "duration": 3.0 }
+        ]
+      }
+    }
   ]
 }

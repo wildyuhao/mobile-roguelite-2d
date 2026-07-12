@@ -1,21 +1,39 @@
 {
   "id": "flying_sword",
+  "version": 1,
   "display_name": "飞剑",
   "description": "符箓引导的飞剑，自动斩向最近的妖物。",
-  "type": "projectile",
-  "base_damage": 12,
-  "cooldown": 0.9,
-  "projectile_speed": 560,
-  "projectile_texture_path": "res://art/weapons/flying_sword/flying_sword_projectile.png",
-  "projectile_scale": 0.08,
-  "projectile_tint": "#ffffff",
-  "range": 420,
-  "pierce": 0,
+  "school": "sword",
   "max_level": 5,
-  "level_modifiers": [
-    { "level": 2, "base_damage": 16 },
-    { "level": 3, "cooldown": 0.75 },
-    { "level": 4, "pierce": 1 },
-    { "level": 5, "projectile_count": 2 }
+  "effects": [
+    {
+      "effect_id": "sword_bolt",
+      "trigger": { "id": "periodic", "cooldown": 0.9 },
+      "target": { "id": "nearest", "range": 420 },
+      "carrier": {
+        "id": "projectile",
+        "speed": 560,
+        "count": 1,
+        "pierce": 0,
+        "scale": 0.08,
+        "tint": "#ffffff"
+      },
+      "hit": {
+        "damage": 12,
+        "knockback": 0,
+        "statuses": [],
+        "hit_effect_id": "enemy_weapon_hit_spark"
+      }
+    }
+  ],
+  "visual": {
+    "carrier": "res://art/weapons/flying_sword/flying_sword_projectile.png",
+    "hit": "res://art/effects/hit/enemy_weapon_hit_spark.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "sword_bolt", "section": "hit", "values": { "damage": 16 } },
+    { "level": 3, "effect_id": "sword_bolt", "section": "trigger", "values": { "cooldown": 0.75 } },
+    { "level": 4, "effect_id": "sword_bolt", "section": "carrier", "values": { "pierce": 1 } },
+    { "level": 5, "effect_id": "sword_bolt", "section": "carrier", "values": { "count": 2 } }
   ]
 }

@@ -1,9 +1,9 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/game_loop.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/BasicDemon.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/ProjectileCarrier.tscn" id="4"]
 [ext_resource type="Script" path="res://scripts/systems/enemy_director.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/systems/experience_system.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/systems/weapon_system.gd" id="7"]
@@ -14,10 +14,13 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/VirtualJoystick.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/ui/SettlementPanel.tscn" id="13"]
 [ext_resource type="Script" path="res://scripts/systems/pool_service.gd" id="14"]
+[ext_resource type="Script" path="res://scripts/systems/combat_effect_pipeline.gd" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/AreaCarrier.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/OrbitCarrier.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/SummonCarrier.tscn" id="18"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
-projectile_scene = ExtResource("4")
 experience_pickup_scene = ExtResource("10")
 
 [node name="Ground" type="Sprite2D" parent="."]
@@ -31,6 +34,13 @@ position = Vector2(360, 640)
 
 [node name="PoolService" type="Node" parent="."]
 script = ExtResource("14")
+
+[node name="CombatEffectPipeline" type="Node" parent="."]
+script = ExtResource("15")
+projectile_scene = ExtResource("4")
+area_scene = ExtResource("16")
+orbit_scene = ExtResource("17")
+summon_scene = ExtResource("18")
 
 [node name="EnemyDirector" type="Node" parent="."]
 script = ExtResource("5")

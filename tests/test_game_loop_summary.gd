@@ -440,7 +440,7 @@ func run(runner) -> void:
 		projectile_pool_loop.set_pool_service(projectile_pool)
 		var pooled_projectile = projectile_pool_loop._acquire_runtime_node(
 			"projectile",
-			load("res://scenes/weapons/Projectile.tscn")
+			load("res://scenes/weapons/ProjectileCarrier.tscn")
 		)
 		runner.assert_true(
 			pooled_projectile != null,

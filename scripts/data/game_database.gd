@@ -1,6 +1,10 @@
 extends RefCounted
 class_name GameDatabase
 
+const WeaponDefinitionValidatorScript = preload(
+	"res://scripts/weapons/weapon_definition_validator.gd"
+)
+
 var weapons: Dictionary = {}
 var enemies: Dictionary = {}
 var upgrades: Array[Dictionary] = []
@@ -13,6 +17,9 @@ var errors: Array[String] = []
 func load_all() -> bool:
 	errors.clear()
 	weapons = _load_directory_as_id_map("res://data/weapons")
+	errors.append_array(
+		WeaponDefinitionValidatorScript.new().validate_catalog(weapons)
+	)
 	enemies = _load_directory_as_id_map("res://data/enemies")
 	formations = _array_to_id_map(
 		_load_json_array("res://data/encounters/formations.json"),

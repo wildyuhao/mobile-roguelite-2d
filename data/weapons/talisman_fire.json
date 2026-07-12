@@ -1,21 +1,42 @@
 {
   "id": "talisman_fire",
+  "version": 1,
   "display_name": "符火",
   "description": "燃烧符箓命中妖物后引发小范围爆炸。",
-  "type": "projectile",
-  "base_damage": 9,
-  "cooldown": 1.15,
-  "projectile_speed": 440,
-  "projectile_texture_path": "res://art/weapons/talisman_fire/talisman_fire_projectile.png",
-  "projectile_scale": 0.10,
-  "projectile_tint": "#fff2dc",
-  "range": 360,
-  "area_size": 72,
+  "school": "talisman",
   "max_level": 5,
-  "level_modifiers": [
-    { "level": 2, "base_damage": 13 },
-    { "level": 3, "area_size": 96 },
-    { "level": 4, "cooldown": 0.95 },
-    { "level": 5, "projectile_count": 2 }
+  "effects": [
+    {
+      "effect_id": "talisman_burst",
+      "trigger": { "id": "periodic", "cooldown": 1.15 },
+      "target": { "id": "nearest", "range": 360 },
+      "carrier": {
+        "id": "projectile",
+        "speed": 440,
+        "count": 1,
+        "pierce": 0,
+        "scale": 0.1,
+        "tint": "#fff2dc"
+      },
+      "hit": {
+        "damage": 9,
+        "splash_radius": 72,
+        "knockback": 0,
+        "statuses": [
+          { "id": "burn", "stacks": 1, "duration": 3.0 }
+        ],
+        "hit_effect_id": "enemy_weapon_hit_spark"
+      }
+    }
+  ],
+  "visual": {
+    "carrier": "res://art/weapons/talisman_fire/talisman_fire_projectile.png",
+    "hit": "res://art/effects/hit/enemy_weapon_hit_spark.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "talisman_burst", "section": "hit", "values": { "damage": 13 } },
+    { "level": 3, "effect_id": "talisman_burst", "section": "hit", "values": { "splash_radius": 96 } },
+    { "level": 4, "effect_id": "talisman_burst", "section": "trigger", "values": { "cooldown": 0.95 } },
+    { "level": 5, "effect_id": "talisman_burst", "section": "carrier", "values": { "count": 2 } }
   ]
 }

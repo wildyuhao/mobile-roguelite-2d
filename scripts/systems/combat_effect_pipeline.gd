@@ -8,6 +8,11 @@ const TargetSelectorScript = preload("res://scripts/weapons/target_selector.gd")
 const HitResolverScript = preload("res://scripts/systems/hit_resolver.gd")
 const MAX_QUEUED_REQUESTS := 32
 
+@export var projectile_scene: PackedScene
+@export var area_scene: PackedScene
+@export var orbit_scene: PackedScene
+@export var summon_scene: PackedScene
+
 var target_selector = TargetSelectorScript.new()
 var hit_resolver = HitResolverScript.new()
 var pool_service: Node
@@ -18,6 +23,42 @@ var queued_request_ids: Dictionary = {}
 var current_context: Dictionary = {}
 var registered_status_ids: Dictionary = {}
 var persistent_carriers: Dictionary = {}
+var next_secondary_request_id: int = -1
+
+func prepare_runtime(new_pool_service: Node, new_carrier_parent: Node) -> void:
+	configure(new_pool_service, new_carrier_parent, {
+		"projectile": projectile_scene,
+		"area": area_scene,
+		"orbit": orbit_scene,
+		"summon": summon_scene,
+	})
+	if new_pool_service == null:
+		return
+	var limits := {
+		"projectile": 250,
+		"area": 24,
+		"orbit": 32,
+		"summon": 12,
+	}
+	var prewarm_counts := {
+		"projectile": 48,
+		"area": 8,
+		"orbit": 8,
+		"summon": 4,
+	}
+	for carrier_id in limits.keys():
+		var scene: PackedScene = carrier_scenes.get(carrier_id)
+		if scene == null:
+			continue
+		if new_pool_service.has_method("set_limit"):
+			new_pool_service.set_limit(carrier_id, int(limits[carrier_id]))
+		if new_pool_service.has_method("prewarm"):
+			new_pool_service.prewarm(
+				carrier_id,
+				scene,
+				new_carrier_parent,
+				int(prewarm_counts[carrier_id])
+			)
 
 func configure(
 	new_pool_service: Node,
@@ -239,12 +280,40 @@ func _connect_carrier(carrier: Node) -> void:
 	var hit_callback := Callable(self, "_on_hit_requested")
 	if carrier.has_signal("hit_requested") and not carrier.is_connected("hit_requested", hit_callback):
 		carrier.connect("hit_requested", hit_callback)
+	var area_callback := Callable(self, "_on_area_requested")
+	if carrier.has_signal("area_requested") and not carrier.is_connected("area_requested", area_callback):
+		carrier.connect("area_requested", area_callback)
 
 func _on_hit_requested(target: Node, packet: Dictionary) -> void:
 	var result := hit_resolver.resolve(target, packet)
 	hit_resolved.emit(target, result)
 	for status_id in result.get("applied_statuses", []):
 		status_applied.emit(target, String(status_id))
+
+func _on_area_requested(center: Vector2, source_request: Dictionary) -> void:
+	var hit: Dictionary = Dictionary(source_request.get("hit", {})).duplicate(true)
+	var splash_radius := float(hit.get("splash_radius", 0.0))
+	if splash_radius <= 0.0:
+		return
+	hit.erase("splash_radius")
+	var area_request := source_request.duplicate(true)
+	area_request["request_id"] = next_secondary_request_id
+	next_secondary_request_id -= 1
+	area_request["effect_id"] = "%s_splash" % String(
+		source_request.get("effect_id", "")
+	)
+	area_request["target"] = { "id": "self", "range": splash_radius }
+	area_request["carrier"] = {
+		"id": "area",
+		"radius": splash_radius,
+		"duration": 0.0,
+		"hit_interval": 0.5,
+		"count": 1,
+	}
+	area_request["hit"] = hit
+	var splash_context := current_context.duplicate(false)
+	splash_context["origin"] = center
+	_execute_request(area_request, splash_context, true)
 
 func _on_status_damage_requested(target: Node, packet: Dictionary) -> void:
 	var result := hit_resolver.resolve_status_damage(target, packet)

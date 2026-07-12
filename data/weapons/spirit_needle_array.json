@@ -1,23 +1,50 @@
 {
   "id": "spirit_needle_array",
+  "version": 1,
   "display_name": "灵针阵",
   "description": "向四周释放旋转灵针，清扫逼近的妖群。",
-  "type": "projectile",
-  "aim_mode": "radial",
-  "base_damage": 4,
-  "cooldown": 1.2,
-  "projectile_speed": 520,
-  "projectile_count": 6,
-  "range": 300,
-  "pierce": 0,
-  "projectile_texture_path": "res://art/weapons/spirit_needle_array/spirit_needle_projectile.png",
-  "projectile_scale": 0.10,
-  "projectile_tint": "#d8b4ff",
+  "school": "mechanism",
   "max_level": 5,
-  "level_modifiers": [
-    { "level": 2, "base_damage": 6 },
-    { "level": 3, "projectile_count": 8 },
-    { "level": 4, "pierce": 1 },
-    { "level": 5, "projectile_count": 12, "cooldown": 0.9 }
+  "effects": [
+    {
+      "effect_id": "needle_volley",
+      "trigger": { "id": "periodic", "cooldown": 1.2 },
+      "target": { "id": "radial", "range": 300 },
+      "carrier": {
+        "id": "projectile",
+        "speed": 520,
+        "count": 6,
+        "pierce": 0,
+        "scale": 0.1,
+        "tint": "#d8b4ff"
+      },
+      "hit": {
+        "damage": 4,
+        "knockback": 0,
+        "statuses": [],
+        "hit_effect_id": "enemy_weapon_hit_spark"
+      }
+    }
+  ],
+  "visual": {
+    "carrier": "res://art/weapons/spirit_needle_array/spirit_needle_projectile.png",
+    "hit": "res://art/effects/hit/enemy_weapon_hit_spark.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "needle_volley", "section": "hit", "values": { "damage": 6 } },
+    { "level": 3, "effect_id": "needle_volley", "section": "carrier", "values": { "count": 8 } },
+    { "level": 4, "effect_id": "needle_volley", "section": "carrier", "values": { "pierce": 1 } },
+    {
+      "level": 4,
+      "effect_id": "needle_volley",
+      "section": "hit",
+      "values": {
+        "statuses": [
+          { "id": "armor_break", "stacks": 1, "duration": 2.0 }
+        ]
+      }
+    },
+    { "level": 5, "effect_id": "needle_volley", "section": "carrier", "values": { "count": 12 } },
+    { "level": 5, "effect_id": "needle_volley", "section": "trigger", "values": { "cooldown": 0.9 } }
   ]
 }
