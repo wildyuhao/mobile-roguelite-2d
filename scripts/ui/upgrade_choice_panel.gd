@@ -27,7 +27,7 @@ func show_choices(choices: Array[Dictionary]) -> void:
 			button.text = _format_choice_text(choices[index])
 			button.disabled = false
 		else:
-			button.text = "-"
+			button.text = "无可用强化"
 			button.disabled = true
 	show()
 
@@ -41,7 +41,7 @@ func _on_button_pressed(index: int) -> void:
 	upgrade_selected.emit(selected)
 
 func _format_choice_text(choice: Dictionary) -> String:
-	var label := String(choice.get("display_name", choice.get("id", "Upgrade")))
+	var label := String(choice.get("display_name", choice.get("id", "强化")))
 	var summary := String(choice.get("effect_summary", ""))
 	if summary == "":
 		return label

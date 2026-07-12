@@ -16,22 +16,22 @@ theme_override_constants/separation = 12
 
 [node name="TitleLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 theme_override_font_sizes/font_size = 24
-text = "Choose Upgrade"
+text = "选择强化"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 theme_override_font_sizes/font_size = 14
-text = "Combat paused"
+text = "战斗暂停"
 horizontal_alignment = 1
 
 [node name="Button1" type="Button" parent="PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 104)
-text = "Upgrade 1"
+text = "强化 1"
 
 [node name="Button2" type="Button" parent="PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 104)
-text = "Upgrade 2"
+text = "强化 2"
 
 [node name="Button3" type="Button" parent="PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 104)
-text = "Upgrade 3"
+text = "强化 3"

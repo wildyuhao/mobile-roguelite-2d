@@ -40,6 +40,6 @@ func show_upgrade_feedback(display_name: String) -> void:
 		upgrade_feedback_label = get_node_or_null("MarginContainer/VBoxContainer/UpgradeFeedbackLabel")
 	if upgrade_feedback_label == null:
 		return
-	upgrade_feedback_label.text = "%s selected" % display_name
+	upgrade_feedback_label.text = "已选择：%s" % display_name
 	upgrade_feedback_label.show()
 	upgrade_feedback_time_remaining = UPGRADE_FEEDBACK_DURATION
