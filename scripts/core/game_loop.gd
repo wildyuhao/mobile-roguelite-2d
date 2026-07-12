@@ -33,6 +33,7 @@ var equipment_system = EquipmentSystemScript.new()
 var runtime_state := {
 	"owned_weapons": { "flying_sword": 1 },
 	"upgrade_stacks": {},
+	"max_weapon_slots": 4,
 }
 var run_summary := {
 	"defeated_enemies": 0,
@@ -148,16 +149,34 @@ func _on_level_up(new_level: int) -> void:
 	upgrade_choice_panel.show_choices(choices)
 
 func _on_upgrade_selected(upgrade: Dictionary) -> void:
-	upgrade_system.apply_upgrade(runtime_state, upgrade)
-	if upgrade.get("kind", "") == "weapon_level":
-		weapon_system.level_weapon(upgrade.get("weapon_id", ""))
-	elif upgrade.get("kind", "") == "weapon_unlock":
-		var weapon_id: String = upgrade.get("weapon_id", "")
-		if weapon_id != "" and not weapon_system.has_weapon(weapon_id):
-			weapon_system.add_weapon(database.get_weapon(weapon_id))
+	if not _try_apply_runtime_upgrade(upgrade):
+		get_tree().paused = false
+		return
 	_apply_total_stat_modifiers()
 	_show_runtime_upgrade_feedback(upgrade)
 	get_tree().paused = false
+
+func _try_apply_runtime_upgrade(upgrade: Dictionary) -> bool:
+	var kind := String(upgrade.get("kind", ""))
+	var weapon_definition: Dictionary = {}
+	if kind == "weapon_unlock":
+		var weapon_id := String(upgrade.get("weapon_id", ""))
+		if weapon_id == "":
+			return false
+		weapon_definition = database.get_weapon(weapon_id)
+		if weapon_definition.is_empty() or not weapon_system.can_add_weapon(weapon_definition):
+			return false
+
+	var state_before := runtime_state.duplicate(true)
+	if not upgrade_system.apply_upgrade(runtime_state, upgrade):
+		return false
+	if upgrade.get("kind", "") == "weapon_level":
+		weapon_system.level_weapon(upgrade.get("weapon_id", ""))
+	elif kind == "weapon_unlock" and not weapon_system.add_weapon(weapon_definition):
+		runtime_state.clear()
+		runtime_state.merge(state_before, true)
+		return false
+	return true
 
 func _on_enemy_spawned(enemy: Node) -> void:
 	if not enemy.has_signal("defeated"):

@@ -58,6 +58,18 @@ class FakeWeaponSystem:
 	func set_stat_modifiers(modifiers: Dictionary) -> void:
 		last_modifiers = modifiers.duplicate(true)
 
+class FakeRejectingWeaponSystem:
+	extends Node
+
+	var add_calls: int = 0
+
+	func can_add_weapon(_definition: Dictionary) -> bool:
+		return true
+
+	func add_weapon(_definition: Dictionary) -> bool:
+		add_calls += 1
+		return false
+
 class FakeHUD:
 	extends Node
 
@@ -369,6 +381,27 @@ func run(runner) -> void:
 	stat_player.free()
 	stat_weapon_system.free()
 	stat_loop.free()
+
+	var unlock_loop = game_loop_script.new()
+	var rejecting_weapon_system := FakeRejectingWeaponSystem.new()
+	unlock_loop.weapon_system = rejecting_weapon_system
+	runner.assert_true(unlock_loop.database.load_all(), "database should load before testing transactional weapon unlock")
+	unlock_loop.upgrade_system.configure(unlock_loop.database.get_upgrades())
+	var rejected_unlock: Dictionary = {}
+	for upgrade in unlock_loop.database.get_upgrades():
+		if String(upgrade.get("id", "")) == "unlock_spirit_needle_array":
+			rejected_unlock = upgrade
+			break
+	if unlock_loop.has_method("_try_apply_runtime_upgrade"):
+		var accepted = unlock_loop._try_apply_runtime_upgrade(rejected_unlock)
+		runner.assert_true(accepted != true, "runtime weapon rejection should reject the upgrade selection")
+		runner.assert_eq(rejecting_weapon_system.add_calls, 1, "runtime unlock should attempt to add the selected weapon once")
+		runner.assert_true(not unlock_loop.runtime_state["owned_weapons"].has("spirit_needle_array"), "rejected runtime unlock should roll back ownership")
+		runner.assert_true(not unlock_loop.runtime_state["upgrade_stacks"].has("unlock_spirit_needle_array"), "rejected runtime unlock should roll back its stack")
+	else:
+		runner.assert_true(false, "game loop should expose transactional runtime upgrade application")
+	rejecting_weapon_system.free()
+	unlock_loop.free()
 
 	var pressure_loop = game_loop_script.new()
 	var pressure_player := Node2D.new()

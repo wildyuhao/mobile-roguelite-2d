@@ -25,6 +25,12 @@ func run(runner) -> void:
 	var choices = system.get_choices(runtime_state, 3, 12345)
 	runner.assert_eq(choices.size(), 3, "upgrade system should return three choices")
 	runner.assert_true(_all_unique(choices), "choices should be unique")
+	for seed_value in range(1, 65):
+		var opening_choices = system.get_choices(runtime_state, 3, seed_value)
+		runner.assert_true(
+			_has_kind(opening_choices, "weapon_unlock"),
+			"opening choices should always offer a second weapon for seed %d" % seed_value
+		)
 
 	var summary_system = upgrade_system_script.new()
 	var summary_upgrades: Array[Dictionary] = [
@@ -106,6 +112,45 @@ func run(runner) -> void:
 	runner.assert_near(float(bundle_modifiers.get("weapon_damage_multiplier", 0.0)), 0.25, 0.001, "bundle damage modifier should apply")
 	runner.assert_eq(bundle_modifiers.get("move_speed", 0), -10, "bundle speed tradeoff should apply")
 
+	var full_weapon_state := {
+		"owned_weapons": {
+			"flying_sword": 1,
+			"talisman_fire": 1,
+			"mechanism_crossbow": 1,
+			"demon_sealing_bell": 1,
+		},
+		"upgrade_stacks": {},
+		"max_weapon_slots": 99,
+	}
+	var full_choices = system.get_choices(full_weapon_state, 20, 2026)
+	runner.assert_true(
+		not _has_kind(full_choices, "weapon_unlock"),
+		"the four-slot cap should not be raised by runtime state"
+	)
+	var rejected_unlock := _find_upgrade(db.get_upgrades(), "unlock_spirit_needle_array")
+	var applied = system.apply_upgrade(full_weapon_state, rejected_unlock)
+	runner.assert_true(applied != true, "full weapon slots should reject direct unlock application")
+	runner.assert_eq(full_weapon_state["owned_weapons"].size(), 4, "rejected unlock should preserve four owned weapons")
+	runner.assert_true(not full_weapon_state["owned_weapons"].has("spirit_needle_array"), "rejected unlock should not add a fifth weapon")
+	runner.assert_true(not full_weapon_state["upgrade_stacks"].has("unlock_spirit_needle_array"), "rejected unlock should not consume its stack")
+
+	var duplicate_system = upgrade_system_script.new()
+	var duplicate_unlock := rejected_unlock.duplicate(true)
+	var duplicate_upgrades: Array[Dictionary] = [
+		rejected_unlock,
+		duplicate_unlock,
+		_find_upgrade(db.get_upgrades(), "weapon_damage_1"),
+	]
+	duplicate_system.configure(duplicate_upgrades)
+	var duplicate_choices = duplicate_system.get_choices({
+		"owned_weapons": { "flying_sword": 1 },
+		"upgrade_stacks": {},
+	}, 3, 9)
+	runner.assert_true(
+		_all_unique(duplicate_choices),
+		"duplicate upgrade definitions should appear at most once per draw"
+	)
+
 func _all_unique(choices: Array) -> bool:
 	var seen := {}
 	for choice in choices:
@@ -125,3 +170,9 @@ func _find_upgrade(upgrades: Array, id: String) -> Dictionary:
 		if upgrade["id"] == id:
 			return upgrade
 	return {}
+
+func _has_kind(choices: Array, kind: String) -> bool:
+	for choice in choices:
+		if String(choice.get("kind", "")) == kind:
+			return true
+	return false

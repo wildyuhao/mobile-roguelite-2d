@@ -75,6 +75,21 @@ func run(runner) -> void:
 	runner.assert_eq(damage_system.get_weapon_damage("flying_sword"), 15, "stat damage multiplier should increase weapon damage")
 	damage_system.free()
 
+	var slot_system = weapon_system_script.new()
+	slot_system.max_weapon_slots = 99
+	for weapon_id in ["flying_sword", "talisman_fire", "mechanism_crossbow", "demon_sealing_bell"]:
+		runner.assert_true(
+			slot_system.add_weapon(db.get_weapon(weapon_id)) == true,
+			"the first four weapon slots should accept %s" % weapon_id
+		)
+	runner.assert_true(
+		slot_system.add_weapon(db.get_weapon("spirit_needle_array")) != true,
+		"the fifth weapon should be rejected"
+	)
+	runner.assert_eq(slot_system.weapons.size(), 4, "weapon system should enforce four weapon slots even when configured higher")
+	runner.assert_true(not slot_system.has_weapon("spirit_needle_array"), "rejected fifth weapon should stay unavailable")
+	slot_system.free()
+
 	runner.assert_true(db.has_weapon("spirit_needle_array"), "database should include Spirit Needle Array")
 	if db.has_weapon("spirit_needle_array"):
 		var needle_system = weapon_system_script.new()

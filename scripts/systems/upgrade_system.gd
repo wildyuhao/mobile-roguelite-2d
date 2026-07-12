@@ -1,6 +1,9 @@
 extends RefCounted
 class_name UpgradeSystem
 
+const MAX_WEAPON_SLOTS := 4
+const OPENING_WEAPON_TARGET := 2
+
 var upgrades: Array[Dictionary] = []
 
 func configure(new_upgrades: Array[Dictionary]) -> void:
@@ -12,31 +15,60 @@ func get_choices(runtime_state: Dictionary, count: int = 3, seed_value: int = 0)
 	rng.seed = seed_value if seed_value != 0 else Time.get_ticks_usec()
 
 	var choices: Array[Dictionary] = []
+	var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
+	var opening_target := mini(
+		OPENING_WEAPON_TARGET,
+		_get_max_weapon_slots(runtime_state)
+	)
+	if count > 0 and owned_weapons.size() < opening_target:
+		var unlocks: Array[Dictionary] = []
+		for upgrade in available:
+			if String(upgrade.get("kind", "")) == "weapon_unlock":
+				unlocks.append(upgrade)
+		if not unlocks.is_empty():
+			var unlock_index := rng.randi_range(0, unlocks.size() - 1)
+			var unlock_choice: Dictionary = unlocks[unlock_index]
+			choices.append(_with_effect_summary(unlock_choice))
+			_remove_upgrade_by_id(available, String(unlock_choice.get("id", "")))
+
 	while not available.is_empty() and choices.size() < count:
 		var index := rng.randi_range(0, available.size() - 1)
 		choices.append(_with_effect_summary(available[index]))
 		available.remove_at(index)
 	return choices
 
-func apply_upgrade(runtime_state: Dictionary, upgrade: Dictionary) -> void:
+func apply_upgrade(runtime_state: Dictionary, upgrade: Dictionary) -> bool:
+	var id := String(upgrade.get("id", ""))
+	if id == "":
+		return false
+	var kind := String(upgrade.get("kind", ""))
+	var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
+	var weapon_id := String(upgrade.get("weapon_id", ""))
+	if kind == "weapon_level" and (weapon_id == "" or not owned_weapons.has(weapon_id)):
+		return false
+	if kind == "weapon_unlock":
+		if (
+			weapon_id == ""
+			or owned_weapons.has(weapon_id)
+			or owned_weapons.size() >= _get_max_weapon_slots(runtime_state)
+		):
+			return false
+
 	if not runtime_state.has("upgrade_stacks"):
 		runtime_state["upgrade_stacks"] = {}
 
-	var id: String = upgrade["id"]
 	var stacks: Dictionary = runtime_state["upgrade_stacks"]
+	if int(stacks.get(id, 0)) >= int(upgrade.get("max_stacks", 1)):
+		return false
 	stacks[id] = int(stacks.get(id, 0)) + 1
 
-	if upgrade.get("kind", "") == "weapon_level":
-		var weapon_id: String = upgrade.get("weapon_id", "")
-		var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
+	if kind == "weapon_level":
 		owned_weapons[weapon_id] = int(owned_weapons.get(weapon_id, 1)) + 1
 		runtime_state["owned_weapons"] = owned_weapons
-	elif upgrade.get("kind", "") == "weapon_unlock":
-		var weapon_id: String = upgrade.get("weapon_id", "")
-		var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
-		if weapon_id != "" and not owned_weapons.has(weapon_id):
-			owned_weapons[weapon_id] = 1
+	elif kind == "weapon_unlock":
+		owned_weapons[weapon_id] = 1
 		runtime_state["owned_weapons"] = owned_weapons
+	return true
 
 func get_stat_modifiers(runtime_state: Dictionary) -> Dictionary:
 	var totals: Dictionary = {}
@@ -63,9 +95,14 @@ func _get_available_upgrades(runtime_state: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var stacks: Dictionary = runtime_state.get("upgrade_stacks", {})
 	var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
+	var max_weapon_slots := _get_max_weapon_slots(runtime_state)
+	var seen_ids := {}
 
 	for upgrade in upgrades:
 		var id: String = upgrade["id"]
+		if seen_ids.has(id):
+			continue
+		seen_ids[id] = true
 		var current_stacks := int(stacks.get(id, 0))
 		var max_stacks := int(upgrade.get("max_stacks", 1))
 		if current_stacks >= max_stacks:
@@ -77,12 +114,21 @@ func _get_available_upgrades(runtime_state: Dictionary) -> Array[Dictionary]:
 				continue
 		elif upgrade.get("kind", "") == "weapon_unlock":
 			var weapon_id: String = upgrade.get("weapon_id", "")
-			if owned_weapons.has(weapon_id):
+			if owned_weapons.has(weapon_id) or owned_weapons.size() >= max_weapon_slots:
 				continue
 
 		result.append(upgrade)
 
 	return result
+
+func _get_max_weapon_slots(runtime_state: Dictionary) -> int:
+	return clampi(int(runtime_state.get("max_weapon_slots", MAX_WEAPON_SLOTS)), 1, MAX_WEAPON_SLOTS)
+
+func _remove_upgrade_by_id(available: Array[Dictionary], upgrade_id: String) -> void:
+	for index in range(available.size()):
+		if String(available[index].get("id", "")) == upgrade_id:
+			available.remove_at(index)
+			return
 
 func _normalize_number_types(values: Dictionary) -> Dictionary:
 	var normalized: Dictionary = {}

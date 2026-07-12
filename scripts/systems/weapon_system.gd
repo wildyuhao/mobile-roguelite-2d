@@ -1,19 +1,32 @@
 extends Node
 class_name WeaponSystem
 
+const MAX_WEAPON_SLOTS := 4
+
+@export var max_weapon_slots: int = MAX_WEAPON_SLOTS
+
 var weapons: Dictionary = {}
 var stat_modifiers: Dictionary = {}
 
 func set_stat_modifiers(modifiers: Dictionary) -> void:
 	stat_modifiers = modifiers.duplicate(true)
 
-func add_weapon(definition: Dictionary) -> void:
-	var id: String = definition["id"]
+func can_add_weapon(definition: Dictionary) -> bool:
+	var id := String(definition.get("id", ""))
+	if id == "" or weapons.has(id):
+		return false
+	return weapons.size() < clampi(max_weapon_slots, 1, MAX_WEAPON_SLOTS)
+
+func add_weapon(definition: Dictionary) -> bool:
+	if not can_add_weapon(definition):
+		return false
+	var id := String(definition.get("id", ""))
 	weapons[id] = {
 		"definition": definition.duplicate(true),
 		"level": 1,
 		"cooldown_remaining": float(definition.get("cooldown", 1.0)),
 	}
+	return true
 
 func has_weapon(id: String) -> bool:
 	return weapons.has(id)
