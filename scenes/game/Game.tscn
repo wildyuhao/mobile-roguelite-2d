@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/game_loop.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" path="res://art/environment/wasteland_ground_tile.png" id="11"]
 [ext_resource type="PackedScene" path="res://scenes/ui/VirtualJoystick.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://scenes/ui/SettlementPanel.tscn" id="13"]
+[ext_resource type="Script" path="res://scripts/systems/pool_service.gd" id="14"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
@@ -27,6 +28,9 @@ texture = ExtResource("11")
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(360, 640)
+
+[node name="PoolService" type="Node" parent="."]
+script = ExtResource("14")
 
 [node name="EnemyDirector" type="Node" parent="."]
 script = ExtResource("5")

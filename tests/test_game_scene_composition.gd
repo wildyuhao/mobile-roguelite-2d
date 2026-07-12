@@ -8,6 +8,7 @@ func run(runner) -> void:
 	var game_scene: PackedScene = load("res://scenes/game/Game.tscn")
 	var game = game_scene.instantiate()
 	runner.assert_true(game.has_node("Ground"), "game scene should include a ground sprite")
+	runner.assert_true(game.has_node("PoolService"), "game scene should include a local pool service")
 	runner.assert_true(game.has_node("VirtualJoystick/Stick"), "game scene should include a virtual joystick stick")
 	runner.assert_true(game.has_node("SettlementPanel"), "game scene should include a settlement panel")
 
