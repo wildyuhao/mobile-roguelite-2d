@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_agent.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
 [ext_resource type="Texture2D" path="res://art/enemies/small_demon/small_demon_front.png" id="3"]
 [ext_resource type="Script" path="res://scripts/components/hit_feedback.gd" id="4"]
 [ext_resource type="Texture2D" path="res://art/effects/hit/enemy_weapon_hit_spark.png" id="5"]
+[ext_resource type="Script" path="res://scripts/components/status_controller.gd" id="6"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 16.0
@@ -19,6 +20,9 @@ texture = ExtResource("3")
 
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("2")
+
+[node name="StatusController" type="Node" parent="."]
+script = ExtResource("6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy")

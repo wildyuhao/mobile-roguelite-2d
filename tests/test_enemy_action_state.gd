@@ -13,6 +13,13 @@ func run(runner) -> void:
 	)
 	runner.assert_eq(state.state, "windup", "attack should begin with windup")
 	runner.assert_true(not state.is_damage_active(), "windup should not deal damage")
+	var remaining_before_freeze := float(state.remaining)
+	var tick_argument_count := _method_argument_count(state, "tick")
+	runner.assert_true(tick_argument_count >= 2, "action tick should accept a time scale")
+	if tick_argument_count >= 2:
+		state.tick(1.0, 0.0)
+		runner.assert_eq(state.state, "windup", "zero action scale should preserve windup")
+		runner.assert_near(float(state.remaining), remaining_before_freeze, 0.001, "zero action scale should preserve remaining time")
 	runner.assert_eq(
 		state.tick(0.2).size(),
 		0,
@@ -41,3 +48,9 @@ func run(runner) -> void:
 		not state.start_attack(0.1, 0.1, 0.1),
 		"dead enemies cannot start attacks"
 	)
+
+func _method_argument_count(instance: Object, method_name: String) -> int:
+	for method in instance.get_method_list():
+		if String(method.get("name", "")) == method_name:
+			return Array(method.get("args", [])).size()
+	return 0

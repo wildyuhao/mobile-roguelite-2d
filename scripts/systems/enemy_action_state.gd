@@ -25,12 +25,12 @@ func start_attack(windup: float, active: float, recovery: float) -> bool:
 	recovery_duration = maxf(0.001, recovery)
 	return true
 
-func tick(delta: float) -> Array[String]:
+func tick(delta: float, time_scale: float = 1.0) -> Array[String]:
 	var transitions: Array[String] = []
 	if state == LOCOMOTION or state == DEAD:
 		return transitions
 
-	remaining -= maxf(0.0, delta)
+	remaining -= maxf(0.0, delta) * clampf(time_scale, 0.0, 1.0)
 	while remaining <= 0.0 and state != LOCOMOTION and state != DEAD:
 		var overflow := -remaining
 		match state:

@@ -52,6 +52,10 @@ func run(runner) -> void:
 		enemy.get_node_or_null("HitSpark") is Sprite2D,
 		"basic enemy should include a hit spark sprite"
 	)
+	runner.assert_true(
+		enemy.get_node_or_null("StatusController") != null,
+		"basic enemy should include a status controller"
+	)
 	enemy.free()
 
 	for effect_path in [

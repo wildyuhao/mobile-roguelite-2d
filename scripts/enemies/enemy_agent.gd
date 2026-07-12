@@ -35,6 +35,7 @@ const DEFAULT_MATERIAL_VALUE := 1
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var hit_feedback: Node = get_node_or_null("HitFeedback")
+@onready var status_controller: Node = get_node_or_null("StatusController")
 
 var target: Node2D
 var behavior: String = "chase"
@@ -50,6 +51,8 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		sprite = get_node_or_null("Sprite2D")
 	if collision_shape == null:
 		collision_shape = get_node_or_null("CollisionShape2D")
+	if status_controller == null:
+		status_controller = get_node_or_null("StatusController")
 	_reset_definition_defaults()
 	target = new_target
 	behavior = definition.get("behavior", "chase")
@@ -70,6 +73,8 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 	experience_value = int(definition.get("experience_value", experience_value))
 	material_value = int(definition.get("material_value", material_value))
 	is_boss = definition.get("behavior", "") == "boss" or bool(definition.get("is_boss", false))
+	if status_controller != null and status_controller.has_method("configure"):
+		status_controller.configure(is_boss)
 	if health != null:
 		health.configure(int(definition.get("max_health", 24)))
 	_configure_sprite(definition)
@@ -101,13 +106,18 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func calculate_action_velocity(delta: float) -> Vector2:
-	var transitions := action_state.tick(delta)
+	var action_time_scale := _get_action_time_scale()
+	var movement_multiplier := _get_movement_multiplier()
+	if status_controller != null and status_controller.has_method("tick_statuses"):
+		status_controller.tick_statuses(delta)
+	var transitions := action_state.tick(delta, action_time_scale)
 	if transitions.has(EnemyActionStateScript.ACTIVE):
 		damage_applied_this_action = false
 
 	var result := Vector2.ZERO
 	if action_state.state == EnemyActionStateScript.ACTIVE:
-		_try_action_damage()
+		if action_time_scale > 0.0:
+			_try_action_damage()
 		if behavior == "charge":
 			result = locked_action_direction * charge_speed
 	elif action_state.state == EnemyActionStateScript.LOCOMOTION:
@@ -115,12 +125,12 @@ func calculate_action_velocity(delta: float) -> Vector2:
 			result = _calculate_charge_velocity()
 		else:
 			result = calculate_desired_velocity(delta)
-			if _is_target_in_contact_range():
+			if _is_target_in_contact_range() and _can_start_action(_is_special_behavior()):
 				locked_action_direction = global_position.direction_to(target.global_position)
 				action_state.start_attack(attack_windup, attack_active, attack_recovery)
 				result = Vector2.ZERO
 	_update_action_visual()
-	return result
+	return result * movement_multiplier
 
 func calculate_desired_velocity(_delta: float) -> Vector2:
 	if target == null:
@@ -150,7 +160,7 @@ func _calculate_charge_velocity() -> Vector2:
 	var to_target := target.global_position - global_position
 	if to_target == Vector2.ZERO:
 		return Vector2.ZERO
-	if to_target.length() <= charge_trigger_range:
+	if to_target.length() <= charge_trigger_range and _can_start_action(true):
 		locked_action_direction = to_target.normalized()
 		damage_applied_this_action = false
 		action_state.start_attack(attack_windup, attack_active, attack_recovery)
@@ -195,6 +205,8 @@ func _update_action_visual() -> void:
 
 func _on_died() -> void:
 	action_state.mark_dead()
+	if status_controller != null and status_controller.has_method("clear_all"):
+		status_controller.clear_all()
 	_reset_hit_feedback()
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
@@ -209,6 +221,9 @@ func activate_from_pool() -> void:
 	action_state.reset()
 	locked_action_direction = Vector2.RIGHT
 	damage_applied_this_action = false
+	_clear_runtime_metadata()
+	if status_controller != null and status_controller.has_method("clear_all"):
+		status_controller.clear_all()
 	_reset_hit_feedback()
 	if not is_in_group(GameConstantsScript.ENEMY_GROUP):
 		add_to_group(GameConstantsScript.ENEMY_GROUP)
@@ -227,10 +242,6 @@ func deactivate_for_pool() -> void:
 	process_mode = Node.PROCESS_MODE_DISABLED
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
-	if has_meta("encounter_id"):
-		remove_meta("encounter_id")
-	if has_meta("enemy_role"):
-		remove_meta("enemy_role")
 
 func begin_pool_release() -> void:
 	pool_active = false
@@ -238,6 +249,9 @@ func begin_pool_release() -> void:
 	velocity = Vector2.ZERO
 	action_state.mark_dead()
 	damage_applied_this_action = false
+	_clear_runtime_metadata()
+	if status_controller != null and status_controller.has_method("clear_all"):
+		status_controller.clear_all()
 	visible = false
 	remove_from_group(GameConstantsScript.ENEMY_GROUP)
 
@@ -257,7 +271,37 @@ func get_defeat_payload() -> Dictionary:
 		"experience_value": experience_value,
 		"material_value": material_value,
 		"is_boss": is_boss,
+		"source_weapon_id": String(get_meta("last_weapon_id", "")),
 	}
+
+func _get_action_time_scale() -> float:
+	if status_controller != null and status_controller.has_method("get_action_time_scale"):
+		return float(status_controller.get_action_time_scale())
+	return 1.0
+
+func _get_movement_multiplier() -> float:
+	if status_controller != null and status_controller.has_method("get_movement_multiplier"):
+		return float(status_controller.get_movement_multiplier())
+	return 1.0
+
+func _can_start_action(is_special: bool) -> bool:
+	if _get_action_time_scale() <= 0.0:
+		return false
+	if (
+		is_special
+		and status_controller != null
+		and status_controller.has_method("can_start_special")
+	):
+		return bool(status_controller.can_start_special())
+	return true
+
+func _is_special_behavior() -> bool:
+	return behavior in ["charge", "ranged", "summon", "support"]
+
+func _clear_runtime_metadata() -> void:
+	for metadata_key in ["encounter_id", "enemy_role", "last_weapon_id"]:
+		if has_meta(metadata_key):
+			remove_meta(metadata_key)
 
 func _configure_sprite(definition: Dictionary) -> void:
 	if sprite == null:
