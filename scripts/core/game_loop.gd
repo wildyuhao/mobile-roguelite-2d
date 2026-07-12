@@ -269,6 +269,9 @@ func _apply_total_stat_modifiers() -> Dictionary:
 	active_stat_modifiers = modifiers.duplicate(true)
 	if player != null and player.has_method("apply_stat_modifiers"):
 		player.apply_stat_modifiers(modifiers)
+		var player_health := player.get_node_or_null("HealthComponent")
+		if player_health != null:
+			_update_player_health_hud(player_health)
 	if weapon_system != null and weapon_system.has_method("set_stat_modifiers"):
 		weapon_system.set_stat_modifiers(modifiers)
 	return modifiers
@@ -331,6 +334,8 @@ func _on_player_damaged(amount: int) -> void:
 	if player_health == null:
 		return
 	_update_player_health_hud(player_health)
+	if hud != null and hud.has_method("show_damage_feedback"):
+		hud.show_damage_feedback(amount)
 	var heavy_threshold := int(
 		ceil(float(player_health.get("max_health")) * 0.25)
 	)

@@ -10,6 +10,7 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 @onready var health: Node = $HealthComponent
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var animation_controller: Node = get_node_or_null("DirectionalAnimation")
+@onready var hit_feedback: Node = get_node_or_null("HitFeedback")
 
 var external_move_vector: Vector2 = Vector2.ZERO
 var damage_invulnerability_remaining: float = 0.0
@@ -24,6 +25,7 @@ func _ready() -> void:
 		collision_shape = get_node_or_null("CollisionShape2D")
 	if health != null:
 		health.configure(base_max_health)
+	_connect_hit_feedback()
 
 func _physics_process(_delta: float) -> void:
 	tick_damage_invulnerability(_delta)
@@ -58,8 +60,10 @@ func apply_stat_modifiers(modifiers: Dictionary) -> void:
 		health = get_node_or_null("HealthComponent")
 
 	move_speed = base_move_speed + float(modifiers.get("move_speed", 0.0))
-	if health != null and health.has_method("configure"):
-		health.configure(base_max_health + int(modifiers.get("max_health", 0)))
+	if health != null and health.has_method("set_max_health"):
+		health.set_max_health(
+			base_max_health + int(modifiers.get("max_health", 0))
+		)
 
 func take_contact_damage(amount: int) -> bool:
 	if amount <= 0 or damage_invulnerability_remaining > 0.0:
@@ -84,3 +88,21 @@ func get_contact_radius() -> float:
 	if collision_shape != null and collision_shape.shape is CircleShape2D:
 		return (collision_shape.shape as CircleShape2D).radius
 	return 18.0
+
+func _connect_hit_feedback() -> void:
+	if health == null:
+		return
+	var damaged_callback := Callable(self, "_on_health_damaged")
+	if health.has_signal("damaged") and not health.is_connected("damaged", damaged_callback):
+		health.connect("damaged", damaged_callback)
+	var died_callback := Callable(self, "_on_health_died")
+	if health.has_signal("died") and not health.is_connected("died", died_callback):
+		health.connect("died", died_callback)
+
+func _on_health_damaged(amount: int) -> void:
+	if hit_feedback != null and hit_feedback.has_method("play_hit"):
+		hit_feedback.play_hit(amount, &"player")
+
+func _on_health_died() -> void:
+	if hit_feedback != null and hit_feedback.has_method("reset_feedback"):
+		hit_feedback.reset_feedback()

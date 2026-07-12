@@ -2,6 +2,9 @@ extends CanvasLayer
 class_name HUD
 
 const UPGRADE_FEEDBACK_DURATION := 1.4
+const DAMAGE_FEEDBACK_DURATION := 0.18
+const DAMAGE_FEEDBACK_COLOR := Color(1.0, 0.28, 0.28, 1.0)
+const DAMAGE_FEEDBACK_PUNCH := 0.16
 
 @onready var timer_label: Label = $MarginContainer/VBoxContainer/TimerLabel
 @onready var level_label: Label = $MarginContainer/VBoxContainer/LevelLabel
@@ -10,13 +13,19 @@ const UPGRADE_FEEDBACK_DURATION := 1.4
 @onready var upgrade_feedback_label: Label = $MarginContainer/VBoxContainer/UpgradeFeedbackLabel
 
 var upgrade_feedback_time_remaining: float = 0.0
+var damage_feedback_time_remaining: float = 0.0
+var health_label_base_scale := Vector2.ONE
+var health_label_base_modulate := Color.WHITE
+
+func _ready() -> void:
+	if health_label != null:
+		health_label_base_scale = health_label.scale
+		health_label_base_modulate = health_label.modulate
+		health_label.pivot_offset = health_label.size * 0.5
 
 func _process(delta: float) -> void:
-	if upgrade_feedback_time_remaining <= 0.0:
-		return
-	upgrade_feedback_time_remaining -= delta
-	if upgrade_feedback_time_remaining <= 0.0 and upgrade_feedback_label != null:
-		upgrade_feedback_label.hide()
+	_tick_upgrade_feedback(delta)
+	_tick_damage_feedback(delta)
 
 func set_run_time(seconds: float) -> void:
 	var minutes := int(seconds / 60.0)
@@ -43,3 +52,42 @@ func show_upgrade_feedback(display_name: String) -> void:
 	upgrade_feedback_label.text = "已选择：%s" % display_name
 	upgrade_feedback_label.show()
 	upgrade_feedback_time_remaining = UPGRADE_FEEDBACK_DURATION
+
+func show_damage_feedback(_amount: int) -> void:
+	if health_label == null:
+		health_label = get_node_or_null("MarginContainer/VBoxContainer/HealthLabel")
+	if health_label == null:
+		return
+	health_label.scale = health_label_base_scale * (1.0 + DAMAGE_FEEDBACK_PUNCH)
+	health_label.modulate = DAMAGE_FEEDBACK_COLOR
+	damage_feedback_time_remaining = DAMAGE_FEEDBACK_DURATION
+
+func _tick_upgrade_feedback(delta: float) -> void:
+	if upgrade_feedback_time_remaining <= 0.0:
+		return
+	upgrade_feedback_time_remaining = maxf(
+		0.0,
+		upgrade_feedback_time_remaining - maxf(0.0, delta)
+	)
+	if upgrade_feedback_time_remaining <= 0.0 and upgrade_feedback_label != null:
+		upgrade_feedback_label.hide()
+
+func _tick_damage_feedback(delta: float) -> void:
+	if damage_feedback_time_remaining <= 0.0 or health_label == null:
+		return
+	damage_feedback_time_remaining = maxf(
+		0.0,
+		damage_feedback_time_remaining - maxf(0.0, delta)
+	)
+	if damage_feedback_time_remaining <= 0.0:
+		health_label.scale = health_label_base_scale
+		health_label.modulate = health_label_base_modulate
+		return
+	var ratio := damage_feedback_time_remaining / DAMAGE_FEEDBACK_DURATION
+	health_label.scale = health_label_base_scale * (
+		1.0 + DAMAGE_FEEDBACK_PUNCH * ratio
+	)
+	health_label.modulate = health_label_base_modulate.lerp(
+		DAMAGE_FEEDBACK_COLOR,
+		ratio
+	)

@@ -29,6 +29,39 @@ func run(runner) -> void:
 			player.get_node_or_null("DirectionalAnimation") != null,
 			"player should include directional animation control"
 		)
+		runner.assert_true(
+			player.get_node_or_null("HitFeedback") != null,
+			"player should include layered hit feedback"
+		)
+		runner.assert_true(
+			player.get_node_or_null("HitSpark") is Sprite2D,
+			"player should include a hit spark sprite"
+		)
+		runner.assert_true(
+			player.get_node_or_null("DamageLabel") is Label,
+			"player should include a floating damage label"
+		)
+
+	var enemy_scene: PackedScene = load("res://scenes/enemies/BasicDemon.tscn")
+	var enemy = enemy_scene.instantiate()
+	runner.assert_true(
+		enemy.get_node_or_null("HitFeedback") != null,
+		"basic enemy should include layered hit feedback"
+	)
+	runner.assert_true(
+		enemy.get_node_or_null("HitSpark") is Sprite2D,
+		"basic enemy should include a hit spark sprite"
+	)
+	enemy.free()
+
+	for effect_path in [
+		"res://art/effects/hit/player_contact_hit_burst.png",
+		"res://art/effects/hit/enemy_weapon_hit_spark.png",
+	]:
+		runner.assert_true(
+			ResourceLoader.exists(effect_path),
+			"%s should exist" % effect_path
+		)
 	for strip_path in [
 		"res://art/characters/player/animation/walk_front_strip.png",
 		"res://art/characters/player/animation/walk_back_strip.png",

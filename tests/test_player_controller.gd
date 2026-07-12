@@ -25,6 +25,25 @@ func run(runner) -> void:
 		runner.assert_eq(health.max_health, 130, "equipment max health should increase player max health")
 		runner.assert_eq(health.current_health, 130, "equipment max health should refill starting health")
 		runner.assert_eq(player.move_speed, 278.0, "equipment move speed should increase player speed")
+		health.take_damage(40)
+		player.apply_stat_modifiers({
+			"max_health": 30,
+			"move_speed": 18,
+		})
+		runner.assert_eq(
+			health.current_health,
+			90,
+			"reapplying runtime modifiers should preserve existing damage"
+		)
+		player.apply_stat_modifiers({
+			"max_health": 40,
+			"move_speed": 18,
+		})
+		runner.assert_eq(
+			health.current_health,
+			100,
+			"max health upgrades should grant only newly added health"
+		)
 		player.apply_stat_modifiers({
 			"max_health": 10,
 			"move_speed": 5,

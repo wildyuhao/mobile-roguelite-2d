@@ -44,6 +44,12 @@ class FakePlayer:
 	func apply_stat_modifiers(modifiers: Dictionary) -> void:
 		last_modifiers = modifiers.duplicate(true)
 
+class FakeHealth:
+	extends Node
+
+	var current_health: int = 46
+	var max_health: int = 110
+
 class FakeWeaponSystem:
 	extends Node
 
@@ -56,9 +62,13 @@ class FakeHUD:
 	extends Node
 
 	var last_upgrade_feedback: String = ""
+	var last_health := Vector2i(-1, -1)
 
 	func show_upgrade_feedback(display_name: String) -> void:
 		last_upgrade_feedback = display_name
+
+	func set_health(current: int, maximum: int) -> void:
+		last_health = Vector2i(current, maximum)
 
 class FakeEnemyDirector:
 	extends Node
@@ -299,6 +309,9 @@ func run(runner) -> void:
 
 	var stat_loop = game_loop_script.new()
 	var stat_player := FakePlayer.new()
+	var stat_health := FakeHealth.new()
+	stat_health.name = "HealthComponent"
+	stat_player.add_child(stat_health)
 	var stat_weapon_system := FakeWeaponSystem.new()
 	var stat_hud := FakeHUD.new()
 	stat_loop.player = stat_player
@@ -314,6 +327,11 @@ func run(runner) -> void:
 		"unlocked_equipment": [],
 		"equipment_levels": {},
 	})
+	runner.assert_eq(
+		stat_hud.last_health,
+		Vector2i(46, 110),
+		"runtime stat application should immediately refresh HUD health"
+	)
 	runner.assert_eq(stat_player.last_modifiers.get("pickup_radius", 0), 48, "runtime pickup radius should be included in player modifiers")
 	runner.assert_near(float(stat_weapon_system.last_modifiers.get("weapon_damage_multiplier", 0.0)), 0.15, 0.001, "runtime damage should be included in weapon modifiers")
 	var fake_pickup := FakePickup.new()

@@ -11,6 +11,14 @@ func run(runner) -> void:
 	parent.add_child(enemy)
 	player.health = player.get_node("HealthComponent")
 	player.collision_shape = player.get_node("CollisionShape2D")
+	var player_feedback = player.get_node("HitFeedback")
+	player.hit_feedback = player_feedback
+	player_feedback.configure(
+		player.get_node("AnimatedSprite2D"),
+		player.get_node("HitSpark"),
+		player.get_node("DamageLabel")
+	)
+	player._connect_hit_feedback()
 	player.health.configure(player.base_max_health)
 
 	player.global_position = Vector2.ZERO
@@ -23,6 +31,13 @@ func run(runner) -> void:
 		"attack_recovery": 0.48,
 		"max_health": 24,
 	}, player)
+	var enemy_feedback = enemy.get_node("HitFeedback")
+	enemy.hit_feedback = enemy_feedback
+	enemy_feedback.configure(
+		enemy.get_node("Sprite2D"),
+		enemy.get_node("HitSpark")
+	)
+	enemy._connect_health_signals()
 	var edge_distance: float = float(
 		enemy.get_contact_radius() + player.get_contact_radius() + 2.0
 	)
@@ -35,6 +50,19 @@ func run(runner) -> void:
 	enemy.calculate_action_velocity(0.28)
 	runner.assert_eq(enemy.action_state.state, "active", "windup completion should enter active")
 	runner.assert_eq(player_health.current_health, 92, "active contact should deal exactly eight damage")
+	runner.assert_true(player_feedback != null, "player should include hit feedback")
+	if player_feedback != null:
+		runner.assert_true(
+			player_feedback.is_playing(),
+			"contact damage should start player hit feedback"
+		)
+	runner.assert_true(enemy_feedback != null, "enemy should include hit feedback")
+	if enemy_feedback != null:
+		enemy.get_node("HealthComponent").take_damage(1)
+		runner.assert_true(
+			enemy_feedback.is_playing(),
+			"enemy damage should start enemy hit feedback"
+		)
 	enemy.calculate_action_velocity(0.01)
 	runner.assert_eq(player_health.current_health, 92, "one active window should not deal duplicate damage")
 	runner.assert_true(not player.take_contact_damage(8), "player invulnerability should reject a second contact hit")

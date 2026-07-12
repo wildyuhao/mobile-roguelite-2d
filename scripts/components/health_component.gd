@@ -12,6 +12,12 @@ func configure(new_max_health: int) -> void:
 	max_health = max(1, new_max_health)
 	current_health = max_health
 
+func set_max_health(new_max_health: int) -> void:
+	var next_max_health: int = maxi(1, new_max_health)
+	var added_capacity: int = maxi(0, next_max_health - max_health)
+	max_health = next_max_health
+	current_health = mini(max_health, current_health + added_capacity)
+
 func take_damage(amount: int) -> void:
 	if amount <= 0 or is_dead():
 		return

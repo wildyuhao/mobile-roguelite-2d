@@ -34,6 +34,7 @@ const DEFAULT_MATERIAL_VALUE := 1
 @onready var health: Node = $HealthComponent
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var hit_feedback: Node = get_node_or_null("HitFeedback")
 
 var target: Node2D
 var behavior: String = "chase"
@@ -91,7 +92,7 @@ func _reset_definition_defaults() -> void:
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.ENEMY_GROUP)
-	health.died.connect(_on_died)
+	_connect_health_signals()
 
 func _physics_process(delta: float) -> void:
 	if not pool_active:
@@ -194,6 +195,7 @@ func _update_action_visual() -> void:
 
 func _on_died() -> void:
 	action_state.mark_dead()
+	_reset_hit_feedback()
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
 	defeated.emit(get_defeat_payload())
@@ -207,6 +209,7 @@ func activate_from_pool() -> void:
 	action_state.reset()
 	locked_action_direction = Vector2.RIGHT
 	damage_applied_this_action = false
+	_reset_hit_feedback()
 	if not is_in_group(GameConstantsScript.ENEMY_GROUP):
 		add_to_group(GameConstantsScript.ENEMY_GROUP)
 	if collision_shape == null:
@@ -219,6 +222,7 @@ func activate_from_pool() -> void:
 		sprite.modulate = Color.WHITE
 
 func deactivate_for_pool() -> void:
+	_reset_hit_feedback()
 	begin_pool_release()
 	process_mode = Node.PROCESS_MODE_DISABLED
 	if collision_shape != null:
@@ -309,3 +313,23 @@ func _get_target_contact_radius(target_node: Node2D) -> float:
 	if target_node.has_method("get_contact_radius"):
 		return float(target_node.call("get_contact_radius"))
 	return 18.0
+
+func _connect_health_signals() -> void:
+	if health == null:
+		return
+	var damaged_callback := Callable(self, "_on_damaged")
+	if health.has_signal("damaged") and not health.is_connected("damaged", damaged_callback):
+		health.connect("damaged", damaged_callback)
+	var died_callback := Callable(self, "_on_died")
+	if health.has_signal("died") and not health.is_connected("died", died_callback):
+		health.connect("died", died_callback)
+
+func _on_damaged(amount: int) -> void:
+	if not pool_active:
+		return
+	if hit_feedback != null and hit_feedback.has_method("play_hit"):
+		hit_feedback.play_hit(amount, &"enemy")
+
+func _reset_hit_feedback() -> void:
+	if hit_feedback != null and hit_feedback.has_method("reset_feedback"):
+		hit_feedback.reset_feedback()

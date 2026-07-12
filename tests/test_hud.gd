@@ -30,4 +30,31 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "HUD should expose show_upgrade_feedback")
 
+	var health_label = hud.get_node_or_null("MarginContainer/VBoxContainer/HealthLabel")
+	if hud.has_method("show_damage_feedback") and health_label != null:
+		var base_scale: Vector2 = health_label.scale
+		var base_color: Color = health_label.modulate
+		hud.show_damage_feedback(8)
+		runner.assert_true(
+			health_label.scale.x > base_scale.x,
+			"damage feedback should punch the health label"
+		)
+		runner.assert_true(
+			health_label.modulate.r > health_label.modulate.g,
+			"damage feedback should tint the health label red"
+		)
+		hud._process(0.3)
+		runner.assert_eq(
+			health_label.scale,
+			base_scale,
+			"damage feedback should restore the health label scale"
+		)
+		runner.assert_eq(
+			health_label.modulate,
+			base_color,
+			"damage feedback should restore the health label tint"
+		)
+	else:
+		runner.assert_true(false, "HUD should expose show_damage_feedback")
+
 	hud.queue_free()
