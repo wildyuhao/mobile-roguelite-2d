@@ -120,11 +120,16 @@ func _validate_effects(
 		if effect_id == "" or effect_ids.has(effect_id):
 			errors.append("%s has duplicate effect_id %s" % [weapon_id, effect_id])
 		effect_ids[effect_id] = true
+		var unlock_level := int(effect.get("unlock_level", 1))
+		if unlock_level < 1 or unlock_level > 5:
+			errors.append("%s/%s unlock level is outside 1..5" % [weapon_id, effect_id])
 		_validate_module(errors, weapon_id, effect_id, "trigger", effect.get("trigger", {}), TRIGGERS)
 		_validate_module(errors, weapon_id, effect_id, "target", effect.get("target", {}), TARGETS)
 		_validate_module(errors, weapon_id, effect_id, "carrier", effect.get("carrier", {}), CARRIERS)
 		_validate_effect_bounds(errors, weapon_id, effect_id, effect)
 		_validate_hit(errors, weapon_id, effect_id, effect.get("hit", {}))
+		if effect.has("visual"):
+			_validate_visuals(errors, "%s/%s" % [weapon_id, effect_id], effect.get("visual", {}))
 	return effect_ids
 
 func _validate_levels(

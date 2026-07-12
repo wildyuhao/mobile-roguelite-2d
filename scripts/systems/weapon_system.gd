@@ -224,6 +224,9 @@ func _make_request(
 		int(round(int(hit.get("damage", 0)) * damage_multiplier))
 	)
 	var definition: Dictionary = weapons[weapon_id]["definition"]
+	var visual: Dictionary = Dictionary(definition.get("visual", {})).duplicate(true)
+	for visual_key in Dictionary(effect.get("visual", {})).keys():
+		visual[visual_key] = effect["visual"][visual_key]
 	return {
 		"request_id": request_id,
 		"weapon_id": weapon_id,
@@ -232,7 +235,7 @@ func _make_request(
 		"target": Dictionary(effect.get("target", {})).duplicate(true),
 		"carrier": Dictionary(effect.get("carrier", {})).duplicate(true),
 		"hit": hit,
-		"visual": Dictionary(definition.get("visual", {})).duplicate(true),
+		"visual": visual,
 		"trigger_payload": payload.duplicate(true),
 	}
 

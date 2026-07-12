@@ -4,8 +4,11 @@ class_name WeaponRequestBuilder
 func resolve_effects(definition: Dictionary, level: int) -> Array[Dictionary]:
 	var effects: Array[Dictionary] = []
 	for raw_effect in definition.get("effects", []):
-		if typeof(raw_effect) == TYPE_DICTIONARY:
-			effects.append(Dictionary(raw_effect).duplicate(true))
+		if typeof(raw_effect) != TYPE_DICTIONARY:
+			continue
+		var effect: Dictionary = raw_effect
+		if int(effect.get("unlock_level", 1)) <= level:
+			effects.append(effect.duplicate(true))
 
 	for raw_override in definition.get("levels", []):
 		if typeof(raw_override) != TYPE_DICTIONARY:

@@ -139,7 +139,9 @@ func _normalize_number_types(values: Dictionary) -> Dictionary:
 
 func _with_effect_summary(upgrade: Dictionary) -> Dictionary:
 	var result := upgrade.duplicate(true)
-	var summary := _build_effect_summary(result)
+	var summary := String(result.get("effect_summary", ""))
+	if summary == "":
+		summary = _build_effect_summary(result)
 	if summary != "":
 		result["effect_summary"] = summary
 	return result

@@ -65,6 +65,22 @@ func run(runner) -> void:
 		enemy.get_node_or_null("StatusController") != null,
 		"basic enemy should include a status controller"
 	)
+	var status_visual = enemy.get_node_or_null("StatusVisual")
+	runner.assert_true(status_visual != null, "basic enemy should include one aggregate status visual")
+	if status_visual != null:
+		runner.assert_true(status_visual.get_node_or_null("Icon") is Sprite2D, "status visual should include one icon")
+		runner.assert_true(status_visual.get_node_or_null("StackLabel") is Label, "status visual should include one stack label")
+		for texture_property in ["freeze_texture", "seal_texture", "armor_break_texture", "burn_texture"]:
+			runner.assert_true(
+				status_visual.get(texture_property) is Texture2D,
+				"status visual should configure %s" % texture_property
+			)
+		var status_controller = enemy.get_node_or_null("StatusController")
+		if status_controller != null:
+			runner.assert_true(
+				status_controller.is_connected("status_changed", Callable(status_visual, "apply_snapshot")),
+				"status controller should drive the aggregate visual"
+			)
 	enemy.free()
 
 	for effect_path in [

@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_agent.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -6,6 +6,11 @@
 [ext_resource type="Script" path="res://scripts/components/hit_feedback.gd" id="4"]
 [ext_resource type="Texture2D" path="res://art/effects/hit/enemy_weapon_hit_spark.png" id="5"]
 [ext_resource type="Script" path="res://scripts/components/status_controller.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/components/status_visual.gd" id="7"]
+[ext_resource type="Texture2D" path="res://art/effects/status/freeze_mark.png" id="8"]
+[ext_resource type="Texture2D" path="res://art/effects/status/seal_mark.png" id="9"]
+[ext_resource type="Texture2D" path="res://art/effects/status/armor_break_mark.png" id="10"]
+[ext_resource type="Texture2D" path="res://art/effects/status/burn_mark.png" id="11"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 16.0
@@ -24,6 +29,30 @@ script = ExtResource("2")
 [node name="StatusController" type="Node" parent="."]
 script = ExtResource("6")
 
+[node name="StatusVisual" type="Node2D" parent="."]
+visible = false
+z_index = 24
+position = Vector2(0, -44)
+script = ExtResource("7")
+freeze_texture = ExtResource("8")
+seal_texture = ExtResource("9")
+armor_break_texture = ExtResource("10")
+burn_texture = ExtResource("11")
+
+[node name="Icon" type="Sprite2D" parent="StatusVisual"]
+texture_filter = 1
+scale = Vector2(0.125, 0.125)
+
+[node name="StackLabel" type="Label" parent="StatusVisual"]
+offset_left = 9.0
+offset_top = -12.0
+offset_right = 29.0
+offset_bottom = 10.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 14
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy")
 
@@ -39,3 +68,5 @@ texture = ExtResource("5")
 script = ExtResource("4")
 target_path = NodePath("../Sprite2D")
 spark_path = NodePath("../HitSpark")
+
+[connection signal="status_changed" from="StatusController" to="StatusVisual" method="apply_snapshot"]

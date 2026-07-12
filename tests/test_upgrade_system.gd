@@ -16,6 +16,7 @@ func run(runner) -> void:
 
 	var system = upgrade_system_script.new()
 	system.configure(db.get_upgrades())
+	_assert_new_weapon_upgrades(runner, db.get_upgrades())
 
 	var runtime_state := {
 		"owned_weapons": { "flying_sword": 1 },
@@ -56,12 +57,25 @@ func run(runner) -> void:
 			"weapon_id": "talisman_fire",
 			"max_stacks": 1,
 		},
+		{
+			"id": "unlock_frost_talisman",
+			"display_name": "习得寒霜符",
+			"kind": "weapon_unlock",
+			"weapon_id": "frost_talisman",
+			"max_stacks": 1,
+			"effect_summary": "向前方扇区齐射三道寒符",
+		},
 	]
 	summary_system.configure(summary_upgrades)
-	var summary_choices = summary_system.get_choices(runtime_state, 3, 99)
+	var summary_choices = summary_system.get_choices(runtime_state, 4, 99)
 	runner.assert_eq(_find_choice(summary_choices, "weapon_damage_1").get("effect_summary", ""), "伤害 +15%", "stat upgrade choices should use Chinese effect text")
 	runner.assert_eq(_find_choice(summary_choices, "flying_sword_level").get("effect_summary", ""), "武器等级 +1", "weapon level choices should use Chinese effect text")
 	runner.assert_eq(_find_choice(summary_choices, "unlock_talisman_fire").get("effect_summary", ""), "解锁武器", "weapon unlock choices should use Chinese effect text")
+	runner.assert_eq(
+		_find_choice(summary_choices, "unlock_frost_talisman").get("effect_summary", ""),
+		"向前方扇区齐射三道寒符",
+		"authored weapon summaries should override generic text"
+	)
 
 	var damage_upgrade := _find_choice(choices, "weapon_damage_1")
 	if damage_upgrade.is_empty():
@@ -174,5 +188,35 @@ func _find_upgrade(upgrades: Array, id: String) -> Dictionary:
 func _has_kind(choices: Array, kind: String) -> bool:
 	for choice in choices:
 		if String(choice.get("kind", "")) == kind:
+			return true
+	return false
+
+func _assert_new_weapon_upgrades(runner, upgrades: Array[Dictionary]) -> void:
+	var expected := {
+		"unlock_sword_gourd_blades": ["weapon_unlock", "sword_gourd_blades", 1],
+		"sword_gourd_blades_level": ["weapon_level", "sword_gourd_blades", 4],
+		"unlock_frost_talisman": ["weapon_unlock", "frost_talisman", 1],
+		"frost_talisman_level": ["weapon_level", "frost_talisman", 4],
+		"unlock_soul_lantern": ["weapon_unlock", "soul_lantern", 1],
+		"soul_lantern_level": ["weapon_level", "soul_lantern", 4],
+	}
+	for upgrade_id in expected.keys():
+		var upgrade := _find_upgrade(upgrades, upgrade_id)
+		runner.assert_true(not upgrade.is_empty(), "%s should exist" % upgrade_id)
+		if upgrade.is_empty():
+			continue
+		var signature: Array = expected[upgrade_id]
+		runner.assert_eq(upgrade.get("kind", ""), signature[0], "%s kind" % upgrade_id)
+		runner.assert_eq(upgrade.get("weapon_id", ""), signature[1], "%s weapon id" % upgrade_id)
+		runner.assert_eq(upgrade.get("max_stacks", 0), signature[2], "%s stack count" % upgrade_id)
+		runner.assert_true(_has_cjk(String(upgrade.get("display_name", ""))), "%s should have a Chinese name" % upgrade_id)
+		var summary := String(upgrade.get("effect_summary", ""))
+		runner.assert_true(_has_cjk(summary), "%s should have an authored Chinese behavior summary" % upgrade_id)
+		runner.assert_true(summary not in ["解锁武器", "武器等级 +1"], "%s summary should describe behavior" % upgrade_id)
+
+func _has_cjk(text: String) -> bool:
+	for index in range(text.length()):
+		var codepoint := text.unicode_at(index)
+		if codepoint >= 0x4E00 and codepoint <= 0x9FFF:
 			return true
 	return false

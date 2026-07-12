@@ -1,0 +1,68 @@
+{
+  "id": "sword_gourd_blades",
+  "version": 1,
+  "display_name": "剑葫芦",
+  "description": "灵剑绕身护体，修至圆满后受击可引剑雨反击。",
+  "school": "sword",
+  "max_level": 5,
+  "effects": [
+    {
+      "effect_id": "orbit_blades",
+      "trigger": { "id": "persistent" },
+      "target": { "id": "self" },
+      "carrier": {
+        "id": "orbit",
+        "count": 2,
+        "radius": 82,
+        "angular_speed": 2.4,
+        "hit_interval": 0.45,
+        "hit_radius": 22,
+        "scale": 0.12
+      },
+      "hit": {
+        "damage": 7,
+        "knockback": 0,
+        "statuses": [],
+        "hit_effect_id": "sword_gourd_hit"
+      },
+      "visual": {
+        "carrier": "res://art/weapons/sword_gourd/sword_gourd_orbit_sword.png",
+        "hit": "res://art/weapons/sword_gourd/sword_gourd_hit.png"
+      }
+    },
+    {
+      "effect_id": "sword_rain",
+      "unlock_level": 5,
+      "trigger": { "id": "on_player_hit", "event_cooldown": 4.0 },
+      "target": { "id": "sector", "range": 360, "angle_degrees": 100 },
+      "carrier": {
+        "id": "projectile",
+        "speed": 600,
+        "count": 4,
+        "pierce": 1,
+        "spread_degrees": 12,
+        "scale": 0.1,
+        "tint": "#e8ffff"
+      },
+      "hit": {
+        "damage": 6,
+        "knockback": 12,
+        "statuses": [],
+        "hit_effect_id": "sword_gourd_hit"
+      },
+      "visual": {
+        "carrier": "res://art/weapons/sword_gourd/sword_gourd_sword_rain.png",
+        "hit": "res://art/weapons/sword_gourd/sword_gourd_hit.png"
+      }
+    }
+  ],
+  "visual": {
+    "icon": "res://art/weapons/sword_gourd/sword_gourd_icon.png",
+    "body": "res://art/weapons/sword_gourd/sword_gourd_body.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "orbit_blades", "section": "hit", "values": { "damage": 10 } },
+    { "level": 3, "effect_id": "orbit_blades", "section": "carrier", "values": { "count": 3 } },
+    { "level": 4, "effect_id": "orbit_blades", "section": "carrier", "values": { "radius": 104 } }
+  ]
+}

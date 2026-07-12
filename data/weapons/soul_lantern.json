@@ -1,0 +1,45 @@
+{
+  "id": "soul_lantern",
+  "version": 1,
+  "display_name": "引魂灯",
+  "description": "引出自动追敌的魂火，在妖群间持续游猎。",
+  "school": "soul",
+  "max_level": 5,
+  "effects": [
+    {
+      "effect_id": "soul_flame",
+      "trigger": { "id": "periodic", "cooldown": 2.4 },
+      "target": { "id": "nearest", "range": 460 },
+      "carrier": {
+        "id": "summon",
+        "count": 1,
+        "lifetime": 6.0,
+        "move_speed": 190,
+        "attack_interval": 0.8,
+        "attack_range": 48,
+        "scale": 0.13
+      },
+      "hit": {
+        "damage": 5,
+        "knockback": 0,
+        "statuses": [],
+        "hit_effect_id": "soul_flame_attack"
+      },
+      "visual": {
+        "carrier": "res://art/weapons/soul_lantern/soul_flame.png",
+        "hit": "res://art/weapons/soul_lantern/soul_flame_attack.png",
+        "dissolve": "res://art/weapons/soul_lantern/soul_flame_dissolve.png"
+      }
+    }
+  ],
+  "visual": {
+    "icon": "res://art/weapons/soul_lantern/soul_lantern_icon.png",
+    "body": "res://art/weapons/soul_lantern/soul_lantern_body.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "soul_flame", "section": "hit", "values": { "damage": 7 } },
+    { "level": 3, "effect_id": "soul_flame", "section": "carrier", "values": { "count": 2 } },
+    { "level": 4, "effect_id": "soul_flame", "section": "carrier", "values": { "lifetime": 8.0 } },
+    { "level": 5, "effect_id": "soul_flame", "section": "carrier", "values": { "count": 3, "attack_interval": 0.65 } }
+  ]
+}

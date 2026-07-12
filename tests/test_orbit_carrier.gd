@@ -10,10 +10,14 @@ func run(runner) -> void:
 	owner.global_position = Vector2(100, 100)
 	var first = script.new()
 	var second = script.new()
+	var first_sprite := Sprite2D.new()
+	first_sprite.name = "Sprite2D"
+	first.add_child(first_sprite)
 	first.activate_from_pool()
 	second.activate_from_pool()
 	first.configure_from_request(0, 2, _request(), owner)
 	second.configure_from_request(1, 2, _request(), owner)
+	runner.assert_true(first_sprite.texture != null, "orbit carrier should load its sword-gourd production visual")
 	first._physics_process(0.0)
 	second._physics_process(0.0)
 	runner.assert_near(
@@ -77,5 +81,7 @@ func _request() -> Dictionary:
 			"hit_radius": 20.0,
 		},
 		"hit": { "damage": 7, "knockback": 0.0, "statuses": [] },
-		"visual": {},
+		"visual": {
+			"carrier": "res://art/weapons/sword_gourd/sword_gourd_orbit_sword.png",
+		},
 	}

@@ -6,6 +6,9 @@ func run(runner) -> void:
 		runner.assert_true(false, "summon carrier should exist")
 		return
 	var summon = load(script_path).new()
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	summon.add_child(sprite)
 	var owner := Node2D.new()
 	var near_target := _target(Vector2(100, 0))
 	var far_target := _target(Vector2(200, 0))
@@ -21,6 +24,7 @@ func run(runner) -> void:
 	)
 	summon.activate_from_pool()
 	summon.configure_from_request(_request(), owner, Vector2.ZERO)
+	runner.assert_true(sprite.texture != null, "summon carrier should load its soul-flame production visual")
 	summon.update_context([far_target, near_target])
 	summon._physics_process(1.0)
 	runner.assert_eq(summon.current_target, near_target, "summon should choose nearest explicit candidate")
@@ -68,5 +72,7 @@ func _request() -> Dictionary:
 			"attack_range": 10.0,
 		},
 		"hit": { "damage": 5, "knockback": 0.0, "statuses": [] },
-		"visual": {},
+		"visual": {
+			"carrier": "res://art/weapons/soul_lantern/soul_flame.png",
+		},
 	}

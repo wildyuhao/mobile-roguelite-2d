@@ -13,7 +13,7 @@
       "carrier": {
         "id": "area",
         "radius": 180,
-        "duration": 0,
+        "duration": 0.28,
         "hit_interval": 0.5,
         "count": 1
       },
@@ -26,7 +26,7 @@
     }
   ],
   "visual": {
-    "carrier": "res://art/effects/hit/enemy_weapon_hit_spark.png",
+    "carrier": "res://art/weapons/demon_sealing_bell/bell_wave.png",
     "hit": "res://art/effects/hit/enemy_weapon_hit_spark.png"
   },
   "levels": [

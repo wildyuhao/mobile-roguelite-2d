@@ -107,6 +107,8 @@ func run(runner) -> void:
 			runner.assert_eq(Dictionary(level_three_events[0].get("carrier", {})).get("count", 0), 8, "Spirit Needle Array level three should fire eight needles")
 		needle_system.free()
 
+	_assert_new_production_weapons(runner, db, weapon_system_script)
+
 	var modular_system = weapon_system_script.new()
 	modular_system.set_stat_modifiers({
 		"weapon_damage_multiplier": 0.25,
@@ -241,3 +243,86 @@ func _find_request(requests: Array, effect_id: String) -> Dictionary:
 func _request_damage(requests: Array, effect_id: String) -> int:
 	var request := _find_request(requests, effect_id)
 	return int(Dictionary(request.get("hit", {})).get("damage", 0))
+
+func _assert_new_production_weapons(runner, db, weapon_system_script) -> void:
+	var sword_system = weapon_system_script.new()
+	runner.assert_true(
+		sword_system.add_weapon(db.get_weapon("sword_gourd_blades")),
+		"sword gourd should equip"
+	)
+	var orbit := _find_request(sword_system.tick(0.0), "orbit_blades")
+	runner.assert_eq(Dictionary(orbit.get("carrier", {})).get("count", 0), 2, "sword gourd starts with two orbit blades")
+	runner.assert_eq(Dictionary(orbit.get("carrier", {})).get("radius", 0), 82, "sword gourd base orbit radius")
+	runner.assert_eq(Dictionary(orbit.get("hit", {})).get("damage", 0), 7, "sword gourd base damage")
+	runner.assert_eq(
+		Dictionary(orbit.get("visual", {})).get("carrier", ""),
+		"res://art/weapons/sword_gourd/sword_gourd_orbit_sword.png",
+		"orbit effect should select its own production visual"
+	)
+	runner.assert_eq(sword_system.notify_trigger("on_player_hit").size(), 0, "sword rain should stay locked before level five")
+	sword_system.level_weapon("sword_gourd_blades")
+	orbit = _find_request(sword_system.tick(0.0), "orbit_blades")
+	runner.assert_eq(Dictionary(orbit.get("hit", {})).get("damage", 0), 10, "sword gourd level two raises orbit damage")
+	sword_system.level_weapon("sword_gourd_blades")
+	orbit = _find_request(sword_system.tick(0.0), "orbit_blades")
+	runner.assert_eq(Dictionary(orbit.get("carrier", {})).get("count", 0), 3, "sword gourd level three adds an orbit blade")
+	sword_system.level_weapon("sword_gourd_blades")
+	orbit = _find_request(sword_system.tick(0.0), "orbit_blades")
+	runner.assert_eq(Dictionary(orbit.get("carrier", {})).get("radius", 0), 104, "sword gourd level four widens its orbit")
+	sword_system.level_weapon("sword_gourd_blades")
+	sword_system.tick(0.0)
+	var rain := _find_request(sword_system.notify_trigger("on_player_hit", { "damage": 8 }), "sword_rain")
+	runner.assert_eq(Dictionary(rain.get("carrier", {})).get("count", 0), 4, "sword gourd level five unlocks four retaliation swords")
+	runner.assert_near(float(Dictionary(rain.get("trigger", {})).get("event_cooldown", 0.0)), 4.0, 0.001, "sword rain trigger cooldown")
+	runner.assert_eq(
+		Dictionary(rain.get("visual", {})).get("carrier", ""),
+		"res://art/weapons/sword_gourd/sword_gourd_sword_rain.png",
+		"retaliation effect should select its own production visual"
+	)
+	sword_system.free()
+
+	var frost_system = weapon_system_script.new()
+	runner.assert_true(frost_system.add_weapon(db.get_weapon("frost_talisman")), "frost talisman should equip")
+	var frost := _find_request(frost_system.tick(1.4), "frost_fan")
+	runner.assert_eq(Dictionary(frost.get("target", {})).get("id", ""), "sector", "frost talisman uses sector targeting")
+	runner.assert_eq(Dictionary(frost.get("target", {})).get("angle_degrees", 0), 70, "frost talisman base angle")
+	runner.assert_eq(Dictionary(frost.get("carrier", {})).get("count", 0), 3, "frost talisman starts with three projectiles")
+	runner.assert_eq(_status_duration(frost, "freeze"), 2.5, "frost talisman applies chill")
+	frost_system.level_weapon("frost_talisman")
+	frost_system.level_weapon("frost_talisman")
+	frost = _find_request(frost_system.tick(1.4), "frost_fan")
+	runner.assert_eq(Dictionary(frost.get("target", {})).get("angle_degrees", 0), 95, "frost talisman level three widens its fan")
+	frost_system.level_weapon("frost_talisman")
+	frost = _find_request(frost_system.tick(1.4), "frost_fan")
+	runner.assert_eq(Dictionary(frost.get("carrier", {})).get("pierce", 0), 1, "frost talisman level four pierces")
+	frost_system.level_weapon("frost_talisman")
+	frost = _find_request(frost_system.tick(1.4), "frost_fan")
+	runner.assert_eq(Dictionary(frost.get("carrier", {})).get("count", 0), 4, "frost talisman level five fires four projectiles")
+	runner.assert_eq(_status_duration(frost, "freeze"), 3.5, "frost talisman level five extends chill")
+	frost_system.free()
+
+	var lantern_system = weapon_system_script.new()
+	runner.assert_true(lantern_system.add_weapon(db.get_weapon("soul_lantern")), "soul lantern should equip")
+	var flame := _find_request(lantern_system.tick(2.5), "soul_flame")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("id", ""), "summon", "soul lantern summons a carrier")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("count", 0), 1, "soul lantern starts with one flame")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("lifetime", 0.0), 6.0, "soul flame base lifetime")
+	lantern_system.level_weapon("soul_lantern")
+	lantern_system.level_weapon("soul_lantern")
+	flame = _find_request(lantern_system.tick(2.5), "soul_flame")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("count", 0), 2, "soul lantern level three summons two flames")
+	lantern_system.level_weapon("soul_lantern")
+	flame = _find_request(lantern_system.tick(2.5), "soul_flame")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("lifetime", 0.0), 8.0, "soul lantern level four extends lifetime")
+	lantern_system.level_weapon("soul_lantern")
+	flame = _find_request(lantern_system.tick(2.5), "soul_flame")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("count", 0), 3, "soul lantern level five summons three flames")
+	runner.assert_eq(Dictionary(flame.get("carrier", {})).get("attack_interval", 0.0), 0.65, "soul lantern level five attacks faster")
+	lantern_system.free()
+
+func _status_duration(request: Dictionary, status_id: String) -> float:
+	for status_value in Dictionary(request.get("hit", {})).get("statuses", []):
+		var status: Dictionary = status_value
+		if String(status.get("id", "")) == status_id:
+			return float(status.get("duration", 0.0))
+	return 0.0

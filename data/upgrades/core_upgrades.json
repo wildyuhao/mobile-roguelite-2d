@@ -143,5 +143,53 @@
     "kind": "weapon_unlock",
     "weapon_id": "spirit_needle_array",
     "max_stacks": 1
+  },
+  {
+    "id": "unlock_sword_gourd_blades",
+    "display_name": "开启剑葫芦",
+    "kind": "weapon_unlock",
+    "weapon_id": "sword_gourd_blades",
+    "max_stacks": 1,
+    "effect_summary": "两柄灵剑常驻护体，贴身切割妖群"
+  },
+  {
+    "id": "sword_gourd_blades_level",
+    "display_name": "剑葫芦精通",
+    "kind": "weapon_level",
+    "weapon_id": "sword_gourd_blades",
+    "max_stacks": 4,
+    "effect_summary": "灵剑增伤、增数并扩展轨道，五级解锁受击剑雨"
+  },
+  {
+    "id": "unlock_frost_talisman",
+    "display_name": "习得寒霜符",
+    "kind": "weapon_unlock",
+    "weapon_id": "frost_talisman",
+    "max_stacks": 1,
+    "effect_summary": "向前方扇区齐射三道寒符，叠满寒气冻结"
+  },
+  {
+    "id": "frost_talisman_level",
+    "display_name": "寒霜符精通",
+    "kind": "weapon_level",
+    "weapon_id": "frost_talisman",
+    "max_stacks": 4,
+    "effect_summary": "寒符增伤并扩大扇区，随后贯穿且延长寒气"
+  },
+  {
+    "id": "unlock_soul_lantern",
+    "display_name": "点亮引魂灯",
+    "kind": "weapon_unlock",
+    "weapon_id": "soul_lantern",
+    "max_stacks": 1,
+    "effect_summary": "召出自动追敌的魂火，持续游猎附近妖物"
+  },
+  {
+    "id": "soul_lantern_level",
+    "display_name": "引魂灯精通",
+    "kind": "weapon_level",
+    "weapon_id": "soul_lantern",
+    "max_stacks": 4,
+    "effect_summary": "魂火增伤并增加数量，延长寿命且加快攻击"
   }
 ]

@@ -1,0 +1,56 @@
+{
+  "id": "frost_talisman",
+  "version": 1,
+  "display_name": "寒霜符",
+  "description": "向前方泼洒寒符，连续叠加寒气可冻结妖物。",
+  "school": "talisman",
+  "max_level": 5,
+  "effects": [
+    {
+      "effect_id": "frost_fan",
+      "trigger": { "id": "periodic", "cooldown": 1.35 },
+      "target": { "id": "sector", "range": 340, "angle_degrees": 70 },
+      "carrier": {
+        "id": "projectile",
+        "speed": 430,
+        "count": 3,
+        "pierce": 0,
+        "spread_degrees": 16,
+        "scale": 0.12,
+        "tint": "#e8fbff"
+      },
+      "hit": {
+        "damage": 6,
+        "knockback": 0,
+        "statuses": [
+          { "id": "freeze", "stacks": 1, "duration": 2.5 }
+        ],
+        "hit_effect_id": "frost_talisman_burst"
+      },
+      "visual": {
+        "carrier": "res://art/weapons/frost_talisman/frost_talisman_projectile.png",
+        "hit": "res://art/weapons/frost_talisman/frost_talisman_burst.png",
+        "reaction": "res://art/weapons/frost_talisman/thermal_shatter.png"
+      }
+    }
+  ],
+  "visual": {
+    "icon": "res://art/weapons/frost_talisman/frost_talisman_icon.png"
+  },
+  "levels": [
+    { "level": 2, "effect_id": "frost_fan", "section": "hit", "values": { "damage": 8 } },
+    { "level": 3, "effect_id": "frost_fan", "section": "target", "values": { "angle_degrees": 95 } },
+    { "level": 4, "effect_id": "frost_fan", "section": "carrier", "values": { "pierce": 1 } },
+    { "level": 5, "effect_id": "frost_fan", "section": "carrier", "values": { "count": 4 } },
+    {
+      "level": 5,
+      "effect_id": "frost_fan",
+      "section": "hit",
+      "values": {
+        "statuses": [
+          { "id": "freeze", "stacks": 1, "duration": 3.5 }
+        ]
+      }
+    }
+  ]
+}

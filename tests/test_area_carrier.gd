@@ -6,6 +6,9 @@ func run(runner) -> void:
 		runner.assert_true(false, "area carrier should exist")
 		return
 	var carrier = load(script_path).new()
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	carrier.add_child(sprite)
 	var target := Node2D.new()
 	var health = load("res://scripts/components/health_component.gd").new()
 	health.name = "HealthComponent"
@@ -23,6 +26,7 @@ func run(runner) -> void:
 		_request(1.0),
 		null
 	)
+	runner.assert_true(sprite.texture != null, "area carrier should load its bell-wave production visual")
 	carrier.update_context([target])
 	carrier.update_context([target])
 	runner.assert_eq(hits.size(), 1, "area should respect per-target hit interval")
@@ -55,5 +59,7 @@ func _request(duration: float) -> Dictionary:
 			"knockback": 0.0,
 			"statuses": [],
 		},
-		"visual": {},
+		"visual": {
+			"carrier": "res://art/weapons/demon_sealing_bell/bell_wave.png",
+		},
 	}

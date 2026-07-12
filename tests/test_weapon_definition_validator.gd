@@ -58,6 +58,22 @@ func run(runner) -> void:
 	)
 
 	invalid = valid.duplicate(true)
+	invalid["effects"][0]["unlock_level"] = 6
+	runner.assert_true(
+		_contains(validator.validate(invalid), "unlock level"),
+		"effect unlock levels should stay inside one through five"
+	)
+
+	invalid = valid.duplicate(true)
+	invalid["effects"][0]["visual"] = {
+		"carrier": "res://art/weapons/missing_effect.png",
+	}
+	runner.assert_true(
+		_contains(validator.validate(invalid), "missing visual"),
+		"effect-specific production visuals should be validated"
+	)
+
+	invalid = valid.duplicate(true)
 	invalid["levels"] = [{
 		"level": 2,
 		"effect_id": "main",

@@ -11,6 +11,12 @@ var remaining_duration: float = 0.0
 var hit_interval: float = 0.5
 var target_cooldowns: Dictionary = {}
 var pool_active: bool = true
+var base_texture: Texture2D
+var base_scale := Vector2.ONE
+var base_visual_captured: bool = false
+
+func _ready() -> void:
+	_capture_base_visual()
 
 func configure_from_request(
 	center: Vector2,
@@ -37,6 +43,7 @@ func configure_from_request(
 		var shape := CircleShape2D.new()
 		shape.radius = radius
 		collision.shape = shape
+	_configure_visual()
 
 func update_context(candidates: Array) -> void:
 	if not pool_active:
@@ -86,6 +93,7 @@ func activate_from_pool() -> void:
 	remaining_duration = 0.0
 	hit_interval = 0.5
 	target_cooldowns.clear()
+	_restore_visual()
 	var collision := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision != null:
 		collision.set_deferred("disabled", false)
@@ -116,6 +124,40 @@ func _build_hit_packet() -> Dictionary:
 		"status_payloads": Array(hit.get("statuses", [])).duplicate(true),
 		"hit_effect_id": String(hit.get("hit_effect_id", "")),
 	}
+
+func _configure_visual() -> void:
+	_capture_base_visual()
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		return
+	var visual: Dictionary = request.get("visual", {})
+	var carrier: Dictionary = request.get("carrier", {})
+	var texture_path := String(visual.get("carrier", ""))
+	if texture_path != "" and ResourceLoader.exists(texture_path):
+		sprite.texture = load(texture_path)
+	var scale_value := float(carrier.get("scale", radius / 128.0))
+	sprite.scale = Vector2.ONE * maxf(0.01, scale_value)
+	var tint_text := String(carrier.get("tint", "#ffffff"))
+	if Color.html_is_valid(tint_text):
+		sprite.modulate = Color.html(tint_text)
+
+func _capture_base_visual() -> void:
+	if base_visual_captured:
+		return
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		return
+	base_texture = sprite.texture
+	base_scale = sprite.scale
+	base_visual_captured = true
+
+func _restore_visual() -> void:
+	_capture_base_visual()
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null:
+		sprite.texture = base_texture
+		sprite.scale = base_scale
+		sprite.modulate = Color.WHITE
 
 func _release_or_free() -> void:
 	if not pool_active:
