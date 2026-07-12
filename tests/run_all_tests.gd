@@ -5,6 +5,7 @@ const TestRunnerScript = preload("res://scripts/core/test_runner.gd")
 const TEST_SCRIPTS := [
 	"res://tests/test_game_database.gd",
 	"res://tests/test_pool_service.gd",
+	"res://tests/test_target_selector.gd",
 	"res://tests/test_pool_churn.gd",
 	"res://tests/test_health_component.gd",
 	"res://tests/test_status_controller.gd",
@@ -17,8 +18,10 @@ const TEST_SCRIPTS := [
 	"res://tests/test_weapon_definition_validator.gd",
 	"res://tests/test_weapon_system.gd",
 	"res://tests/test_projectile.gd",
+	"res://tests/test_area_carrier.gd",
 	"res://tests/test_combat_resolver.gd",
 	"res://tests/test_hit_resolver.gd",
+	"res://tests/test_combat_effect_pipeline.gd",
 	"res://tests/test_enemy_agent.gd",
 	"res://tests/test_enemy_action_state.gd",
 	"res://tests/test_contact_combat_integration.gd",

@@ -10,6 +10,27 @@ const POOL_KEY_META := &"_pool_key"
 var available: Dictionary = {}
 var active_by_id: Dictionary = {}
 var created_counts: Dictionary = {}
+var limits: Dictionary = {}
+
+func set_limit(pool_key: String, max_created: int) -> void:
+	if pool_key == "":
+		return
+	limits[pool_key] = maxi(1, max_created)
+
+func can_acquire(pool_key: String, count: int = 1) -> bool:
+	if pool_key == "" or count <= 0:
+		return false
+	var bucket: Array = available.get(pool_key, [])
+	_prune_bucket(bucket)
+	available[pool_key] = bucket
+	var reusable := bucket.size()
+	if not limits.has(pool_key):
+		return true
+	var creatable := maxi(
+		0,
+		int(limits[pool_key]) - int(created_counts.get(pool_key, 0))
+	)
+	return reusable + creatable >= count
 
 func acquire(pool_key: String, scene: PackedScene, parent: Node) -> Node:
 	if pool_key == "" or scene == null or parent == null:
@@ -20,6 +41,8 @@ func acquire(pool_key: String, scene: PackedScene, parent: Node) -> Node:
 	if not bucket.is_empty():
 		node = bucket.pop_back()
 	else:
+		if not can_acquire(pool_key, 1):
+			return null
 		node = scene.instantiate()
 		parent.add_child(node)
 		node.set_meta(POOL_KEY_META, pool_key)

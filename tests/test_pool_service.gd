@@ -46,4 +46,22 @@ func run(runner) -> void:
 	runner.assert_eq(stats.get("active", -1), 1, "acquired node should be active")
 	runner.assert_eq(stats.get("available", -1), 0, "acquired node should leave the bucket")
 	service.release(second)
+
+	if service.has_method("set_limit") and service.has_method("can_acquire"):
+		service.set_limit("limited", 2)
+		runner.assert_true(service.can_acquire("limited", 2), "empty limited pool should accept two nodes")
+		var limited_first = service.acquire("limited", scene, parent)
+		var limited_second = service.acquire("limited", scene, parent)
+		runner.assert_true(limited_first != null and limited_second != null, "pool should fill to its limit")
+		runner.assert_true(not service.can_acquire("limited", 1), "full pool should reject another batch")
+		runner.assert_true(service.acquire("limited", scene, parent) == null, "acquire should return null at limit")
+		service.release(limited_first)
+		runner.assert_true(service.can_acquire("limited", 1), "released node should restore capacity")
+		var limited_reused = service.acquire("limited", scene, parent)
+		runner.assert_true(limited_reused == limited_first, "limited pool should reuse released nodes")
+		runner.assert_eq(service.get_stats("limited")["created"], 2, "limited reuse should not create extra nodes")
+		service.release(limited_reused)
+		service.release(limited_second)
+	else:
+		runner.assert_true(false, "pool service should expose limits and batch capacity")
 	parent.free()
