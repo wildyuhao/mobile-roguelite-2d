@@ -87,5 +87,47 @@
     "kind": "weapon_unlock",
     "weapon_id": "demon_sealing_bell",
     "max_stacks": 1
+  },
+  {
+    "id": "quickstep_invocation",
+    "display_name": "Quickstep Invocation",
+    "kind": "stat_bundle",
+    "stat_modifiers": { "weapon_cooldown_multiplier": -0.06, "move_speed": 12 },
+    "max_stacks": 3
+  },
+  {
+    "id": "heavy_seal",
+    "display_name": "Heavy Seal",
+    "kind": "stat_bundle",
+    "stat_modifiers": { "weapon_damage_multiplier": 0.25, "move_speed": -10 },
+    "max_stacks": 2
+  },
+  {
+    "id": "prosperity_compass",
+    "display_name": "Prosperity Compass",
+    "kind": "stat_bundle",
+    "stat_modifiers": { "pickup_radius": 32, "material_gain": 0.10 },
+    "max_stacks": 3
+  },
+  {
+    "id": "iron_focus",
+    "display_name": "Iron Focus",
+    "kind": "stat_bundle",
+    "stat_modifiers": { "max_health": 10, "weapon_damage_multiplier": 0.10 },
+    "max_stacks": 3
+  },
+  {
+    "id": "wind_edge",
+    "display_name": "Wind Edge",
+    "kind": "stat_bundle",
+    "stat_modifiers": { "move_speed": 18, "weapon_damage_multiplier": 0.10 },
+    "max_stacks": 3
+  },
+  {
+    "id": "gathering_breath",
+    "display_name": "Gathering Breath",
+    "kind": "stat_bundle",
+    "stat_modifiers": { "weapon_cooldown_multiplier": -0.04, "pickup_radius": 16 },
+    "max_stacks": 3
   }
 ]

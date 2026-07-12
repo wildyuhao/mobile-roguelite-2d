@@ -43,16 +43,19 @@ func get_stat_modifiers(runtime_state: Dictionary) -> Dictionary:
 	var stacks: Dictionary = runtime_state.get("upgrade_stacks", {})
 
 	for upgrade in upgrades:
-		if upgrade.get("kind", "") != "stat":
-			continue
 		var id: String = upgrade.get("id", "")
 		var stack_count := int(stacks.get(id, 0))
 		if stack_count <= 0:
 			continue
-		var stat: String = upgrade.get("stat", "")
-		if stat == "":
-			continue
-		totals[stat] = float(totals.get(stat, 0.0)) + float(upgrade.get("value", 0.0)) * stack_count
+		var kind := String(upgrade.get("kind", ""))
+		if kind == "stat":
+			var stat: String = upgrade.get("stat", "")
+			if stat != "":
+				totals[stat] = float(totals.get(stat, 0.0)) + float(upgrade.get("value", 0.0)) * stack_count
+		elif kind == "stat_bundle":
+			var modifiers: Dictionary = upgrade.get("stat_modifiers", {})
+			for stat in modifiers.keys():
+				totals[stat] = float(totals.get(stat, 0.0)) + float(modifiers[stat]) * stack_count
 
 	return _normalize_number_types(totals)
 
@@ -101,11 +104,19 @@ func _build_effect_summary(upgrade: Dictionary) -> String:
 		return "Weapon Lv +1"
 	if kind == "weapon_unlock":
 		return "Unlock Weapon"
-	if kind != "stat":
-		return ""
+	if kind == "stat_bundle":
+		var parts: Array[String] = []
+		var modifiers: Dictionary = upgrade.get("stat_modifiers", {})
+		for stat in modifiers.keys():
+			var part := _build_stat_effect(String(stat), float(modifiers[stat]))
+			if part != "":
+				parts.append(part)
+		return _join_effect_parts(parts)
+	if kind == "stat":
+		return _build_stat_effect(String(upgrade.get("stat", "")), float(upgrade.get("value", 0.0)))
+	return ""
 
-	var stat := String(upgrade.get("stat", ""))
-	var value := float(upgrade.get("value", 0.0))
+func _build_stat_effect(stat: String, value: float) -> String:
 	match stat:
 		"weapon_damage_multiplier":
 			return "Damage %s" % _format_signed_value(value, true)
@@ -122,6 +133,14 @@ func _build_effect_summary(upgrade: Dictionary) -> String:
 		"control_duration":
 			return "Control %s" % _format_signed_value(value, true)
 	return ""
+
+func _join_effect_parts(parts: Array[String]) -> String:
+	var result := ""
+	for part in parts:
+		if result != "":
+			result += ", "
+		result += part
+	return result
 
 func _format_signed_value(value: float, as_percent: bool) -> String:
 	var scale := 100.0 if as_percent else 1.0

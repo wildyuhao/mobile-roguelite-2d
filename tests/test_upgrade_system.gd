@@ -83,6 +83,29 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "upgrade system should expose stat modifiers from selected upgrades")
 
+	var bundle_system = upgrade_system_script.new()
+	var bundle_upgrades: Array[Dictionary] = [
+		{
+			"id": "heavy_seal",
+			"display_name": "Heavy Seal",
+			"kind": "stat_bundle",
+			"stat_modifiers": {
+				"weapon_damage_multiplier": 0.25,
+				"move_speed": -10,
+			},
+			"max_stacks": 2,
+		},
+	]
+	bundle_system.configure(bundle_upgrades)
+	var bundle_choices = bundle_system.get_choices(runtime_state, 1, 77)
+	runner.assert_eq(bundle_choices.size(), 1, "stat bundle should be a valid upgrade choice")
+	runner.assert_eq(bundle_choices[0].get("effect_summary", ""), "Damage +25%, Speed -10", "stat bundle should summarize every modifier")
+	var bundle_state := { "owned_weapons": {}, "upgrade_stacks": {} }
+	bundle_system.apply_upgrade(bundle_state, bundle_choices[0])
+	var bundle_modifiers = bundle_system.get_stat_modifiers(bundle_state)
+	runner.assert_near(float(bundle_modifiers.get("weapon_damage_multiplier", 0.0)), 0.25, 0.001, "bundle damage modifier should apply")
+	runner.assert_eq(bundle_modifiers.get("move_speed", 0), -10, "bundle speed tradeoff should apply")
+
 func _all_unique(choices: Array) -> bool:
 	var seen := {}
 	for choice in choices:

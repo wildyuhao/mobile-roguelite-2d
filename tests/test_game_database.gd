@@ -13,7 +13,7 @@ func run(runner) -> void:
 	runner.assert_true(db.has_weapon("flying_sword"), "database should include flying_sword")
 	runner.assert_eq(db.get_weapon("flying_sword")["display_name"], "Flying Sword", "flying_sword display name")
 	runner.assert_true(db.has_enemy("basic_demon"), "database should include basic_demon")
-	runner.assert_true(db.get_upgrades().size() >= 6, "database should include at least six upgrades")
+	runner.assert_true(db.get_upgrades().size() >= 18, "combat density foundation should include at least eighteen upgrades before the fifth weapon")
 	runner.assert_true(db.get_wave_events().size() >= 2, "database should include wave events")
 	_assert_early_wave_pressure(runner, db.get_wave_events())
 	_assert_three_minute_wave_density(runner, db.get_wave_events())
