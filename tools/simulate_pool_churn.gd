@@ -24,6 +24,11 @@ func _initialize() -> void:
 			"scene": load("res://scenes/weapons/SummonCarrier.tscn"),
 			"peak": 12,
 		},
+		{
+			"key": "enemy_projectile",
+			"scene": load("res://scenes/enemies/EnemyProjectile.tscn"),
+			"peak": 64,
+		},
 	]
 	for definition in definitions:
 		service.set_limit(definition["key"], int(definition["peak"]))

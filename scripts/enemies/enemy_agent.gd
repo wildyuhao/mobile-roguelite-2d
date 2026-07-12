@@ -3,6 +3,7 @@ class_name EnemyAgent
 
 signal defeated(payload: Dictionary)
 signal release_requested(node: Node)
+signal ranged_attack_requested(payload: Dictionary)
 
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
 const EnemyActionStateScript = preload("res://scripts/systems/enemy_action_state.gd")
@@ -10,6 +11,12 @@ const DEFAULT_MOVE_SPEED := 110.0
 const DEFAULT_CHARGE_SPEED := 240.0
 const DEFAULT_PREFERRED_RANGE := 300.0
 const DEFAULT_CHARGE_TRIGGER_RANGE := 340.0
+const DEFAULT_RANGED_ATTACK_RANGE := 380.0
+const DEFAULT_PROJECTILE_SPEED := 330.0
+const DEFAULT_PROJECTILE_LIFETIME := 2.4
+const DEFAULT_PROJECTILE_DAMAGE := 8
+const DEFAULT_PROJECTILE_RADIUS := 12.0
+const PROJECTILE_SPAWN_PADDING := 4.0
 const DEFAULT_ATTACK_WINDUP := 0.28
 const DEFAULT_ATTACK_ACTIVE := 0.10
 const DEFAULT_ATTACK_RECOVERY := 0.48
@@ -22,6 +29,10 @@ const DEFAULT_MATERIAL_VALUE := 1
 @export var charge_speed: float = 240.0
 @export var preferred_range: float = 300.0
 @export var charge_trigger_range: float = 340.0
+@export var ranged_attack_range: float = 380.0
+@export var projectile_speed: float = 330.0
+@export var projectile_lifetime: float = 2.4
+@export var projectile_damage: int = 8
 @export var attack_windup: float = 0.28
 @export var attack_active: float = 0.10
 @export var attack_recovery: float = 0.48
@@ -36,12 +47,16 @@ const DEFAULT_MATERIAL_VALUE := 1
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var hit_feedback: Node = get_node_or_null("HitFeedback")
 @onready var status_controller: Node = get_node_or_null("StatusController")
+@onready var ranged_aim_line: Line2D = get_node_or_null("RangedAimLine")
+@onready var ranged_muzzle: Sprite2D = get_node_or_null("RangedMuzzle")
+@onready var ranged_aim_sigil: Sprite2D = get_node_or_null("RangedAimSigil")
 
 var target: Node2D
 var behavior: String = "chase"
 var action_state = EnemyActionStateScript.new()
 var locked_action_direction: Vector2 = Vector2.RIGHT
 var damage_applied_this_action: bool = false
+var ranged_attack_emitted_this_action: bool = false
 var pool_active: bool = true
 
 func configure(definition: Dictionary, new_target: Node2D) -> void:
@@ -53,13 +68,24 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		collision_shape = get_node_or_null("CollisionShape2D")
 	if status_controller == null:
 		status_controller = get_node_or_null("StatusController")
+	if ranged_aim_line == null:
+		ranged_aim_line = get_node_or_null("RangedAimLine") as Line2D
+	if ranged_muzzle == null:
+		ranged_muzzle = get_node_or_null("RangedMuzzle") as Sprite2D
+	if ranged_aim_sigil == null:
+		ranged_aim_sigil = get_node_or_null("RangedAimSigil") as Sprite2D
 	_reset_definition_defaults()
 	target = new_target
 	behavior = definition.get("behavior", "chase")
 	action_state.reset()
 	locked_action_direction = Vector2.RIGHT
 	damage_applied_this_action = false
+	ranged_attack_emitted_this_action = false
 	charge_trigger_range = float(definition.get("charge_trigger_range", charge_trigger_range))
+	ranged_attack_range = float(definition.get("ranged_attack_range", ranged_attack_range))
+	projectile_speed = float(definition.get("projectile_speed", projectile_speed))
+	projectile_lifetime = float(definition.get("projectile_lifetime", projectile_lifetime))
+	projectile_damage = int(definition.get("projectile_damage", projectile_damage))
 	attack_windup = float(definition.get("attack_windup", attack_windup))
 	attack_active = float(definition.get("attack_active", attack_active))
 	attack_recovery = float(definition.get("attack_recovery", attack_recovery))
@@ -79,6 +105,7 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		health.configure(int(definition.get("max_health", 24)))
 	_configure_sprite(definition)
 	_configure_collision(definition)
+	_reset_ranged_visuals()
 
 func _reset_definition_defaults() -> void:
 	behavior = "chase"
@@ -86,6 +113,10 @@ func _reset_definition_defaults() -> void:
 	charge_speed = DEFAULT_CHARGE_SPEED
 	preferred_range = DEFAULT_PREFERRED_RANGE
 	charge_trigger_range = DEFAULT_CHARGE_TRIGGER_RANGE
+	ranged_attack_range = DEFAULT_RANGED_ATTACK_RANGE
+	projectile_speed = DEFAULT_PROJECTILE_SPEED
+	projectile_lifetime = DEFAULT_PROJECTILE_LIFETIME
+	projectile_damage = DEFAULT_PROJECTILE_DAMAGE
 	attack_windup = DEFAULT_ATTACK_WINDUP
 	attack_active = DEFAULT_ATTACK_ACTIVE
 	attack_recovery = DEFAULT_ATTACK_RECOVERY
@@ -110,19 +141,34 @@ func calculate_action_velocity(delta: float) -> Vector2:
 	var movement_multiplier := _get_movement_multiplier()
 	if status_controller != null and status_controller.has_method("tick_statuses"):
 		status_controller.tick_statuses(delta)
+	if behavior == "ranged" and action_state.state == EnemyActionStateScript.WINDUP:
+		_update_ranged_lock()
 	var transitions := action_state.tick(delta, action_time_scale)
 	if transitions.has(EnemyActionStateScript.ACTIVE):
 		damage_applied_this_action = false
+		if behavior == "ranged":
+			_emit_ranged_attack()
 
 	var result := Vector2.ZERO
 	if action_state.state == EnemyActionStateScript.ACTIVE:
-		if action_time_scale > 0.0:
+		if behavior != "ranged" and action_time_scale > 0.0:
 			_try_action_damage()
 		if behavior == "charge":
 			result = locked_action_direction * charge_speed
 	elif action_state.state == EnemyActionStateScript.LOCOMOTION:
 		if behavior == "charge":
 			result = _calculate_charge_velocity()
+		elif behavior == "ranged":
+			result = calculate_desired_velocity(delta)
+			if (
+				result == Vector2.ZERO
+				and _is_target_in_ranged_attack_range()
+				and _can_start_action(true)
+			):
+				_update_ranged_lock()
+				ranged_attack_emitted_this_action = false
+				action_state.start_attack(attack_windup, attack_active, attack_recovery)
+				result = Vector2.ZERO
 		else:
 			result = calculate_desired_velocity(delta)
 			if _is_target_in_contact_range() and _can_start_action(_is_special_behavior()):
@@ -191,23 +237,85 @@ func _try_action_damage() -> void:
 		damage_applied_this_action = true
 
 func _update_action_visual() -> void:
-	if sprite == null:
+	if sprite != null:
+		match action_state.state:
+			EnemyActionStateScript.WINDUP:
+				sprite.modulate = Color(1.0, 0.65, 0.25)
+			EnemyActionStateScript.ACTIVE:
+				sprite.modulate = Color(1.0, 0.3, 0.3)
+			EnemyActionStateScript.RECOVERY:
+				sprite.modulate = Color(0.72, 0.72, 0.72)
+			_:
+				sprite.modulate = Color.WHITE
+	_update_ranged_telegraph_visuals()
+
+func _is_target_in_ranged_attack_range() -> bool:
+	return (
+		target != null
+		and global_position.distance_to(target.global_position) <= ranged_attack_range
+	)
+
+func _update_ranged_lock() -> void:
+	if target == null:
 		return
-	match action_state.state:
-		EnemyActionStateScript.WINDUP:
-			sprite.modulate = Color(1.0, 0.65, 0.25)
-		EnemyActionStateScript.ACTIVE:
-			sprite.modulate = Color(1.0, 0.3, 0.3)
-		EnemyActionStateScript.RECOVERY:
-			sprite.modulate = Color(0.72, 0.72, 0.72)
-		_:
-			sprite.modulate = Color.WHITE
+	var next_direction := global_position.direction_to(target.global_position)
+	if next_direction != Vector2.ZERO:
+		locked_action_direction = next_direction
+
+func _emit_ranged_attack() -> void:
+	if ranged_attack_emitted_this_action:
+		return
+	ranged_attack_emitted_this_action = true
+	var direction := locked_action_direction.normalized()
+	if direction == Vector2.ZERO:
+		direction = Vector2.RIGHT
+	ranged_attack_requested.emit({
+		"origin": global_position + direction * (
+			get_contact_radius() + DEFAULT_PROJECTILE_RADIUS + PROJECTILE_SPAWN_PADDING
+		),
+		"direction": direction,
+		"damage": projectile_damage,
+		"speed": projectile_speed,
+		"lifetime": projectile_lifetime,
+	})
+
+func _update_ranged_telegraph_visuals() -> void:
+	var show_aim: bool = behavior == "ranged" and action_state.state == EnemyActionStateScript.WINDUP
+	var show_muzzle: bool = behavior == "ranged" and action_state.state == EnemyActionStateScript.ACTIVE
+	var aim_length := ranged_attack_range
+	if target != null:
+		aim_length = minf(aim_length, global_position.distance_to(target.global_position))
+	if ranged_aim_line != null:
+		ranged_aim_line.visible = show_aim
+		ranged_aim_line.points = PackedVector2Array([
+			Vector2.ZERO,
+			locked_action_direction * aim_length,
+		])
+	if ranged_aim_sigil != null:
+		ranged_aim_sigil.visible = show_aim
+		ranged_aim_sigil.position = locked_action_direction * aim_length
+		ranged_aim_sigil.rotation = locked_action_direction.angle()
+	if ranged_muzzle != null:
+		ranged_muzzle.visible = show_muzzle
+		ranged_muzzle.position = locked_action_direction * (
+			get_contact_radius() + DEFAULT_PROJECTILE_RADIUS + PROJECTILE_SPAWN_PADDING
+		)
+		ranged_muzzle.rotation = locked_action_direction.angle()
+
+func _reset_ranged_visuals() -> void:
+	if ranged_aim_line != null:
+		ranged_aim_line.visible = false
+	if ranged_aim_sigil != null:
+		ranged_aim_sigil.visible = false
+	if ranged_muzzle != null:
+		ranged_muzzle.visible = false
 
 func _on_died() -> void:
 	action_state.mark_dead()
 	if status_controller != null and status_controller.has_method("clear_all"):
 		status_controller.clear_all()
 	_reset_hit_feedback()
+	_reset_ranged_visuals()
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
 	defeated.emit(get_defeat_payload())
@@ -221,10 +329,12 @@ func activate_from_pool() -> void:
 	action_state.reset()
 	locked_action_direction = Vector2.RIGHT
 	damage_applied_this_action = false
+	ranged_attack_emitted_this_action = false
 	_clear_runtime_metadata()
 	if status_controller != null and status_controller.has_method("clear_all"):
 		status_controller.clear_all()
 	_reset_hit_feedback()
+	_reset_ranged_visuals()
 	if not is_in_group(GameConstantsScript.ENEMY_GROUP):
 		add_to_group(GameConstantsScript.ENEMY_GROUP)
 	if collision_shape == null:
@@ -249,9 +359,11 @@ func begin_pool_release() -> void:
 	velocity = Vector2.ZERO
 	action_state.mark_dead()
 	damage_applied_this_action = false
+	ranged_attack_emitted_this_action = false
 	_clear_runtime_metadata()
 	if status_controller != null and status_controller.has_method("clear_all"):
 		status_controller.clear_all()
+	_reset_ranged_visuals()
 	visible = false
 	remove_from_group(GameConstantsScript.ENEMY_GROUP)
 

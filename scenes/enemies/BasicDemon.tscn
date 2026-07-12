@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_agent.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" path="res://art/effects/status/seal_mark.png" id="9"]
 [ext_resource type="Texture2D" path="res://art/effects/status/armor_break_mark.png" id="10"]
 [ext_resource type="Texture2D" path="res://art/effects/status/burn_mark.png" id="11"]
+[ext_resource type="Texture2D" path="res://art/enemies/ranged_demon/enemy_fire_muzzle.png" id="12"]
+[ext_resource type="Texture2D" path="res://art/enemies/ranged_demon/enemy_fire_sigil.png" id="13"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 16.0
@@ -55,6 +57,28 @@ theme_override_font_sizes/font_size = 14
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy")
+
+[node name="RangedAimLine" type="Line2D" parent="."]
+visible = false
+z_index = 12
+points = PackedVector2Array(0, 0, 120, 0)
+width = 3.0
+default_color = Color(1, 0.16, 0.04, 0.72)
+antialiased = true
+
+[node name="RangedAimSigil" type="Sprite2D" parent="."]
+visible = false
+z_index = 13
+texture_filter = 1
+scale = Vector2(0.11, 0.11)
+texture = ExtResource("13")
+
+[node name="RangedMuzzle" type="Sprite2D" parent="."]
+visible = false
+z_index = 14
+texture_filter = 1
+scale = Vector2(0.12, 0.12)
+texture = ExtResource("12")
 
 [node name="HitSpark" type="Sprite2D" parent="."]
 visible = false

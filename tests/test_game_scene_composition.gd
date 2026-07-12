@@ -46,6 +46,10 @@ func run(runner) -> void:
 	if pipeline != null:
 		for scene_property in ["projectile_scene", "area_scene", "orbit_scene", "summon_scene"]:
 			runner.assert_true(pipeline.get(scene_property) is PackedScene, "pipeline should configure %s" % scene_property)
+	runner.assert_true(
+		game.get("enemy_projectile_scene") is PackedScene,
+		"game loop should configure a pooled enemy projectile scene"
+	)
 	var game_loop_source := FileAccess.get_file_as_string("res://scripts/core/game_loop.gd")
 	runner.assert_true(not game_loop_source.contains("weapon_type"), "game loop should not branch on weapon type")
 	runner.assert_true(not game_loop_source.contains("_apply_pulse_event"), "game loop should not execute pulse damage")
@@ -65,6 +69,9 @@ func run(runner) -> void:
 		enemy.get_node_or_null("StatusController") != null,
 		"basic enemy should include a status controller"
 	)
+	runner.assert_true(enemy.get_node_or_null("RangedAimLine") is Line2D, "enemy should include a ranged aim line")
+	runner.assert_true(enemy.get_node_or_null("RangedMuzzle") is Sprite2D, "enemy should include a ranged muzzle flash")
+	runner.assert_true(enemy.get_node_or_null("RangedAimSigil") is Sprite2D, "enemy should include a ranged aim sigil")
 	var status_visual = enemy.get_node_or_null("StatusVisual")
 	runner.assert_true(status_visual != null, "basic enemy should include one aggregate status visual")
 	if status_visual != null:

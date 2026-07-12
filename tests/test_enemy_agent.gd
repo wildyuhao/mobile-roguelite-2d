@@ -28,6 +28,7 @@ func run(runner) -> void:
 	var sprite := Sprite2D.new()
 	var collision := CollisionShape2D.new()
 	var collision_shape := CircleShape2D.new()
+	var ranged_aim_line := Line2D.new()
 	var target := Node2D.new()
 	var status_controller: Node = null
 	health.name = "HealthComponent"
@@ -35,9 +36,12 @@ func run(runner) -> void:
 	collision.name = "CollisionShape2D"
 	collision_shape.radius = 16.0
 	collision.shape = collision_shape
+	ranged_aim_line.name = "RangedAimLine"
+	ranged_aim_line.visible = false
 	enemy.add_child(health)
 	enemy.add_child(sprite)
 	enemy.add_child(collision)
+	enemy.add_child(ranged_aim_line)
 	if ResourceLoader.exists("res://scripts/components/status_controller.gd"):
 		status_controller = load("res://scripts/components/status_controller.gd").new()
 		status_controller.name = "StatusController"
@@ -186,6 +190,58 @@ func run(runner) -> void:
 			"charge should enter active after windup"
 		)
 		charge_target.free()
+
+		if enemy.has_signal("ranged_attack_requested"):
+			var ranged_target := ContactTarget.new()
+			var ranged_payloads: Array[Dictionary] = []
+			enemy.ranged_attack_requested.connect(
+				func(payload: Dictionary) -> void: ranged_payloads.append(payload)
+			)
+			enemy.global_position = Vector2.ZERO
+			ranged_target.global_position = Vector2(320, 0)
+			enemy.configure({
+				"behavior": "ranged",
+				"move_speed": 80,
+				"preferred_range": 320,
+				"ranged_attack_range": 380,
+				"projectile_speed": 330,
+				"projectile_lifetime": 2.4,
+				"projectile_damage": 8,
+				"attack_windup": 0.55,
+				"attack_active": 0.08,
+				"attack_recovery": 0.65,
+				"max_health": 28,
+			}, ranged_target)
+			runner.assert_eq(
+				enemy.calculate_action_velocity(0.0),
+				Vector2.ZERO,
+				"ranged enemy should stop and begin windup inside attack range"
+			)
+			runner.assert_eq(enemy.action_state.state, "windup", "ranged enemy should visibly wind up")
+			runner.assert_eq(ranged_payloads.size(), 0, "ranged windup should not fire early")
+			runner.assert_true(ranged_aim_line.visible, "ranged windup should show an aim line")
+
+			ranged_target.global_position = Vector2(0, 320)
+			enemy.calculate_action_velocity(0.55)
+			runner.assert_eq(enemy.action_state.state, "active", "ranged windup should enter active")
+			runner.assert_eq(ranged_payloads.size(), 1, "ranged active frame should fire exactly once")
+			if not ranged_payloads.is_empty():
+				var payload: Dictionary = ranged_payloads[0]
+				runner.assert_true(
+					Vector2(payload.get("origin", Vector2.ZERO)).distance_to(enemy.global_position) >= 34.0,
+					"shot should spawn beyond the shooter and projectile collision radii"
+				)
+				runner.assert_near(Vector2(payload.get("direction", Vector2.ZERO)).x, 0.0, 0.001, "shot should lock final x direction")
+				runner.assert_near(Vector2(payload.get("direction", Vector2.ZERO)).y, 1.0, 0.001, "shot should lock final y direction")
+				runner.assert_eq(int(payload.get("damage", 0)), 8, "shot should use configured damage")
+				runner.assert_near(float(payload.get("speed", 0.0)), 330.0, 0.001, "shot should use configured speed")
+			runner.assert_true(not ranged_aim_line.visible, "aim line should hide once the shot fires")
+			ranged_target.global_position = Vector2(-320, 0)
+			enemy.calculate_action_velocity(0.04)
+			runner.assert_eq(ranged_payloads.size(), 1, "active ranged action should not fire twice")
+			ranged_target.free()
+		else:
+			runner.assert_true(false, "enemy agent should emit ranged attack requests")
 
 		if status_controller != null:
 			enemy.global_position = Vector2.ZERO

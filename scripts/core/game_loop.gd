@@ -8,8 +8,11 @@ const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
 const EquipmentSystemScript = preload("res://scripts/systems/equipment_system.gd")
 const SETTLEMENT_UPGRADE_EQUIPMENT_ID := "talisman_robe"
 const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "bronze_gear_core", "jade_compass"]
+const ENEMY_PROJECTILE_POOL_LIMIT := 64
+const ENEMY_PROJECTILE_PREWARM := 16
 
 @export var experience_pickup_scene: PackedScene
+@export var enemy_projectile_scene: PackedScene
 
 @onready var player: Node2D = $Player
 @onready var enemy_director: Node = $EnemyDirector
@@ -49,6 +52,14 @@ func _ready() -> void:
 	assert(loaded, "Game database failed to load: %s" % str(database.errors))
 	if pool_service != null and pool_service.has_method("prewarm"):
 		pool_service.prewarm("pickup", experience_pickup_scene, self, 32)
+		if enemy_projectile_scene != null:
+			pool_service.set_limit("enemy_projectile", ENEMY_PROJECTILE_POOL_LIMIT)
+			pool_service.prewarm(
+				"enemy_projectile",
+				enemy_projectile_scene,
+				self,
+				ENEMY_PROJECTILE_PREWARM
+			)
 	if (
 		combat_effect_pipeline != null
 		and combat_effect_pipeline.has_method("prepare_runtime")
@@ -170,11 +181,27 @@ func _try_apply_runtime_upgrade(upgrade: Dictionary) -> bool:
 func _on_enemy_spawned(enemy: Node) -> void:
 	if combat_effect_pipeline != null:
 		combat_effect_pipeline.register_target(enemy)
+	if enemy.has_signal("ranged_attack_requested"):
+		var ranged_callback := Callable(self, "_on_enemy_ranged_attack_requested")
+		if not enemy.is_connected("ranged_attack_requested", ranged_callback):
+			enemy.connect("ranged_attack_requested", ranged_callback)
 	if not enemy.has_signal("defeated"):
 		return
 	var callback := Callable(self, "_on_enemy_defeated")
 	if not enemy.is_connected("defeated", callback):
 		enemy.connect("defeated", callback)
+
+func _on_enemy_ranged_attack_requested(payload: Dictionary) -> void:
+	var projectile = _acquire_runtime_node("enemy_projectile", enemy_projectile_scene)
+	if projectile == null or not projectile.has_method("configure"):
+		return
+	projectile.configure(
+		payload.get("origin", Vector2.ZERO),
+		payload.get("direction", Vector2.RIGHT),
+		float(payload.get("speed", 330.0)),
+		int(payload.get("damage", 8)),
+		float(payload.get("lifetime", 2.4))
+	)
 
 func _on_enemy_defeated(payload: Dictionary) -> void:
 	_forward_weapon_trigger("on_kill", payload)
