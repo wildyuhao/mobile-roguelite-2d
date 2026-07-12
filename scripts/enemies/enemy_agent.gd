@@ -14,6 +14,7 @@ const DEFAULT_ATTACK_WINDUP := 0.28
 const DEFAULT_ATTACK_ACTIVE := 0.10
 const DEFAULT_ATTACK_RECOVERY := 0.48
 const DEFAULT_CONTACT_DAMAGE := 8
+const DEFAULT_CONTACT_REACH_PADDING := 4.0
 const DEFAULT_EXPERIENCE_VALUE := 1
 const DEFAULT_MATERIAL_VALUE := 1
 
@@ -25,6 +26,7 @@ const DEFAULT_MATERIAL_VALUE := 1
 @export var attack_active: float = 0.10
 @export var attack_recovery: float = 0.48
 @export var contact_damage: int = 8
+@export var contact_reach_padding: float = DEFAULT_CONTACT_REACH_PADDING
 @export var experience_value: int = 1
 @export var material_value: int = 1
 @export var is_boss: bool = false
@@ -61,6 +63,9 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 	charge_speed = float(definition.get("charge_speed", charge_speed))
 	preferred_range = float(definition.get("preferred_range", preferred_range))
 	contact_damage = int(definition.get("contact_damage", contact_damage))
+	contact_reach_padding = float(
+		definition.get("contact_reach_padding", contact_reach_padding)
+	)
 	experience_value = int(definition.get("experience_value", experience_value))
 	material_value = int(definition.get("material_value", material_value))
 	is_boss = definition.get("behavior", "") == "boss" or bool(definition.get("is_boss", false))
@@ -79,6 +84,7 @@ func _reset_definition_defaults() -> void:
 	attack_active = DEFAULT_ATTACK_ACTIVE
 	attack_recovery = DEFAULT_ATTACK_RECOVERY
 	contact_damage = DEFAULT_CONTACT_DAMAGE
+	contact_reach_padding = DEFAULT_CONTACT_REACH_PADDING
 	experience_value = DEFAULT_EXPERIENCE_VALUE
 	material_value = DEFAULT_MATERIAL_VALUE
 	is_boss = false
@@ -153,8 +159,19 @@ func _calculate_charge_velocity() -> Vector2:
 func _is_target_in_contact_range() -> bool:
 	if target == null:
 		return false
-	var contact_range := get_contact_radius() + _get_target_contact_radius(target)
-	return global_position.distance_to(target.global_position) <= contact_range
+	return (
+		global_position.distance_to(target.global_position)
+		<= get_contact_attack_range(target)
+	)
+
+func get_contact_attack_range(target_node: Node2D) -> float:
+	if target_node == null:
+		return 0.0
+	return (
+		get_contact_radius()
+		+ _get_target_contact_radius(target_node)
+		+ maxf(0.0, contact_reach_padding)
+	)
 
 func _try_action_damage() -> void:
 	if damage_applied_this_action:
@@ -273,8 +290,10 @@ func try_apply_contact_damage() -> bool:
 		return false
 
 	var target_node := target as Node2D
-	var contact_range := get_contact_radius() + _get_target_contact_radius(target_node)
-	if global_position.distance_to(target_node.global_position) > contact_range:
+	if (
+		global_position.distance_to(target_node.global_position)
+		> get_contact_attack_range(target_node)
+	):
 		return false
 
 	return bool(target_node.call("take_contact_damage", contact_damage))

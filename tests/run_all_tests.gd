@@ -17,6 +17,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_combat_resolver.gd",
 	"res://tests/test_enemy_agent.gd",
 	"res://tests/test_enemy_action_state.gd",
+	"res://tests/test_contact_combat_integration.gd",
 	"res://tests/test_game_loop_summary.gd",
 	"res://tests/test_enemy_director.gd",
 	"res://tests/test_encounter_bag.gd",

@@ -213,6 +213,7 @@ func run(runner) -> void:
 		runner.assert_eq(enemy.preferred_range, 300.0, "reuse should reset omitted preferred range")
 		runner.assert_eq(enemy.attack_windup, 0.28, "reuse should reset omitted attack windup")
 		runner.assert_eq(enemy.contact_damage, 8, "reuse should reset omitted contact damage")
+		runner.assert_eq(enemy.contact_reach_padding, 4.0, "reuse should reset contact reach padding")
 		enemy._on_died()
 		runner.assert_eq(release_requests, [enemy], "pooled enemy death should request one release")
 	else:
