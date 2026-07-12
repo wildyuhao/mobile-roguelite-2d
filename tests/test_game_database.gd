@@ -11,7 +11,28 @@ func run(runner) -> void:
 
 	runner.assert_true(result, "database load_all should return true")
 	runner.assert_true(db.has_weapon("flying_sword"), "database should include flying_sword")
-	runner.assert_eq(db.get_weapon("flying_sword")["display_name"], "Flying Sword", "flying_sword display name")
+	var expected_weapon_names := {
+		"flying_sword": "飞剑",
+		"talisman_fire": "符火",
+		"mechanism_crossbow": "机关连弩",
+		"demon_sealing_bell": "封魔铃",
+		"spirit_needle_array": "灵针阵",
+	}
+	for weapon_id in expected_weapon_names.keys():
+		runner.assert_eq(
+			db.get_weapon(weapon_id).get("display_name", ""),
+			expected_weapon_names[weapon_id],
+			"%s should use its Chinese display name" % weapon_id
+		)
+		runner.assert_true(
+			_has_cjk(String(db.get_weapon(weapon_id).get("description", ""))),
+			"%s description should contain Chinese text" % weapon_id
+		)
+	for upgrade in db.get_upgrades():
+		runner.assert_true(
+			_has_cjk(String(upgrade.get("display_name", ""))),
+			"%s should use a Chinese display name" % upgrade.get("id", "")
+		)
 	runner.assert_true(db.has_enemy("basic_demon"), "database should include basic_demon")
 	runner.assert_true(db.get_upgrades().size() >= 20, "combat density foundation should include at least twenty upgrades")
 	runner.assert_true(db.get_wave_events().size() >= 2, "database should include wave events")
@@ -92,3 +113,10 @@ func _assert_three_minute_wave_density(runner, wave_events: Array[Dictionary]) -
 	for index in range(1, event_times.size()):
 		var gap := event_times[index] - event_times[index - 1]
 		runner.assert_true(gap <= 12.0, "three-minute wave gap should not exceed 12 seconds")
+
+func _has_cjk(text: String) -> bool:
+	for index in range(text.length()):
+		var codepoint := text.unicode_at(index)
+		if codepoint >= 0x4E00 and codepoint <= 0x9FFF:
+			return true
+	return false

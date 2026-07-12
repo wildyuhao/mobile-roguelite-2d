@@ -101,9 +101,9 @@ func _with_effect_summary(upgrade: Dictionary) -> Dictionary:
 func _build_effect_summary(upgrade: Dictionary) -> String:
 	var kind := String(upgrade.get("kind", ""))
 	if kind == "weapon_level":
-		return "Weapon Lv +1"
+		return "武器等级 +1"
 	if kind == "weapon_unlock":
-		return "Unlock Weapon"
+		return "解锁武器"
 	if kind == "stat_bundle":
 		var parts: Array[String] = []
 		var modifiers: Dictionary = upgrade.get("stat_modifiers", {})
@@ -119,26 +119,26 @@ func _build_effect_summary(upgrade: Dictionary) -> String:
 func _build_stat_effect(stat: String, value: float) -> String:
 	match stat:
 		"weapon_damage_multiplier":
-			return "Damage %s" % _format_signed_value(value, true)
+			return "伤害 %s" % _format_signed_value(value, true)
 		"weapon_cooldown_multiplier":
-			return "CD %s" % _format_signed_value(value, true)
+			return "冷却 %s" % _format_signed_value(value, true)
 		"pickup_radius":
-			return "Pickup %s" % _format_signed_value(value, false)
+			return "拾取范围 %s" % _format_signed_value(value, false)
 		"move_speed":
-			return "Speed %s" % _format_signed_value(value, false)
+			return "移速 %s" % _format_signed_value(value, false)
 		"max_health":
-			return "HP %s" % _format_signed_value(value, false)
+			return "生命 %s" % _format_signed_value(value, false)
 		"material_gain":
-			return "Mat %s" % _format_signed_value(value, true)
+			return "灵石收益 %s" % _format_signed_value(value, true)
 		"control_duration":
-			return "Control %s" % _format_signed_value(value, true)
+			return "控制时长 %s" % _format_signed_value(value, true)
 	return ""
 
 func _join_effect_parts(parts: Array[String]) -> String:
 	var result := ""
 	for part in parts:
 		if result != "":
-			result += ", "
+			result += "，"
 		result += part
 	return result
 

@@ -1,7 +1,7 @@
 {
   "id": "mechanism_crossbow",
-  "display_name": "Mechanism Crossbow",
-  "description": "A compact mechanism crossbow that fires piercing bolts.",
+  "display_name": "机关连弩",
+  "description": "高速发射可贯穿敌人的机关弩矢。",
   "type": "projectile",
   "base_damage": 7,
   "cooldown": 0.45,

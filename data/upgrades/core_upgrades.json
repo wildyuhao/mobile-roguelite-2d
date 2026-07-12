@@ -1,7 +1,7 @@
 [
   {
     "id": "weapon_damage_1",
-    "display_name": "Sharpened Edge",
+    "display_name": "锋刃淬炼",
     "kind": "stat",
     "stat": "weapon_damage_multiplier",
     "value": 0.15,
@@ -9,7 +9,7 @@
   },
   {
     "id": "cooldown_1",
-    "display_name": "Quick Invocation",
+    "display_name": "迅捷敕令",
     "kind": "stat",
     "stat": "weapon_cooldown_multiplier",
     "value": -0.08,
@@ -17,7 +17,7 @@
   },
   {
     "id": "pickup_radius_1",
-    "display_name": "Spirit Magnet",
+    "display_name": "聚灵磁场",
     "kind": "stat",
     "stat": "pickup_radius",
     "value": 24,
@@ -25,7 +25,7 @@
   },
   {
     "id": "move_speed_1",
-    "display_name": "Cloudstep",
+    "display_name": "踏云步",
     "kind": "stat",
     "stat": "move_speed",
     "value": 24,
@@ -33,7 +33,7 @@
   },
   {
     "id": "max_health_1",
-    "display_name": "Jade Body",
+    "display_name": "玉骨法身",
     "kind": "stat",
     "stat": "max_health",
     "value": 12,
@@ -41,105 +41,105 @@
   },
   {
     "id": "flying_sword_level",
-    "display_name": "Flying Sword Mastery",
+    "display_name": "飞剑精通",
     "kind": "weapon_level",
     "weapon_id": "flying_sword",
     "max_stacks": 4
   },
   {
     "id": "talisman_fire_level",
-    "display_name": "Talisman Fire Mastery",
+    "display_name": "符火精通",
     "kind": "weapon_level",
     "weapon_id": "talisman_fire",
     "max_stacks": 4
   },
   {
     "id": "mechanism_crossbow_level",
-    "display_name": "Mechanism Crossbow Mastery",
+    "display_name": "机关连弩精通",
     "kind": "weapon_level",
     "weapon_id": "mechanism_crossbow",
     "max_stacks": 4
   },
   {
     "id": "demon_sealing_bell_level",
-    "display_name": "Demon-Sealing Bell Mastery",
+    "display_name": "封魔铃精通",
     "kind": "weapon_level",
     "weapon_id": "demon_sealing_bell",
     "max_stacks": 4
   },
   {
     "id": "unlock_talisman_fire",
-    "display_name": "Learn Talisman Fire",
+    "display_name": "习得符火",
     "kind": "weapon_unlock",
     "weapon_id": "talisman_fire",
     "max_stacks": 1
   },
   {
     "id": "unlock_mechanism_crossbow",
-    "display_name": "Build Mechanism Crossbow",
+    "display_name": "铸造机关连弩",
     "kind": "weapon_unlock",
     "weapon_id": "mechanism_crossbow",
     "max_stacks": 1
   },
   {
     "id": "unlock_demon_sealing_bell",
-    "display_name": "Attune Demon-Sealing Bell",
+    "display_name": "调律封魔铃",
     "kind": "weapon_unlock",
     "weapon_id": "demon_sealing_bell",
     "max_stacks": 1
   },
   {
     "id": "quickstep_invocation",
-    "display_name": "Quickstep Invocation",
+    "display_name": "疾行敕令",
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_cooldown_multiplier": -0.06, "move_speed": 12 },
     "max_stacks": 3
   },
   {
     "id": "heavy_seal",
-    "display_name": "Heavy Seal",
+    "display_name": "重山封印",
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_damage_multiplier": 0.25, "move_speed": -10 },
     "max_stacks": 2
   },
   {
     "id": "prosperity_compass",
-    "display_name": "Prosperity Compass",
+    "display_name": "纳福罗盘",
     "kind": "stat_bundle",
     "stat_modifiers": { "pickup_radius": 32, "material_gain": 0.10 },
     "max_stacks": 3
   },
   {
     "id": "iron_focus",
-    "display_name": "Iron Focus",
+    "display_name": "铁心凝神",
     "kind": "stat_bundle",
     "stat_modifiers": { "max_health": 10, "weapon_damage_multiplier": 0.10 },
     "max_stacks": 3
   },
   {
     "id": "wind_edge",
-    "display_name": "Wind Edge",
+    "display_name": "风刃诀",
     "kind": "stat_bundle",
     "stat_modifiers": { "move_speed": 18, "weapon_damage_multiplier": 0.10 },
     "max_stacks": 3
   },
   {
     "id": "gathering_breath",
-    "display_name": "Gathering Breath",
+    "display_name": "聚息诀",
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_cooldown_multiplier": -0.04, "pickup_radius": 16 },
     "max_stacks": 3
   },
   {
     "id": "spirit_needle_array_level",
-    "display_name": "Spirit Needle Array Mastery",
+    "display_name": "灵针阵精通",
     "kind": "weapon_level",
     "weapon_id": "spirit_needle_array",
     "max_stacks": 4
   },
   {
     "id": "unlock_spirit_needle_array",
-    "display_name": "Build Spirit Needle Array",
+    "display_name": "铸造灵针阵",
     "kind": "weapon_unlock",
     "weapon_id": "spirit_needle_array",
     "max_stacks": 1

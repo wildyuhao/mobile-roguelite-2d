@@ -30,7 +30,7 @@ func run(runner) -> void:
 	var summary_upgrades: Array[Dictionary] = [
 		{
 			"id": "weapon_damage_1",
-			"display_name": "Sharpened Edge",
+			"display_name": "锋刃淬炼",
 			"kind": "stat",
 			"stat": "weapon_damage_multiplier",
 			"value": 0.15,
@@ -38,14 +38,14 @@ func run(runner) -> void:
 		},
 		{
 			"id": "flying_sword_level",
-			"display_name": "Flying Sword Mastery",
+			"display_name": "飞剑精通",
 			"kind": "weapon_level",
 			"weapon_id": "flying_sword",
 			"max_stacks": 1,
 		},
 		{
 			"id": "unlock_talisman_fire",
-			"display_name": "Learn Talisman Fire",
+			"display_name": "习得符火",
 			"kind": "weapon_unlock",
 			"weapon_id": "talisman_fire",
 			"max_stacks": 1,
@@ -53,9 +53,9 @@ func run(runner) -> void:
 	]
 	summary_system.configure(summary_upgrades)
 	var summary_choices = summary_system.get_choices(runtime_state, 3, 99)
-	runner.assert_eq(_find_choice(summary_choices, "weapon_damage_1").get("effect_summary", ""), "Damage +15%", "stat upgrade choices should describe their effect")
-	runner.assert_eq(_find_choice(summary_choices, "flying_sword_level").get("effect_summary", ""), "Weapon Lv +1", "weapon level choices should describe their effect")
-	runner.assert_eq(_find_choice(summary_choices, "unlock_talisman_fire").get("effect_summary", ""), "Unlock Weapon", "weapon unlock choices should describe their effect")
+	runner.assert_eq(_find_choice(summary_choices, "weapon_damage_1").get("effect_summary", ""), "伤害 +15%", "stat upgrade choices should use Chinese effect text")
+	runner.assert_eq(_find_choice(summary_choices, "flying_sword_level").get("effect_summary", ""), "武器等级 +1", "weapon level choices should use Chinese effect text")
+	runner.assert_eq(_find_choice(summary_choices, "unlock_talisman_fire").get("effect_summary", ""), "解锁武器", "weapon unlock choices should use Chinese effect text")
 
 	var damage_upgrade := _find_choice(choices, "weapon_damage_1")
 	if damage_upgrade.is_empty():
@@ -87,7 +87,7 @@ func run(runner) -> void:
 	var bundle_upgrades: Array[Dictionary] = [
 		{
 			"id": "heavy_seal",
-			"display_name": "Heavy Seal",
+			"display_name": "重山封印",
 			"kind": "stat_bundle",
 			"stat_modifiers": {
 				"weapon_damage_multiplier": 0.25,
@@ -99,7 +99,7 @@ func run(runner) -> void:
 	bundle_system.configure(bundle_upgrades)
 	var bundle_choices = bundle_system.get_choices(runtime_state, 1, 77)
 	runner.assert_eq(bundle_choices.size(), 1, "stat bundle should be a valid upgrade choice")
-	runner.assert_eq(bundle_choices[0].get("effect_summary", ""), "Damage +25%, Speed -10", "stat bundle should summarize every modifier")
+	runner.assert_eq(bundle_choices[0].get("effect_summary", ""), "伤害 +25%，移速 -10", "stat bundle should summarize every modifier in Chinese")
 	var bundle_state := { "owned_weapons": {}, "upgrade_stacks": {} }
 	bundle_system.apply_upgrade(bundle_state, bundle_choices[0])
 	var bundle_modifiers = bundle_system.get_stat_modifiers(bundle_state)

@@ -1,7 +1,7 @@
 {
   "id": "spirit_needle_array",
-  "display_name": "Spirit Needle Array",
-  "description": "Releases a rotating ring of spirit needles to break surrounding swarms.",
+  "display_name": "灵针阵",
+  "description": "向四周释放旋转灵针，清扫逼近的妖群。",
   "type": "projectile",
   "aim_mode": "radial",
   "base_damage": 4,

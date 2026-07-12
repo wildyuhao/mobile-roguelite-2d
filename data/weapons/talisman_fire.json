@@ -1,7 +1,7 @@
 {
   "id": "talisman_fire",
-  "display_name": "Talisman Fire",
-  "description": "A burning talisman that explodes when it reaches a demon.",
+  "display_name": "符火",
+  "description": "燃烧符箓命中妖物后引发小范围爆炸。",
   "type": "projectile",
   "base_damage": 9,
   "cooldown": 1.15,

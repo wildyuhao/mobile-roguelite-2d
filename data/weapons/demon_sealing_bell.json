@@ -1,7 +1,7 @@
 {
   "id": "demon_sealing_bell",
-  "display_name": "Demon-Sealing Bell",
-  "description": "A bronze bell that releases periodic sealing waves.",
+  "display_name": "封魔铃",
+  "description": "周期释放具有击退效果的封魔声波。",
   "type": "pulse",
   "base_damage": 8,
   "cooldown": 2.2,
