@@ -13,6 +13,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_save_system.gd",
 	"res://tests/test_settlement_system.gd",
 	"res://tests/test_upgrade_system.gd",
+	"res://tests/test_weapon_definition_validator.gd",
 	"res://tests/test_weapon_system.gd",
 	"res://tests/test_projectile.gd",
 	"res://tests/test_combat_resolver.gd",
