@@ -191,6 +191,33 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "enemy should expose contact damage application")
 
+	if enemy.has_signal("release_requested") and enemy.has_method("deactivate_for_pool"):
+		var release_requests: Array[Node] = []
+		enemy.release_requested.connect(
+			func(node: Node) -> void: release_requests.append(node)
+		)
+		enemy.set_meta("encounter_id", "old_encounter")
+		enemy.set_meta("enemy_role", "charger")
+		enemy.action_state.start_attack(0.1, 0.1, 0.1)
+		enemy.deactivate_for_pool()
+		runner.assert_true(not enemy.is_pool_active(), "deactivated enemy should be inactive")
+		runner.assert_true(not enemy.has_meta("encounter_id"), "deactivation should clear encounter metadata")
+		runner.assert_true(not enemy.has_meta("enemy_role"), "deactivation should clear role metadata")
+		enemy.activate_from_pool()
+		enemy.configure({"max_health": 77, "behavior": "chase"}, target)
+		runner.assert_true(enemy.is_pool_active(), "reactivated enemy should be active")
+		runner.assert_eq(health.current_health, 77, "reactivation should restore configured health")
+		runner.assert_eq(enemy.action_state.state, "locomotion", "reactivation should reset action state")
+		runner.assert_eq(enemy.move_speed, 110.0, "reuse should reset omitted move speed")
+		runner.assert_eq(enemy.charge_speed, 240.0, "reuse should reset omitted charge speed")
+		runner.assert_eq(enemy.preferred_range, 300.0, "reuse should reset omitted preferred range")
+		runner.assert_eq(enemy.attack_windup, 0.28, "reuse should reset omitted attack windup")
+		runner.assert_eq(enemy.contact_damage, 8, "reuse should reset omitted contact damage")
+		enemy._on_died()
+		runner.assert_eq(release_requests, [enemy], "pooled enemy death should request one release")
+	else:
+		runner.assert_true(false, "enemy should expose a pool lifecycle")
+
 	contact_target.free()
 	enemy.free()
 	target.free()

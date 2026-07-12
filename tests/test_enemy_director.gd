@@ -55,6 +55,27 @@ class FakeDatabase:
 	func get_formations() -> Dictionary:
 		return formations
 
+class FakePoolService:
+	extends Node
+
+	var calls: Array[String] = []
+
+	func acquire(pool_key: String, scene: PackedScene, parent: Node) -> Node:
+		calls.append(pool_key)
+		var node = scene.instantiate()
+		parent.add_child(node)
+		if node.has_method("activate_from_pool"):
+			node.activate_from_pool()
+		return node
+
+	func prewarm(
+		_pool_key: String,
+		_scene: PackedScene,
+		_parent: Node,
+		count: int
+	) -> int:
+		return count
+
 func run(runner) -> void:
 	if not ResourceLoader.exists("res://scripts/systems/enemy_director.gd"):
 		runner.assert_true(false, "enemy director script should exist")
@@ -131,12 +152,20 @@ func _assert_budgeted_encounter(runner, director_script) -> void:
 	var parent := Node2D.new()
 	var player := Node2D.new()
 	var director = director_script.new()
+	var fake_pool := FakePoolService.new()
 	var spawned_enemies: Array[Node] = []
 	var started: Array[String] = []
 	parent.add_child(player)
 	parent.add_child(director)
+	parent.add_child(fake_pool)
 	Engine.get_main_loop().root.add_child(parent)
 	director.enemy_scene = load("res://scenes/enemies/BasicDemon.tscn")
+	if director.has_method("set_pool_service"):
+		director.set_pool_service(fake_pool)
+	else:
+		runner.assert_true(false, "enemy director should accept a pool service")
+		parent.queue_free()
+		return
 	director.configure(FakeDatabase.new([], [{
 		"id": "test_surround",
 		"weight": 1,
@@ -184,8 +213,9 @@ func _assert_budgeted_encounter(runner, director_script) -> void:
 		"director should track every active enemy it spawned"
 	)
 	for enemy in spawned_enemies:
-		runner.assert_true(
-			enemy.has_meta("encounter_id"),
-			"director enemy should record encounter provenance"
-		)
+			runner.assert_true(
+				enemy.has_meta("encounter_id"),
+				"director enemy should record encounter provenance"
+			)
+	runner.assert_true(fake_pool.calls.has("enemy"), "director should acquire enemies from the pool")
 	parent.queue_free()

@@ -32,6 +32,10 @@ var formations: Dictionary = {}
 var enemy_definitions: Dictionary = {}
 var next_encounter_time: float = 45.0
 var active_enemies: Array[Node] = []
+var pool_service: Node
+
+func set_pool_service(service: Node) -> void:
+	pool_service = service
 
 func configure(new_database, new_player: Node2D) -> void:
 	database = new_database
@@ -57,6 +61,10 @@ func configure(new_database, new_player: Node2D) -> void:
 	encounter_bag.configure(cards, encounter_seed)
 	interval_rng.seed = encounter_seed ^ 0x5f3759df
 	next_encounter_time = encounter_interval_min
+	if pool_service == null:
+		pool_service = get_node_or_null("../PoolService")
+	if pool_service != null and pool_service.has_method("prewarm"):
+		pool_service.prewarm("enemy", enemy_scene, get_parent(), 32)
 
 func _process(delta: float) -> void:
 	if database == null or player == null or enemy_scene == null:
@@ -215,10 +223,18 @@ func _spawn_enemy(
 ) -> bool:
 	if _get_active_enemies().size() >= max_active_enemies:
 		return false
-	var enemy = enemy_scene.instantiate()
-	get_parent().add_child(enemy)
+	var enemy: Node
+	if pool_service != null and pool_service.has_method("acquire"):
+		enemy = pool_service.acquire("enemy", enemy_scene, get_parent())
+	else:
+		enemy = enemy_scene.instantiate()
+		get_parent().add_child(enemy)
+	if enemy == null:
+		return false
 	active_enemies.append(enemy)
-	enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy), CONNECT_ONE_SHOT)
+	var tree_exit_callback := Callable(self, "_on_enemy_tree_exited").bind(enemy)
+	if not enemy.tree_exited.is_connected(tree_exit_callback):
+		enemy.tree_exited.connect(tree_exit_callback, CONNECT_ONE_SHOT)
 	var resolved_offset := (
 		Vector2.RIGHT.rotated(TAU * float(index) / max(1, count)) * spawn_radius
 		if offset == Vector2.INF
@@ -245,6 +261,8 @@ func _prune_active_enemies() -> void:
 	for index in range(active_enemies.size() - 1, -1, -1):
 		var enemy := active_enemies[index]
 		if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+			active_enemies.remove_at(index)
+		elif enemy.has_method("is_pool_active") and not enemy.is_pool_active():
 			active_enemies.remove_at(index)
 
 func _on_enemy_tree_exited(enemy: Node) -> void:

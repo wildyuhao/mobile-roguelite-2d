@@ -143,8 +143,11 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 	get_tree().paused = false
 
 func _on_enemy_spawned(enemy: Node) -> void:
-	if enemy.has_signal("defeated"):
-		enemy.defeated.connect(_on_enemy_defeated)
+	if not enemy.has_signal("defeated"):
+		return
+	var callback := Callable(self, "_on_enemy_defeated")
+	if not enemy.is_connected("defeated", callback):
+		enemy.connect("defeated", callback)
 
 func _on_enemy_defeated(payload: Dictionary) -> void:
 	record_enemy_defeat(payload)

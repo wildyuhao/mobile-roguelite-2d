@@ -2,9 +2,20 @@ extends CharacterBody2D
 class_name EnemyAgent
 
 signal defeated(payload: Dictionary)
+signal release_requested(node: Node)
 
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
 const EnemyActionStateScript = preload("res://scripts/systems/enemy_action_state.gd")
+const DEFAULT_MOVE_SPEED := 110.0
+const DEFAULT_CHARGE_SPEED := 240.0
+const DEFAULT_PREFERRED_RANGE := 300.0
+const DEFAULT_CHARGE_TRIGGER_RANGE := 340.0
+const DEFAULT_ATTACK_WINDUP := 0.28
+const DEFAULT_ATTACK_ACTIVE := 0.10
+const DEFAULT_ATTACK_RECOVERY := 0.48
+const DEFAULT_CONTACT_DAMAGE := 8
+const DEFAULT_EXPERIENCE_VALUE := 1
+const DEFAULT_MATERIAL_VALUE := 1
 
 @export var move_speed: float = 110.0
 @export var charge_speed: float = 240.0
@@ -27,6 +38,7 @@ var behavior: String = "chase"
 var action_state = EnemyActionStateScript.new()
 var locked_action_direction: Vector2 = Vector2.RIGHT
 var damage_applied_this_action: bool = false
+var pool_active: bool = true
 
 func configure(definition: Dictionary, new_target: Node2D) -> void:
 	if health == null:
@@ -35,6 +47,7 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		sprite = get_node_or_null("Sprite2D")
 	if collision_shape == null:
 		collision_shape = get_node_or_null("CollisionShape2D")
+	_reset_definition_defaults()
 	target = new_target
 	behavior = definition.get("behavior", "chase")
 	action_state.reset()
@@ -55,6 +68,20 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		health.configure(int(definition.get("max_health", 24)))
 	_configure_sprite(definition)
 	_configure_collision(definition)
+
+func _reset_definition_defaults() -> void:
+	behavior = "chase"
+	move_speed = DEFAULT_MOVE_SPEED
+	charge_speed = DEFAULT_CHARGE_SPEED
+	preferred_range = DEFAULT_PREFERRED_RANGE
+	charge_trigger_range = DEFAULT_CHARGE_TRIGGER_RANGE
+	attack_windup = DEFAULT_ATTACK_WINDUP
+	attack_active = DEFAULT_ATTACK_ACTIVE
+	attack_recovery = DEFAULT_ATTACK_RECOVERY
+	contact_damage = DEFAULT_CONTACT_DAMAGE
+	experience_value = DEFAULT_EXPERIENCE_VALUE
+	material_value = DEFAULT_MATERIAL_VALUE
+	is_boss = false
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.ENEMY_GROUP)
@@ -151,7 +178,51 @@ func _on_died() -> void:
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
 	defeated.emit(get_defeat_payload())
-	queue_free()
+	_release_or_free()
+
+func activate_from_pool() -> void:
+	pool_active = true
+	visible = true
+	process_mode = Node.PROCESS_MODE_INHERIT
+	velocity = Vector2.ZERO
+	action_state.reset()
+	locked_action_direction = Vector2.RIGHT
+	damage_applied_this_action = false
+	if not is_in_group(GameConstantsScript.ENEMY_GROUP):
+		add_to_group(GameConstantsScript.ENEMY_GROUP)
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D")
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", false)
+	if sprite == null:
+		sprite = get_node_or_null("Sprite2D")
+	if sprite != null:
+		sprite.modulate = Color.WHITE
+
+func deactivate_for_pool() -> void:
+	pool_active = false
+	target = null
+	velocity = Vector2.ZERO
+	action_state.mark_dead()
+	damage_applied_this_action = false
+	visible = false
+	process_mode = Node.PROCESS_MODE_DISABLED
+	remove_from_group(GameConstantsScript.ENEMY_GROUP)
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", true)
+	if has_meta("encounter_id"):
+		remove_meta("encounter_id")
+	if has_meta("enemy_role"):
+		remove_meta("enemy_role")
+
+func is_pool_active() -> bool:
+	return pool_active
+
+func _release_or_free() -> void:
+	if release_requested.get_connections().is_empty():
+		queue_free()
+	else:
+		release_requested.emit(self)
 
 func get_defeat_payload() -> Dictionary:
 	return {
