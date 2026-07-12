@@ -22,6 +22,7 @@ const SETTLEMENT_UPGRADE_EQUIPMENT_IDS := ["talisman_robe", "cloudstep_boots", "
 @onready var upgrade_choice_panel: Node = $UpgradeChoicePanel
 @onready var virtual_joystick: Node = $VirtualJoystick/Stick
 @onready var settlement_panel: Node = $SettlementPanel
+@onready var pool_service: Node = get_node_or_null("PoolService")
 
 var database = GameDatabaseScript.new()
 var upgrade_system = UpgradeSystemScript.new()
@@ -95,13 +96,26 @@ func _spawn_projectiles(event: Dictionary) -> void:
 		directions = combat_resolver.build_spread_directions(direction, count, 8.0)
 
 	for projectile_direction in directions:
-		var projectile = projectile_scene.instantiate()
-		add_child(projectile)
+		var projectile = _acquire_runtime_node("projectile", projectile_scene)
+		if projectile == null:
+			continue
 		projectile.global_position = player.global_position
 		if projectile.has_method("configure_from_event"):
 			projectile.configure_from_event(projectile_direction, event)
 		else:
 			projectile.configure(projectile_direction, float(event["projectile_speed"]), int(event["damage"]))
+
+func set_pool_service(service: Node) -> void:
+	pool_service = service
+
+func _acquire_runtime_node(pool_key: String, scene: PackedScene) -> Node:
+	if scene == null:
+		return null
+	if pool_service != null and pool_service.has_method("acquire"):
+		return pool_service.acquire(pool_key, scene, self)
+	var node = scene.instantiate()
+	add_child(node)
+	return node
 
 func _apply_pulse_event(event: Dictionary) -> void:
 	var enemies = get_tree().get_nodes_in_group(GameConstantsScript.ENEMY_GROUP)

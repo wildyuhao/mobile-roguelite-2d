@@ -68,6 +68,23 @@ class FakeEnemyDirector:
 	func notify_player_heavy_damage() -> void:
 		heavy_damage_calls += 1
 
+class FakePoolService:
+	extends Node
+
+	var acquired_keys: Array[String] = []
+	var cached_nodes: Dictionary = {}
+
+	func acquire(pool_key: String, scene: PackedScene, parent: Node) -> Node:
+		acquired_keys.append(pool_key)
+		var node: Node = cached_nodes.get(pool_key)
+		if node == null:
+			node = scene.instantiate()
+			parent.add_child(node)
+			cached_nodes[pool_key] = node
+		if node.has_method("activate_from_pool"):
+			node.activate_from_pool()
+		return node
+
 class FakePickup:
 	extends Node
 
@@ -353,6 +370,31 @@ func run(runner) -> void:
 	pressure_director.free()
 	pressure_player.free()
 	pressure_loop.free()
+
+	var projectile_pool_loop = game_loop_script.new()
+	var projectile_pool := FakePoolService.new()
+	if (
+		projectile_pool_loop.has_method("set_pool_service")
+		and projectile_pool_loop.has_method("_acquire_runtime_node")
+	):
+		projectile_pool_loop.set_pool_service(projectile_pool)
+		var pooled_projectile = projectile_pool_loop._acquire_runtime_node(
+			"projectile",
+			load("res://scenes/weapons/Projectile.tscn")
+		)
+		runner.assert_true(
+			pooled_projectile != null,
+			"game loop should acquire a projectile node"
+		)
+		runner.assert_eq(
+			projectile_pool.acquired_keys,
+			["projectile"],
+			"game loop should request the projectile pool"
+		)
+	else:
+		runner.assert_true(false, "game loop should expose pooled runtime acquisition")
+	projectile_pool.free()
+	projectile_pool_loop.free()
 
 	victory_panel.free()
 	game_loop.free()

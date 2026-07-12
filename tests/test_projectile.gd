@@ -36,4 +36,30 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "projectile should configure itself from a weapon event")
 
+	if projectile.has_signal("release_requested") and projectile.has_method("deactivate_for_pool"):
+		projectile.hit_targets[42] = true
+		projectile.remaining_lifetime = 0.2
+		projectile.deactivate_for_pool()
+		projectile.activate_from_pool()
+		projectile.configure(Vector2.DOWN, 300.0, 4)
+		runner.assert_eq(projectile.remaining_pierce, 0, "reused projectile should reset pierce")
+		runner.assert_eq(projectile.area_damage_radius, 0.0, "reused projectile should reset area damage")
+		runner.assert_eq(projectile.max_travel_distance, 0.0, "reused projectile should reset range")
+		runner.assert_eq(projectile.remaining_lifetime, 1.5, "reused projectile should reset lifetime")
+		runner.assert_true(projectile.hit_targets.is_empty(), "reused projectile should clear hit targets")
+		runner.assert_eq(sprite.scale, Vector2.ONE, "reused projectile should restore base visual scale")
+		runner.assert_eq(sprite.modulate, Color.WHITE, "reused projectile should clear visual tint")
+		var release_requests: Array[Node] = []
+		projectile.release_requested.connect(
+			func(node: Node) -> void: release_requests.append(node)
+		)
+		projectile._physics_process(2.0)
+		runner.assert_eq(
+			release_requests,
+			[projectile],
+			"expired pooled projectile should request release once"
+		)
+	else:
+		runner.assert_true(false, "projectile should expose a pool lifecycle")
+
 	projectile.free()
