@@ -49,6 +49,9 @@ var run_time: float = 0.0
 func _ready() -> void:
 	var loaded = database.load_all()
 	assert(loaded, "Game database failed to load: %s" % str(database.errors))
+	if pool_service != null and pool_service.has_method("prewarm"):
+		pool_service.prewarm("projectile", projectile_scene, self, 48)
+		pool_service.prewarm("pickup", experience_pickup_scene, self, 32)
 
 	var save_data := _load_save_data()
 	apply_saved_equipment_to_player(save_data)
@@ -179,14 +182,21 @@ func _spawn_experience_pickup(enemy_position: Vector2, experience_value: int) ->
 			experience_system.add_experience(experience_value)
 		return
 
-	var pickup = experience_pickup_scene.instantiate()
-	add_child(pickup)
+	var pickup = _acquire_runtime_node("pickup", experience_pickup_scene)
+	if pickup == null:
+		return
 	pickup.global_position = enemy_position
 	if pickup.has_method("configure"):
 		pickup.configure(experience_value)
 	configure_pickup_collection_radius(pickup)
-	if experience_system != null and pickup.has_signal("collected") and experience_system.has_method("add_experience"):
-		pickup.collected.connect(experience_system.add_experience)
+	if (
+		experience_system != null
+		and pickup.has_signal("collected")
+		and experience_system.has_method("add_experience")
+	):
+		var callback := Callable(experience_system, "add_experience")
+		if not pickup.is_connected("collected", callback):
+			pickup.connect("collected", callback)
 
 func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 	if run_ended:

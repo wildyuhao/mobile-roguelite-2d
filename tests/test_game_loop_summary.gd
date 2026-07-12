@@ -85,6 +85,14 @@ class FakePoolService:
 			node.activate_from_pool()
 		return node
 
+class FakeExperienceSystem:
+	extends Node
+
+	var total: int = 0
+
+	func add_experience(amount: int) -> void:
+		total += amount
+
 class FakePickup:
 	extends Node
 
@@ -395,6 +403,37 @@ func run(runner) -> void:
 		runner.assert_true(false, "game loop should expose pooled runtime acquisition")
 	projectile_pool.free()
 	projectile_pool_loop.free()
+
+	var pickup_pool_loop = game_loop_script.new()
+	var pickup_pool = load("res://scripts/systems/pool_service.gd").new()
+	var pickup_experience := FakeExperienceSystem.new()
+	pickup_pool_loop.add_child(pickup_pool)
+	pickup_pool_loop.set_pool_service(pickup_pool)
+	pickup_pool_loop.experience_system = pickup_experience
+	pickup_pool_loop.experience_pickup_scene = load(
+		"res://scenes/pickups/ExperiencePickup.tscn"
+	)
+	pickup_pool_loop._spawn_experience_pickup(Vector2.ZERO, 3)
+	var pooled_pickup = pickup_pool_loop.get_child(
+		pickup_pool_loop.get_child_count() - 1
+	)
+	pooled_pickup.collect()
+	pickup_pool_loop._spawn_experience_pickup(Vector2.ZERO, 5)
+	var reused_pickup = pickup_pool_loop.get_child(
+		pickup_pool_loop.get_child_count() - 1
+	)
+	runner.assert_true(
+		reused_pickup == pooled_pickup,
+		"game loop should reuse the released pickup"
+	)
+	pooled_pickup.collect()
+	runner.assert_eq(
+		pickup_experience.total,
+		8,
+		"reused pickup should keep exactly one collected connection"
+	)
+	pickup_experience.free()
+	pickup_pool_loop.free()
 
 	victory_panel.free()
 	game_loop.free()

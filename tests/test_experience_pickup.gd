@@ -9,14 +9,25 @@ func run(runner) -> void:
 	var pickup = pickup_script.new()
 	var collected_amounts: Array[int] = []
 	pickup.collected.connect(func(amount: int) -> void: collected_amounts.append(amount))
-
-	pickup.configure(5)
-	runner.assert_eq(pickup.experience_value, 5, "configure should set experience value")
-
-	pickup.collect()
-	pickup.collect()
-	runner.assert_eq(collected_amounts.size(), 1, "pickup should collect only once")
-	runner.assert_eq(collected_amounts[0], 5, "pickup should emit configured experience")
+	if pickup.has_signal("release_requested") and pickup.has_method("deactivate_for_pool"):
+		var release_requests: Array[Node] = []
+		pickup.release_requested.connect(
+			func(node: Node) -> void: release_requests.append(node)
+		)
+		pickup.configure(5)
+		runner.assert_eq(pickup.experience_value, 5, "configure should set experience value")
+		pickup.collect()
+		pickup.collect()
+		runner.assert_eq(collected_amounts, [5], "pickup should collect once per activation")
+		runner.assert_eq(release_requests, [pickup], "first collection should request release")
+		pickup.deactivate_for_pool()
+		pickup.activate_from_pool()
+		pickup.configure(7)
+		pickup.collect()
+		runner.assert_eq(collected_amounts, [5, 7], "reused pickup should collect in a new activation")
+		runner.assert_eq(release_requests.size(), 2, "each activation should release once")
+	else:
+		runner.assert_true(false, "experience pickup should expose a pool lifecycle")
 	pickup.free()
 
 	var radius_pickup = pickup_script.new()
