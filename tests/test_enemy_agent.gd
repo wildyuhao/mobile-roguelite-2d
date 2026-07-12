@@ -76,7 +76,7 @@ func run(runner) -> void:
 			"max_health": 38,
 		}, target)
 		var charge_velocity = enemy.calculate_desired_velocity(0.1)
-		runner.assert_near(charge_velocity.length(), 260.0, 0.01, "charging enemy should use charge speed")
+		runner.assert_near(charge_velocity.length(), 95.0, 0.01, "charging enemy should approach at locomotion speed before windup")
 
 		enemy.global_position = Vector2.ZERO
 		target.global_position = Vector2(100, 0)
@@ -94,6 +94,87 @@ func run(runner) -> void:
 		runner.assert_true(approach_velocity.x > 0.0, "ranged enemy should approach when too far")
 	else:
 		runner.assert_true(false, "enemy should calculate behavior-specific velocity")
+
+	if enemy.has_method("calculate_action_velocity"):
+		var timed_target := ContactTarget.new()
+		timed_target.global_position = Vector2(18, 0)
+		enemy.global_position = Vector2.ZERO
+		enemy.configure({
+			"behavior": "chase",
+			"contact_damage": 11,
+			"collision_radius": 18.0,
+			"max_health": 24,
+			"attack_windup": 0.28,
+			"attack_active": 0.10,
+			"attack_recovery": 0.48,
+		}, timed_target)
+		var windup_velocity = enemy.calculate_action_velocity(0.0)
+		runner.assert_eq(
+			windup_velocity,
+			Vector2.ZERO,
+			"contact attack should stop during windup"
+		)
+		runner.assert_eq(
+			enemy.action_state.state,
+			"windup",
+			"contact range should begin windup"
+		)
+		runner.assert_eq(
+			timed_target.damage_amounts.size(),
+			0,
+			"windup should not deal contact damage"
+		)
+		enemy.calculate_action_velocity(0.28)
+		runner.assert_eq(
+			enemy.action_state.state,
+			"active",
+			"completed contact windup should enter active"
+		)
+		runner.assert_eq(
+			timed_target.damage_amounts.size(),
+			1,
+			"active contact frame should deal one hit"
+		)
+		timed_target.free()
+
+		var charge_target := ContactTarget.new()
+		charge_target.global_position = Vector2(200, 0)
+		enemy.global_position = Vector2.ZERO
+		enemy.configure({
+			"behavior": "charge",
+			"move_speed": 95,
+			"charge_speed": 260,
+			"charge_trigger_range": 360,
+			"attack_windup": 0.55,
+			"attack_active": 0.45,
+			"attack_recovery": 0.65,
+			"max_health": 38,
+		}, charge_target)
+		runner.assert_eq(
+			enemy.calculate_action_velocity(0.0),
+			Vector2.ZERO,
+			"charge trigger should begin a stationary windup"
+		)
+		runner.assert_eq(
+			enemy.action_state.state,
+			"windup",
+			"charge should visibly wind up"
+		)
+		var active_charge_velocity = enemy.calculate_action_velocity(0.55)
+		runner.assert_near(
+			active_charge_velocity.length(),
+			260.0,
+			0.01,
+			"active charge should use charge speed"
+		)
+		runner.assert_eq(
+			enemy.action_state.state,
+			"active",
+			"charge should enter active after windup"
+		)
+		charge_target.free()
+	else:
+		runner.assert_true(false, "enemy should gate movement through action timing")
 
 	var contact_target := ContactTarget.new()
 	contact_target.global_position = Vector2(18, 0)

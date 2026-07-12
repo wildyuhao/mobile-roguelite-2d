@@ -4,10 +4,15 @@ class_name EnemyAgent
 signal defeated(payload: Dictionary)
 
 const GameConstantsScript = preload("res://scripts/core/constants.gd")
+const EnemyActionStateScript = preload("res://scripts/systems/enemy_action_state.gd")
 
 @export var move_speed: float = 110.0
 @export var charge_speed: float = 240.0
 @export var preferred_range: float = 300.0
+@export var charge_trigger_range: float = 340.0
+@export var attack_windup: float = 0.28
+@export var attack_active: float = 0.10
+@export var attack_recovery: float = 0.48
 @export var contact_damage: int = 8
 @export var experience_value: int = 1
 @export var material_value: int = 1
@@ -19,6 +24,9 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 var target: Node2D
 var behavior: String = "chase"
+var action_state = EnemyActionStateScript.new()
+var locked_action_direction: Vector2 = Vector2.RIGHT
+var damage_applied_this_action: bool = false
 
 func configure(definition: Dictionary, new_target: Node2D) -> void:
 	if health == null:
@@ -29,6 +37,13 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		collision_shape = get_node_or_null("CollisionShape2D")
 	target = new_target
 	behavior = definition.get("behavior", "chase")
+	action_state.reset()
+	locked_action_direction = Vector2.RIGHT
+	damage_applied_this_action = false
+	charge_trigger_range = float(definition.get("charge_trigger_range", charge_trigger_range))
+	attack_windup = float(definition.get("attack_windup", attack_windup))
+	attack_active = float(definition.get("attack_active", attack_active))
+	attack_recovery = float(definition.get("attack_recovery", attack_recovery))
 	move_speed = float(definition.get("move_speed", move_speed))
 	charge_speed = float(definition.get("charge_speed", charge_speed))
 	preferred_range = float(definition.get("preferred_range", preferred_range))
@@ -45,10 +60,31 @@ func _ready() -> void:
 	add_to_group(GameConstantsScript.ENEMY_GROUP)
 	health.died.connect(_on_died)
 
-func _physics_process(_delta: float) -> void:
-	velocity = calculate_desired_velocity(_delta)
+func _physics_process(delta: float) -> void:
+	velocity = calculate_action_velocity(delta)
 	move_and_slide()
-	try_apply_contact_damage()
+
+func calculate_action_velocity(delta: float) -> Vector2:
+	var transitions := action_state.tick(delta)
+	if transitions.has(EnemyActionStateScript.ACTIVE):
+		damage_applied_this_action = false
+
+	var result := Vector2.ZERO
+	if action_state.state == EnemyActionStateScript.ACTIVE:
+		_try_action_damage()
+		if behavior == "charge":
+			result = locked_action_direction * charge_speed
+	elif action_state.state == EnemyActionStateScript.LOCOMOTION:
+		if behavior == "charge":
+			result = _calculate_charge_velocity()
+		else:
+			result = calculate_desired_velocity(delta)
+			if _is_target_in_contact_range():
+				locked_action_direction = global_position.direction_to(target.global_position)
+				action_state.start_attack(attack_windup, attack_active, attack_recovery)
+				result = Vector2.ZERO
+	_update_action_visual()
+	return result
 
 func calculate_desired_velocity(_delta: float) -> Vector2:
 	if target == null:
@@ -60,7 +96,7 @@ func calculate_desired_velocity(_delta: float) -> Vector2:
 
 	match behavior:
 		"charge":
-			return to_target.normalized() * charge_speed
+			return to_target.normalized() * move_speed
 		"ranged":
 			var distance := to_target.length()
 			var tolerance := 24.0
@@ -72,7 +108,48 @@ func calculate_desired_velocity(_delta: float) -> Vector2:
 		_:
 			return to_target.normalized() * move_speed
 
+func _calculate_charge_velocity() -> Vector2:
+	if target == null:
+		return Vector2.ZERO
+	var to_target := target.global_position - global_position
+	if to_target == Vector2.ZERO:
+		return Vector2.ZERO
+	if to_target.length() <= charge_trigger_range:
+		locked_action_direction = to_target.normalized()
+		damage_applied_this_action = false
+		action_state.start_attack(attack_windup, attack_active, attack_recovery)
+		return Vector2.ZERO
+	return to_target.normalized() * move_speed
+
+func _is_target_in_contact_range() -> bool:
+	if target == null:
+		return false
+	var contact_range := get_contact_radius() + _get_target_contact_radius(target)
+	return global_position.distance_to(target.global_position) <= contact_range
+
+func _try_action_damage() -> void:
+	if damage_applied_this_action:
+		return
+	if try_apply_contact_damage():
+		damage_applied_this_action = true
+
+func _update_action_visual() -> void:
+	if sprite == null:
+		return
+	match action_state.state:
+		EnemyActionStateScript.WINDUP:
+			sprite.modulate = Color(1.0, 0.65, 0.25)
+		EnemyActionStateScript.ACTIVE:
+			sprite.modulate = Color(1.0, 0.3, 0.3)
+		EnemyActionStateScript.RECOVERY:
+			sprite.modulate = Color(0.72, 0.72, 0.72)
+		_:
+			sprite.modulate = Color.WHITE
+
 func _on_died() -> void:
+	action_state.mark_dead()
+	if collision_shape != null:
+		collision_shape.set_deferred("disabled", true)
 	defeated.emit(get_defeat_payload())
 	queue_free()
 
