@@ -18,6 +18,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_game_loop_summary.gd",
 	"res://tests/test_enemy_director.gd",
 	"res://tests/test_encounter_bag.gd",
+	"res://tests/test_pressure_budget.gd",
 	"res://tests/test_virtual_joystick.gd",
 	"res://tests/test_player_controller.gd",
 	"res://tests/test_directional_animation.gd",
