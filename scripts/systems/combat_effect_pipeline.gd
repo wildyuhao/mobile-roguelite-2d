@@ -17,6 +17,7 @@ var queued_requests: Array[Dictionary] = []
 var queued_request_ids: Dictionary = {}
 var current_context: Dictionary = {}
 var registered_status_ids: Dictionary = {}
+var persistent_carriers: Dictionary = {}
 
 func configure(
 	new_pool_service: Node,
@@ -77,8 +78,13 @@ func _execute_request(
 	var carrier_id := String(carrier_definition.get("id", ""))
 	if not carrier_scenes.has(carrier_id):
 		return "invalid_request"
+	var requested_count := maxi(1, int(carrier_definition.get("count", 1)))
+	if carrier_id == "orbit" and requested_count > 8:
+		return "invalid_request"
+	if carrier_id == "summon" and requested_count > 6:
+		return "invalid_request"
 	var selection_context := context.duplicate(false)
-	selection_context["count"] = maxi(1, int(carrier_definition.get("count", 1)))
+	selection_context["count"] = requested_count
 	var selection := target_selector.select(
 		target_definition_value,
 		context.get("origin", Vector2.ZERO),
@@ -88,15 +94,20 @@ func _execute_request(
 	if String(selection.get("status", "")) != "selected":
 		return "no_target"
 
-	var spawn_count := (
-		maxi(1, int(carrier_definition.get("count", 1)))
-		if carrier_id == "projectile"
-		else 1
-	)
 	var service := _get_pool_service(context)
 	var parent := _get_carrier_parent(context)
 	if service == null or parent == null:
 		return "invalid_request"
+	if carrier_id == "orbit":
+		return _execute_orbit(
+			service,
+			parent,
+			request,
+			context,
+			requested_count,
+			allow_queue
+		)
+	var spawn_count := requested_count if carrier_id in ["projectile", "summon"] else 1
 	if not service.can_acquire(carrier_id, spawn_count):
 		return _queue_request(request) if allow_queue else "pool_queued"
 
@@ -105,6 +116,8 @@ func _execute_request(
 			_spawn_projectiles(service, parent, request, selection)
 		"area":
 			_spawn_area(service, parent, request, selection, context.get("targets", []))
+		"summon":
+			_spawn_summons(service, parent, request, selection, context)
 		_:
 			return "invalid_request"
 	return "executed"
@@ -138,6 +151,66 @@ func _spawn_area(
 	)
 	carrier.update_context(targets)
 	carrier.finish_instant()
+
+func _execute_orbit(
+	service: Node,
+	parent: Node,
+	request: Dictionary,
+	context: Dictionary,
+	requested_count: int,
+	allow_queue: bool
+) -> String:
+	var persistent_key := "%s/%s" % [
+		String(request.get("weapon_id", "")),
+		String(request.get("effect_id", "")),
+	]
+	var existing: Array[Node] = []
+	for carrier in persistent_carriers.get(persistent_key, []):
+		if (
+			is_instance_valid(carrier)
+			and (
+				not carrier.has_method("is_pool_active")
+				or bool(carrier.is_pool_active())
+			)
+		):
+			existing.append(carrier)
+	var additional := maxi(0, requested_count - existing.size())
+	if additional > 0 and not service.can_acquire("orbit", additional):
+		return _queue_request(request) if allow_queue else "pool_queued"
+	while existing.size() > requested_count:
+		var removed: Node = existing.pop_back()
+		service.release(removed)
+	while existing.size() < requested_count:
+		var carrier = service.acquire("orbit", carrier_scenes["orbit"], parent)
+		_connect_carrier(carrier)
+		existing.append(carrier)
+	for index in range(existing.size()):
+		existing[index].configure_from_request(
+			index,
+			existing.size(),
+			request,
+			context.get("owner")
+		)
+		existing[index].update_context(context.get("targets", []))
+	persistent_carriers[persistent_key] = existing
+	return "executed"
+
+func _spawn_summons(
+	service: Node,
+	parent: Node,
+	request: Dictionary,
+	selection: Dictionary,
+	context: Dictionary
+) -> void:
+	var carrier_definition: Dictionary = request.get("carrier", {})
+	var count := maxi(1, int(carrier_definition.get("count", 1)))
+	var origin: Vector2 = selection.get("origin", Vector2.ZERO)
+	for index in range(count):
+		var carrier = service.acquire("summon", carrier_scenes["summon"], parent)
+		_connect_carrier(carrier)
+		var offset := Vector2.RIGHT.rotated(TAU * float(index) / float(count)) * 12.0
+		carrier.configure_from_request(request, context.get("owner"), origin + offset)
+		carrier.update_context(context.get("targets", []))
 
 func _build_projectile_directions(
 	request: Dictionary,
