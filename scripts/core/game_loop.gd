@@ -209,7 +209,7 @@ func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 		run_ended = true
 		settlement_rewards = _calculate_settlement_rewards()
 		_persist_settlement_rewards()
-		_show_settlement_result("Boss Sealed")
+		_show_settlement_result("封印成功")
 	return run_summary
 
 func record_player_defeat() -> Dictionary:
@@ -221,7 +221,7 @@ func record_player_defeat() -> Dictionary:
 	run_ended = true
 	settlement_rewards = _calculate_settlement_rewards()
 	_persist_settlement_rewards()
-	_show_settlement_result("Run Failed")
+	_show_settlement_result("挑战失败")
 	if is_inside_tree():
 		get_tree().paused = true
 	return run_summary
@@ -435,13 +435,13 @@ func _get_equipment_definition(equipment_id: String) -> Dictionary:
 func _get_equipment_route_label(equipment_id: String) -> String:
 	match equipment_id:
 		"talisman_robe":
-			return "HP"
+			return "生命"
 		"cloudstep_boots":
-			return "SPD"
+			return "移速"
 		"bronze_gear_core":
-			return "CD"
+			return "冷却"
 		"jade_compass":
-			return "LOOT"
+			return "聚灵"
 	return ""
 
 func _get_equipment_route_color(equipment_id: String) -> String:
@@ -463,19 +463,19 @@ func _build_equipment_stat_summary(equipment_definition: Dictionary) -> String:
 		var value := float(modifiers[stat])
 		match String(stat):
 			"max_health":
-				parts.append("HP %s" % _format_signed_stat_value(value, false))
+				parts.append("生命 %s" % _format_signed_stat_value(value, false))
 			"move_speed":
-				parts.append("Speed %s" % _format_signed_stat_value(value, false))
+				parts.append("移速 %s" % _format_signed_stat_value(value, false))
 			"weapon_cooldown_multiplier":
-				parts.append("CD %s" % _format_signed_stat_value(value, true))
+				parts.append("冷却 %s" % _format_signed_stat_value(value, true))
 			"pickup_radius":
-				parts.append("Pickup %s" % _format_signed_stat_value(value, false))
+				parts.append("拾取 %s" % _format_signed_stat_value(value, false))
 			"material_gain":
-				parts.append("Mat %s" % _format_signed_stat_value(value, true))
+				parts.append("灵石 %s" % _format_signed_stat_value(value, true))
 			"weapon_damage_multiplier":
-				parts.append("Damage %s" % _format_signed_stat_value(value, true))
+				parts.append("伤害 %s" % _format_signed_stat_value(value, true))
 			"control_duration":
-				parts.append("Control %s" % _format_signed_stat_value(value, true))
+				parts.append("控制 %s" % _format_signed_stat_value(value, true))
 	return _join_summary_parts(parts)
 
 func _format_signed_stat_value(value: float, as_percent: bool) -> String:
@@ -489,7 +489,7 @@ func _join_summary_parts(parts: Array[String]) -> String:
 	var text := ""
 	for part in parts:
 		if text != "":
-			text += ", "
+			text += "，"
 		text += part
 	return text
 

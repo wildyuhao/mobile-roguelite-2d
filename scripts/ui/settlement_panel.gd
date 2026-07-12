@@ -44,12 +44,12 @@ func _ready() -> void:
 func show_result(title: String, rewards: Dictionary, _summary: Dictionary) -> void:
 	_resolve_nodes()
 	title_label.text = title
-	materials_label.text = "Materials +%d" % int(rewards.get("materials", 0))
+	materials_label.text = "灵石 +%d" % int(rewards.get("materials", 0))
 	var material_bonus := int(rewards.get("material_bonus", 0))
 	material_bonus_label.visible = material_bonus > 0
-	material_bonus_label.text = "Material Bonus +%d" % material_bonus
-	defeated_label.text = "Defeated %d" % int(rewards.get("defeated_enemies", 0))
-	boss_label.text = "Boss Sealed" if bool(rewards.get("boss_defeated", false)) else "Boss Escaped"
+	material_bonus_label.text = "灵石加成 +%d" % material_bonus
+	defeated_label.text = "击败敌人 %d" % int(rewards.get("defeated_enemies", 0))
+	boss_label.text = "首领已封印" if bool(rewards.get("boss_defeated", false)) else "首领逃脱"
 	if upgrade_feedback_label != null:
 		upgrade_feedback_label.text = ""
 		upgrade_feedback_label.hide()
@@ -59,15 +59,15 @@ func show_upgrade_feedback(display_name: String, level: int) -> void:
 	_resolve_nodes()
 	if upgrade_feedback_label == null:
 		return
-	upgrade_feedback_label.text = "Upgraded %s Lv.%d" % [display_name, level]
+	upgrade_feedback_label.text = "已强化：%s %d级" % [display_name, level]
 	upgrade_feedback_label.show()
 
 func show_upgrade_offer(equipment_id: String, display_name: String, level: int, cost: int, total_materials: int, can_upgrade: bool) -> void:
 	_resolve_nodes()
 	upgrade_equipment_id = equipment_id
-	total_materials_label.text = "Materials %d" % total_materials
-	upgrade_label.text = "%s Lv.%d" % [display_name, level]
-	upgrade_button.text = "Upgrade %d" % cost
+	total_materials_label.text = "持有灵石 %d" % total_materials
+	upgrade_label.text = "%s %d级" % [display_name, level]
+	upgrade_button.text = "强化 %d" % cost
 	upgrade_button.disabled = not can_upgrade
 	show_upgrade_offers([
 		{
@@ -90,7 +90,7 @@ func show_upgrade_offers(offers: Array) -> void:
 	var total_materials := 0
 	if not offers.is_empty():
 		total_materials = int(offers[0].get("total_materials", 0))
-	total_materials_label.text = "Materials %d" % total_materials
+	total_materials_label.text = "持有灵石 %d" % total_materials
 
 	for index in range(upgrade_buttons.size()):
 		var route_label := upgrade_route_labels[index]
@@ -101,13 +101,13 @@ func show_upgrade_offers(offers: Array) -> void:
 			upgrade_offer_ids.append(offer.get("equipment_id", ""))
 			_apply_route_label(route_label, offer)
 			label.text = _format_offer_label(offer)
-			button.text = "Upgrade %d" % int(offer.get("cost", 0))
+			button.text = "强化 %d" % int(offer.get("cost", 0))
 			button.disabled = not bool(offer.get("can_upgrade", false))
 		else:
 			upgrade_offer_ids.append("")
 			route_label.hide()
 			label.text = "-"
-			button.text = "Upgrade"
+			button.text = "强化"
 			button.disabled = true
 
 func _on_restart_pressed() -> void:
@@ -179,11 +179,11 @@ func _resolve_nodes() -> void:
 		restart_button.pressed.connect(_on_restart_pressed)
 
 func _format_offer_label(offer: Dictionary) -> String:
-	var label := "%s Lv.%d" % [offer.get("display_name", offer.get("equipment_id", "Equipment")), int(offer.get("level", 1))]
+	var label := "%s %d级" % [offer.get("display_name", offer.get("equipment_id", "装备")), int(offer.get("level", 1))]
 	var summary := String(offer.get("stat_summary", ""))
 	if summary == "":
 		return label
-	return "%s - %s" % [label, summary]
+	return "%s · %s" % [label, summary]
 
 func _apply_route_label(route_label: Label, offer: Dictionary) -> void:
 	var route_text := String(offer.get("route_label", ""))

@@ -48,6 +48,23 @@ func run(runner) -> void:
 		runner.assert_true(ResourceLoader.exists(texture_path), "%s projectile texture should exist" % weapon_id)
 	runner.assert_true(db.get_enemies().size() >= 5, "vertical slice should include four enemies and one boss")
 	runner.assert_true(db.get_equipment().size() >= 6, "vertical slice should include six equipment items")
+	var equipment_names: Dictionary = {}
+	for equipment in db.get_equipment():
+		equipment_names[equipment.get("id", "")] = equipment.get("display_name", "")
+	var expected_equipment_names := {
+		"talisman_robe": "符甲法袍",
+		"sword_gourd": "剑葫芦",
+		"jade_compass": "聚灵盘",
+		"bronze_gear_core": "机关核心",
+		"cloudstep_boots": "踏云靴",
+		"bell_charm": "镇魂珠",
+	}
+	for equipment_id in expected_equipment_names.keys():
+		runner.assert_eq(
+			equipment_names.get(equipment_id, ""),
+			expected_equipment_names[equipment_id],
+			"%s should use its Chinese display name" % equipment_id
+		)
 	runner.assert_true(db.has_method("get_encounters"), "database should expose encounter cards")
 	runner.assert_true(db.has_method("get_formations"), "database should expose formation templates")
 	if db.has_method("get_encounters") and db.has_method("get_formations"):

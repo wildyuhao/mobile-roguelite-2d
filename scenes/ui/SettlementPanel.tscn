@@ -16,24 +16,24 @@ offset_bottom = 940.0
 theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="PanelContainer/VBoxContainer"]
-text = "Run Complete"
+text = "战斗结算"
 horizontal_alignment = 1
 
 [node name="MaterialsLabel" type="Label" parent="PanelContainer/VBoxContainer"]
-text = "Materials +0"
+text = "灵石 +0"
 
 [node name="MaterialBonusLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 visible = false
-text = "Material Bonus +0"
+text = "灵石加成 +0"
 
 [node name="DefeatedLabel" type="Label" parent="PanelContainer/VBoxContainer"]
-text = "Defeated 0"
+text = "击败敌人 0"
 
 [node name="BossLabel" type="Label" parent="PanelContainer/VBoxContainer"]
-text = "Boss Escaped"
+text = "首领逃脱"
 
 [node name="TotalMaterialsLabel" type="Label" parent="PanelContainer/VBoxContainer"]
-text = "Materials 0"
+text = "持有灵石 0"
 
 [node name="UpgradeFeedbackLabel" type="Label" parent="PanelContainer/VBoxContainer"]
 visible = false
@@ -41,10 +41,10 @@ theme_override_colors/font_color = Color(0.552941, 0.941176, 0.662745, 1)
 text = ""
 
 [node name="UpgradeLabel" type="Label" parent="PanelContainer/VBoxContainer"]
-text = "Talisman Robe Lv.1"
+text = "符甲法袍 1级"
 
 [node name="UpgradeButton" type="Button" parent="PanelContainer/VBoxContainer"]
-text = "Upgrade 10"
+text = "强化 10"
 
 [node name="UpgradeRow1" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
@@ -52,17 +52,17 @@ theme_override_constants/separation = 8
 [node name="UpgradeRouteLabel1" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
 custom_minimum_size = Vector2(48, 32)
 theme_override_font_sizes/font_size = 12
-text = "HP"
+text = "生命"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UpgradeLabel1" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
 size_flags_horizontal = 3
-text = "Talisman Robe Lv.1"
+text = "符甲法袍 1级"
 
 [node name="UpgradeButton1" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow1"]
 custom_minimum_size = Vector2(112, 40)
-text = "Upgrade 10"
+text = "强化 10"
 
 [node name="UpgradeRow2" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
@@ -70,17 +70,17 @@ theme_override_constants/separation = 8
 [node name="UpgradeRouteLabel2" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
 custom_minimum_size = Vector2(48, 32)
 theme_override_font_sizes/font_size = 12
-text = "SPD"
+text = "移速"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UpgradeLabel2" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
 size_flags_horizontal = 3
-text = "Cloudstep Boots Lv.1"
+text = "踏云靴 1级"
 
 [node name="UpgradeButton2" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow2"]
 custom_minimum_size = Vector2(112, 40)
-text = "Upgrade 10"
+text = "强化 10"
 
 [node name="UpgradeRow3" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
@@ -88,17 +88,17 @@ theme_override_constants/separation = 8
 [node name="UpgradeRouteLabel3" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
 custom_minimum_size = Vector2(48, 32)
 theme_override_font_sizes/font_size = 12
-text = "CD"
+text = "冷却"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UpgradeLabel3" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
 size_flags_horizontal = 3
-text = "Bronze Gear Core Lv.1"
+text = "机关核心 1级"
 
 [node name="UpgradeButton3" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow3"]
 custom_minimum_size = Vector2(112, 40)
-text = "Upgrade 10"
+text = "强化 10"
 
 [node name="UpgradeRow4" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
 theme_override_constants/separation = 8
@@ -106,17 +106,17 @@ theme_override_constants/separation = 8
 [node name="UpgradeRouteLabel4" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
 custom_minimum_size = Vector2(48, 32)
 theme_override_font_sizes/font_size = 12
-text = "LOOT"
+text = "聚灵"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="UpgradeLabel4" type="Label" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
 size_flags_horizontal = 3
-text = "Jade Compass Lv.1"
+text = "聚灵盘 1级"
 
 [node name="UpgradeButton4" type="Button" parent="PanelContainer/VBoxContainer/UpgradeRow4"]
 custom_minimum_size = Vector2(112, 40)
-text = "Upgrade 10"
+text = "强化 10"
 
 [node name="RestartButton" type="Button" parent="PanelContainer/VBoxContainer"]
-text = "Restart"
+text = "重新挑战"

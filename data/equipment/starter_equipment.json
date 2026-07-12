@@ -1,32 +1,32 @@
 [
   {
     "id": "talisman_robe",
-    "display_name": "Talisman Robe",
+    "display_name": "符甲法袍",
     "stat_modifiers": { "max_health": 10 }
   },
   {
     "id": "sword_gourd",
-    "display_name": "Sword Gourd",
+    "display_name": "剑葫芦",
     "starting_weapon_id": "flying_sword"
   },
   {
     "id": "jade_compass",
-    "display_name": "Jade Compass",
+    "display_name": "聚灵盘",
     "stat_modifiers": { "pickup_radius": 24, "material_gain": 0.1 }
   },
   {
     "id": "bronze_gear_core",
-    "display_name": "Bronze Gear Core",
+    "display_name": "机关核心",
     "stat_modifiers": { "weapon_cooldown_multiplier": -0.05 }
   },
   {
     "id": "cloudstep_boots",
-    "display_name": "Cloudstep Boots",
+    "display_name": "踏云靴",
     "stat_modifiers": { "move_speed": 18 }
   },
   {
     "id": "bell_charm",
-    "display_name": "Bell Charm",
+    "display_name": "镇魂珠",
     "stat_modifiers": { "control_duration": 0.1 }
   }
 ]

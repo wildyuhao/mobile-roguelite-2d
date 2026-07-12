@@ -34,7 +34,7 @@ class FakeSettlementPanel:
 		last_upgrade_offers = offers.duplicate(true)
 
 	func show_upgrade_feedback(display_name: String, level: int) -> void:
-		last_upgrade_feedback = "Upgraded %s Lv.%d" % [display_name, level]
+		last_upgrade_feedback = "已强化：%s %d级" % [display_name, level]
 
 class FakePlayer:
 	extends Node2D
@@ -181,10 +181,11 @@ func run(runner) -> void:
 		runner.assert_eq(summary["boss_defeated"], true, "game loop should mark boss defeated")
 		runner.assert_eq(game_loop.run_ended, true, "boss defeat should end the run")
 		runner.assert_eq(game_loop.settlement_rewards["materials"], 69, "boss defeat should calculate settlement rewards")
-		runner.assert_eq(victory_panel.last_title, "Boss Sealed", "boss defeat should show victory title")
+		runner.assert_eq(victory_panel.last_title, "封印成功", "boss defeat should show victory title")
 		runner.assert_eq(victory_save.save_calls, 1, "boss defeat should save rewards once")
 		runner.assert_eq(int(victory_save.last_saved_data.get("materials", -1)), 80, "boss rewards should be added to saved materials")
 		runner.assert_eq(victory_panel.last_upgrade_offer.get("equipment_id", ""), "talisman_robe", "settlement should show robe upgrade offer")
+		runner.assert_eq(victory_panel.last_upgrade_offer.get("display_name", ""), "符甲法袍", "settlement should show Chinese equipment names")
 		runner.assert_eq(victory_panel.last_upgrade_offers.size(), 4, "settlement should show four equipment upgrade offers")
 		var second_offer_id := ""
 		if victory_panel.last_upgrade_offers.size() > 1:
@@ -194,14 +195,14 @@ func run(runner) -> void:
 		if victory_panel.last_upgrade_offers.size() > 3:
 			fourth_offer_id = victory_panel.last_upgrade_offers[3].get("equipment_id", "")
 		runner.assert_eq(fourth_offer_id, "jade_compass", "fourth settlement offer should upgrade compass")
-		runner.assert_eq(victory_panel.last_upgrade_offers[0].get("stat_summary", ""), "HP +10", "robe offer should describe health gain")
-		runner.assert_eq(victory_panel.last_upgrade_offers[1].get("stat_summary", ""), "Speed +18", "boot offer should describe speed gain")
-		runner.assert_eq(victory_panel.last_upgrade_offers[2].get("stat_summary", ""), "CD -5%", "gear core offer should describe cooldown gain")
-		runner.assert_eq(victory_panel.last_upgrade_offers[3].get("stat_summary", ""), "Pickup +24, Mat +10%", "compass offer should describe pickup and material gain")
-		runner.assert_eq(victory_panel.last_upgrade_offers[0].get("route_label", ""), "HP", "robe offer should include a route tag")
-		runner.assert_eq(victory_panel.last_upgrade_offers[1].get("route_label", ""), "SPD", "boot offer should include a route tag")
-		runner.assert_eq(victory_panel.last_upgrade_offers[2].get("route_label", ""), "CD", "gear core offer should include a route tag")
-		runner.assert_eq(victory_panel.last_upgrade_offers[3].get("route_label", ""), "LOOT", "compass offer should include a route tag")
+		runner.assert_eq(victory_panel.last_upgrade_offers[0].get("stat_summary", ""), "生命 +10", "robe offer should describe health gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[1].get("stat_summary", ""), "移速 +18", "boot offer should describe speed gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[2].get("stat_summary", ""), "冷却 -5%", "gear core offer should describe cooldown gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[3].get("stat_summary", ""), "拾取 +24，灵石 +10%", "compass offer should describe pickup and material gain")
+		runner.assert_eq(victory_panel.last_upgrade_offers[0].get("route_label", ""), "生命", "robe offer should include a route tag")
+		runner.assert_eq(victory_panel.last_upgrade_offers[1].get("route_label", ""), "移速", "boot offer should include a route tag")
+		runner.assert_eq(victory_panel.last_upgrade_offers[2].get("route_label", ""), "冷却", "gear core offer should include a route tag")
+		runner.assert_eq(victory_panel.last_upgrade_offers[3].get("route_label", ""), "聚灵", "compass offer should include a route tag")
 		runner.assert_true(String(victory_panel.last_upgrade_offers[0].get("route_color", "")).begins_with("#"), "robe offer should include a route color")
 		runner.assert_eq(int(victory_panel.last_upgrade_offer.get("total_materials", -1)), 80, "settlement upgrade offer should show saved materials after rewards")
 		runner.assert_true(bool(victory_panel.last_upgrade_offer.get("can_upgrade", false)), "settlement upgrade offer should be affordable after rewards")
@@ -213,7 +214,7 @@ func run(runner) -> void:
 		if victory_panel.last_upgrade_offers.size() > 1:
 			refreshed_boot_level = int(victory_panel.last_upgrade_offers[1]["level"])
 		runner.assert_eq(refreshed_boot_level, 2, "upgrade request should refresh shown boot level")
-		runner.assert_eq(victory_panel.last_upgrade_feedback, "Upgraded Cloudstep Boots Lv.2", "upgrade request should show success feedback")
+		runner.assert_eq(victory_panel.last_upgrade_feedback, "已强化：踏云靴 2级", "upgrade request should show success feedback")
 		victory_panel.upgrade_requested.emit("jade_compass")
 		runner.assert_eq(int(victory_save.last_saved_data.get("equipment_levels", {}).get("jade_compass", -1)), 2, "upgrade request should increase compass level")
 		game_loop.record_enemy_defeat({
@@ -248,7 +249,7 @@ func run(runner) -> void:
 		runner.assert_eq(defeat_summary["boss_defeated"], false, "player defeat should not mark boss defeated")
 		runner.assert_eq(defeat_loop.run_ended, true, "player defeat should end the run")
 		runner.assert_eq(defeat_loop.settlement_rewards["materials"], 10, "player defeat should calculate settlement rewards")
-		runner.assert_eq(defeat_panel.last_title, "Run Failed", "player defeat should show defeat title")
+		runner.assert_eq(defeat_panel.last_title, "挑战失败", "player defeat should show defeat title")
 		runner.assert_eq(defeat_save.save_calls, 1, "player defeat should save rewards once")
 		runner.assert_eq(int(defeat_save.last_saved_data.get("materials", -1)), 15, "defeat rewards should be added to saved materials")
 		defeat_loop.record_player_defeat()
