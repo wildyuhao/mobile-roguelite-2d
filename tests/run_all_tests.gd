@@ -7,6 +7,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_pool_service.gd",
 	"res://tests/test_pool_churn.gd",
 	"res://tests/test_health_component.gd",
+	"res://tests/test_hit_feedback.gd",
 	"res://tests/test_experience_pickup.gd",
 	"res://tests/test_equipment_system.gd",
 	"res://tests/test_save_system.gd",
