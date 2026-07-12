@@ -18,6 +18,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_upgrade_system.gd",
 	"res://tests/test_weapon_definition_validator.gd",
 	"res://tests/test_weapon_system.gd",
+	"res://tests/test_weapon_simulator.gd",
 	"res://tests/test_projectile.gd",
 	"res://tests/test_area_carrier.gd",
 	"res://tests/test_orbit_carrier.gd",
