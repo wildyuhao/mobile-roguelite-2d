@@ -129,5 +129,19 @@
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_cooldown_multiplier": -0.04, "pickup_radius": 16 },
     "max_stacks": 3
+  },
+  {
+    "id": "spirit_needle_array_level",
+    "display_name": "Spirit Needle Array Mastery",
+    "kind": "weapon_level",
+    "weapon_id": "spirit_needle_array",
+    "max_stacks": 4
+  },
+  {
+    "id": "unlock_spirit_needle_array",
+    "display_name": "Build Spirit Needle Array",
+    "kind": "weapon_unlock",
+    "weapon_id": "spirit_needle_array",
+    "max_stacks": 1
   }
 ]

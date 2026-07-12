@@ -1,0 +1,23 @@
+{
+  "id": "spirit_needle_array",
+  "display_name": "Spirit Needle Array",
+  "description": "Releases a rotating ring of spirit needles to break surrounding swarms.",
+  "type": "projectile",
+  "aim_mode": "radial",
+  "base_damage": 4,
+  "cooldown": 1.2,
+  "projectile_speed": 520,
+  "projectile_count": 6,
+  "range": 300,
+  "pierce": 0,
+  "projectile_texture_path": "res://art/weapons/spirit_needle_array/spirit_needle_projectile.png",
+  "projectile_scale": 0.10,
+  "projectile_tint": "#d8b4ff",
+  "max_level": 5,
+  "level_modifiers": [
+    { "level": 2, "base_damage": 6 },
+    { "level": 3, "projectile_count": 8 },
+    { "level": 4, "pierce": 1 },
+    { "level": 5, "projectile_count": 12, "cooldown": 0.9 }
+  ]
+}

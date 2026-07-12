@@ -74,4 +74,21 @@ func run(runner) -> void:
 	damage_system.set_stat_modifiers({ "weapon_damage_multiplier": 0.25 })
 	runner.assert_eq(damage_system.get_weapon_damage("flying_sword"), 15, "stat damage multiplier should increase weapon damage")
 	damage_system.free()
+
+	runner.assert_true(db.has_weapon("spirit_needle_array"), "database should include Spirit Needle Array")
+	if db.has_weapon("spirit_needle_array"):
+		var needle_system = weapon_system_script.new()
+		needle_system.add_weapon(db.get_weapon("spirit_needle_array"))
+		var needle_events = needle_system.tick(1.3)
+		runner.assert_eq(needle_events.size(), 1, "Spirit Needle Array should fire after its base cooldown")
+		if not needle_events.is_empty():
+			runner.assert_eq(needle_events[0].get("aim_mode", ""), "radial", "Spirit Needle Array should use radial aiming")
+			runner.assert_eq(needle_events[0].get("projectile_count", 0), 6, "Spirit Needle Array should start with six needles")
+			runner.assert_eq(needle_events[0].get("projectile_texture_path", ""), "res://art/weapons/spirit_needle_array/spirit_needle_projectile.png", "Spirit Needle Array should identify its production projectile")
+		needle_system.level_weapon("spirit_needle_array")
+		needle_system.level_weapon("spirit_needle_array")
+		var level_three_events = needle_system.tick(1.3)
+		if not level_three_events.is_empty():
+			runner.assert_eq(level_three_events[0].get("projectile_count", 0), 8, "Spirit Needle Array level three should fire eight needles")
+		needle_system.free()
 	system.free()

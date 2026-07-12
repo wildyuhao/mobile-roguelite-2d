@@ -31,3 +31,11 @@ func build_spread_directions(base_direction: Vector2, count: int, spread_degrees
 		var spread: float = deg_to_rad(spread_degrees * (index - (safe_count - 1) / 2.0))
 		result.append(direction.rotated(spread))
 	return result
+
+func build_radial_directions(count: int, start_angle: float = 0.0) -> Array[Vector2]:
+	var safe_count: int = max(1, count)
+	var result: Array[Vector2] = []
+	var step := TAU / float(safe_count)
+	for index in range(safe_count):
+		result.append(Vector2.RIGHT.rotated(start_angle + step * index))
+	return result

@@ -83,13 +83,18 @@ func _spawn_projectiles(event: Dictionary) -> void:
 	if enemies.is_empty() or projectile_scene == null:
 		return
 
-	var target = combat_resolver.find_closest_enemy(player.global_position, enemies, float(event.get("range", 320.0)))
-	if target == null:
-		return
-
-	var direction: Vector2 = player.global_position.direction_to(target.global_position)
 	var count := int(event.get("projectile_count", 1))
-	for projectile_direction in combat_resolver.build_spread_directions(direction, count, 8.0):
+	var directions: Array[Vector2] = []
+	if String(event.get("aim_mode", "target")) == "radial":
+		directions = combat_resolver.build_radial_directions(count, run_time * 0.8)
+	else:
+		var target = combat_resolver.find_closest_enemy(player.global_position, enemies, float(event.get("range", 320.0)))
+		if target == null:
+			return
+		var direction: Vector2 = player.global_position.direction_to(target.global_position)
+		directions = combat_resolver.build_spread_directions(direction, count, 8.0)
+
+	for projectile_direction in directions:
 		var projectile = projectile_scene.instantiate()
 		add_child(projectile)
 		projectile.global_position = player.global_position

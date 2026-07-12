@@ -26,6 +26,14 @@ func run(runner) -> void:
 	runner.assert_eq(directions.size(), 3, "resolver should build one direction per projectile")
 	runner.assert_near(directions[1].angle(), 0.0, 0.001, "middle projectile should keep base direction")
 
+	if resolver.has_method("build_radial_directions"):
+		var radial_directions = resolver.build_radial_directions(4, 0.0)
+		runner.assert_eq(radial_directions.size(), 4, "resolver should build one radial direction per projectile")
+		runner.assert_eq(radial_directions[0], Vector2.RIGHT, "radial pattern should honor its start angle")
+		runner.assert_near(radial_directions[1].angle(), PI / 2.0, 0.001, "radial directions should be evenly spaced")
+	else:
+		runner.assert_true(false, "resolver should build radial projectile directions")
+
 	near_enemy.free()
 	far_enemy.free()
 	out_of_range_enemy.free()
