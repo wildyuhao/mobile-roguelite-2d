@@ -17,5 +17,25 @@ func run(runner) -> void:
 	var enemy_director = game.get_node_or_null("EnemyDirector")
 	if enemy_director != null:
 		runner.assert_true(float(enemy_director.get("spawn_radius")) <= 360.0, "main scene enemy spawn radius should keep early monsters visible on mobile")
+	var player = game.get_node_or_null("Player")
+	runner.assert_true(player != null, "game should include the player")
+	if player != null:
+		runner.assert_true(
+			player.get_node_or_null("AnimatedSprite2D") is AnimatedSprite2D,
+			"player should use AnimatedSprite2D"
+		)
+		runner.assert_true(
+			player.get_node_or_null("DirectionalAnimation") != null,
+			"player should include directional animation control"
+		)
+	for strip_path in [
+		"res://art/characters/player/animation/walk_front_strip.png",
+		"res://art/characters/player/animation/walk_back_strip.png",
+		"res://art/characters/player/animation/walk_side_strip.png",
+	]:
+		runner.assert_true(
+			ResourceLoader.exists(strip_path),
+			"%s should exist" % strip_path
+		)
 
 	game.free()

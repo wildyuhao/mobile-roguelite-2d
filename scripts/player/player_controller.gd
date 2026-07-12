@@ -9,6 +9,7 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 @onready var health: Node = $HealthComponent
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var animation_controller: Node = get_node_or_null("DirectionalAnimation")
 
 var external_move_vector: Vector2 = Vector2.ZERO
 var damage_invulnerability_remaining: float = 0.0
@@ -29,6 +30,8 @@ func _physics_process(_delta: float) -> void:
 	var input_vector := _get_move_input()
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
+	if animation_controller != null and animation_controller.has_method("update_motion"):
+		animation_controller.update_motion(input_vector)
 	velocity = input_vector * move_speed
 	move_and_slide()
 

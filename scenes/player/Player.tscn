@@ -1,8 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
-[ext_resource type="Texture2D" path="res://art/characters/player/player_front.png" id="3"]
+[ext_resource type="Script" path="res://scripts/components/directional_animation.gd" id="3"]
+[ext_resource type="Texture2D" path="res://art/characters/player/animation/walk_front_strip.png" id="4"]
+[ext_resource type="Texture2D" path="res://art/characters/player/animation/walk_back_strip.png" id="5"]
+[ext_resource type="Texture2D" path="res://art/characters/player/animation/walk_side_strip.png" id="6"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 18.0
@@ -10,10 +13,17 @@ radius = 18.0
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
 position = Vector2(0, -12)
-scale = Vector2(0.16, 0.16)
-texture = ExtResource("3")
+scale = Vector2(0.72, 0.72)
+
+[node name="DirectionalAnimation" type="Node" parent="."]
+script = ExtResource("3")
+sprite_path = NodePath("../AnimatedSprite2D")
+front_strip = ExtResource("4")
+back_strip = ExtResource("5")
+side_strip = ExtResource("6")
 
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("2")

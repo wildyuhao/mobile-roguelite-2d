@@ -6,16 +6,55 @@ from pathlib import Path
 from PIL import Image
 
 
+def _retain_largest_alpha_component(frame: Image.Image) -> Image.Image:
+    rgba = frame.convert("RGBA")
+    width, height = rgba.size
+    alpha_values = rgba.getchannel("A").tobytes()
+    active = bytearray(1 if value > 0 else 0 for value in alpha_values)
+    visited = bytearray(len(active))
+    largest: list[int] = []
+
+    for seed, is_active in enumerate(active):
+        if not is_active or visited[seed]:
+            continue
+
+        component: list[int] = []
+        stack = [seed]
+        visited[seed] = 1
+        while stack:
+            current = stack.pop()
+            component.append(current)
+            y, x = divmod(current, width)
+            for neighbor_y in range(max(0, y - 1), min(height, y + 2)):
+                row_offset = neighbor_y * width
+                for neighbor_x in range(max(0, x - 1), min(width, x + 2)):
+                    neighbor = row_offset + neighbor_x
+                    if active[neighbor] and not visited[neighbor]:
+                        visited[neighbor] = 1
+                        stack.append(neighbor)
+
+        if len(component) > len(largest):
+            largest = component
+
+    if not largest:
+        raise ValueError("Contact sheet contains an empty frame")
+
+    cleaned_alpha = bytearray(len(alpha_values))
+    for index in largest:
+        cleaned_alpha[index] = alpha_values[index]
+    rgba.putalpha(Image.frombytes("L", (width, height), bytes(cleaned_alpha)))
+    return rgba
+
+
 def _normalize_frame(
     frame: Image.Image,
     target_size: int,
     foot_y: int,
     padding: int,
 ) -> tuple[Image.Image, tuple[int, int, int, int]]:
-    rgba = frame.convert("RGBA")
+    rgba = _retain_largest_alpha_component(frame)
     bounds = rgba.getchannel("A").getbbox()
-    if bounds is None:
-        raise ValueError("Contact sheet contains an empty frame")
+    assert bounds is not None
 
     subject = rgba.crop(bounds)
     available_width = target_size - padding * 2

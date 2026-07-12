@@ -27,6 +27,11 @@ class SpritePipelineTests(unittest.TestCase):
                     (left, top, left + 39, top + 69),
                     fill=(80 + index * 20, 40, 180, 255),
                 )
+                if index == 0:
+                    draw.rectangle(
+                        (left, 95, left + 5, 99),
+                        fill=(255, 255, 255, 255),
+                    )
             image.save(source)
 
             report = process_sheet(
@@ -48,6 +53,11 @@ class SpritePipelineTests(unittest.TestCase):
                 bounds = frame.getchannel("A").getbbox()
                 self.assertIsNotNone(bounds)
                 self.assertEqual(bounds[3], 112)
+                foot_row = frame.getchannel("A").crop((0, 111, 128, 112))
+                foot_coverage = sum(
+                    1 for value in foot_row.get_flattened_data() if value > 0
+                )
+                self.assertGreater(foot_coverage, 20)
                 self.assertLessEqual(
                     abs((bounds[2] - bounds[0]) - report["widths"][0]),
                     4,
