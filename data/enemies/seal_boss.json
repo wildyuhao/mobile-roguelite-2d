@@ -1,6 +1,8 @@
 {
   "id": "seal_boss",
   "display_name": "Seal-Broken Warden",
+  "role": "boss",
+  "pressure_cost": 30,
   "behavior": "boss",
   "max_health": 1200,
   "move_speed": 70,

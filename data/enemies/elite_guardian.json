@@ -1,6 +1,8 @@
 {
   "id": "elite_guardian",
   "display_name": "Elite Guardian",
+  "role": "elite",
+  "pressure_cost": 8,
   "behavior": "chase",
   "max_health": 160,
   "move_speed": 85,

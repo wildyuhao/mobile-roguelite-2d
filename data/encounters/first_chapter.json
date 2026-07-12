@@ -1,0 +1,93 @@
+[
+  {
+    "id": "four_side_surround",
+    "weight": 6,
+    "min_time": 45.0,
+    "max_time": 420.0,
+    "cooldown_draws": 1,
+    "pressure_cost": 10,
+    "formation_id": "surround_gap",
+    "groups": [
+      { "enemy_id": "basic_demon", "count": 10 }
+    ]
+  },
+  {
+    "id": "wedge_charge",
+    "weight": 5,
+    "min_time": 60.0,
+    "max_time": 420.0,
+    "cooldown_draws": 2,
+    "pressure_cost": 16,
+    "formation_id": "wedge_charge",
+    "groups": [
+      { "enemy_id": "charging_demon", "count": 4 },
+      { "enemy_id": "basic_demon", "count": 4 }
+    ]
+  },
+  {
+    "id": "turret_escort",
+    "weight": 5,
+    "min_time": 75.0,
+    "max_time": 420.0,
+    "cooldown_draws": 2,
+    "pressure_cost": 14,
+    "formation_id": "turret_escort",
+    "groups": [
+      { "enemy_id": "basic_demon", "count": 8 },
+      { "enemy_id": "ranged_demon", "count": 2 }
+    ]
+  },
+  {
+    "id": "elite_lead",
+    "weight": 3,
+    "min_time": 120.0,
+    "max_time": 420.0,
+    "cooldown_draws": 3,
+    "pressure_cost": 16,
+    "formation_id": "elite_lead",
+    "groups": [
+      { "enemy_id": "elite_guardian", "count": 1 },
+      { "enemy_id": "basic_demon", "count": 8 }
+    ]
+  },
+  {
+    "id": "seal_contest",
+    "weight": 4,
+    "min_time": 150.0,
+    "max_time": 420.0,
+    "cooldown_draws": 2,
+    "pressure_cost": 14,
+    "formation_id": "seal_contest",
+    "groups": [
+      { "enemy_id": "basic_demon", "count": 8 },
+      { "enemy_id": "charging_demon", "count": 2 }
+    ]
+  },
+  {
+    "id": "chest_ambush",
+    "weight": 4,
+    "min_time": 180.0,
+    "max_time": 420.0,
+    "cooldown_draws": 2,
+    "pressure_cost": 15,
+    "formation_id": "chest_ambush",
+    "groups": [
+      { "enemy_id": "basic_demon", "count": 6 },
+      { "enemy_id": "ranged_demon", "count": 3 }
+    ]
+  },
+  {
+    "id": "boss_vanguard",
+    "weight": 2,
+    "min_time": 300.0,
+    "max_time": 450.0,
+    "cooldown_draws": 4,
+    "pressure_cost": 20,
+    "formation_id": "boss_vanguard",
+    "groups": [
+      { "enemy_id": "elite_guardian", "count": 1 },
+      { "enemy_id": "charging_demon", "count": 2 },
+      { "enemy_id": "basic_demon", "count": 6 }
+    ]
+  }
+]

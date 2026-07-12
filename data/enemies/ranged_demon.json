@@ -1,6 +1,8 @@
 {
   "id": "ranged_demon",
   "display_name": "Ranged Demon",
+  "role": "ranged",
+  "pressure_cost": 3,
   "behavior": "ranged",
   "max_health": 28,
   "move_speed": 80,

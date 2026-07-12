@@ -1,6 +1,8 @@
 {
   "id": "charging_demon",
   "display_name": "Charging Demon",
+  "role": "charger",
+  "pressure_cost": 3,
   "behavior": "charge",
   "max_health": 38,
   "move_speed": 95,

@@ -1,6 +1,8 @@
 {
   "id": "basic_demon",
   "display_name": "Small Demon",
+  "role": "swarm",
+  "pressure_cost": 1,
   "max_health": 24,
   "move_speed": 110,
   "contact_damage": 8,

@@ -27,6 +27,33 @@ func run(runner) -> void:
 		runner.assert_true(ResourceLoader.exists(texture_path), "%s projectile texture should exist" % weapon_id)
 	runner.assert_true(db.get_enemies().size() >= 5, "vertical slice should include four enemies and one boss")
 	runner.assert_true(db.get_equipment().size() >= 6, "vertical slice should include six equipment items")
+	runner.assert_true(db.has_method("get_encounters"), "database should expose encounter cards")
+	runner.assert_true(db.has_method("get_formations"), "database should expose formation templates")
+	if db.has_method("get_encounters") and db.has_method("get_formations"):
+		var encounters: Array[Dictionary] = db.get_encounters()
+		var formations: Dictionary = db.get_formations()
+		runner.assert_eq(encounters.size(), 7, "first chapter should define seven encounter cards")
+		runner.assert_eq(formations.size(), 7, "first chapter should define seven formations")
+		for encounter in encounters:
+			runner.assert_true(
+				formations.has(String(encounter.get("formation_id", ""))),
+				"encounter formation should resolve"
+			)
+			for group in encounter.get("groups", []):
+				runner.assert_true(
+					db.has_enemy(String(group.get("enemy_id", ""))),
+					"encounter enemy should resolve"
+				)
+	for enemy_id in db.get_enemies().keys():
+		var enemy: Dictionary = db.get_enemy(enemy_id)
+		runner.assert_true(
+			String(enemy.get("role", "")) != "",
+			"%s should declare a role" % enemy_id
+		)
+		runner.assert_true(
+			int(enemy.get("pressure_cost", 0)) > 0,
+			"%s should declare pressure cost" % enemy_id
+		)
 
 func _assert_early_wave_pressure(runner, wave_events: Array[Dictionary]) -> void:
 	var first_minute_times: Array[float] = []

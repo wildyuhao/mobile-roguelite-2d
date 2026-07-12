@@ -1,0 +1,9 @@
+[
+  { "id": "surround_gap", "pattern": "ring_gap", "gap_degrees": 70.0, "radius_scale": 1.0 },
+  { "id": "wedge_charge", "pattern": "wedge", "row_spacing": 62.0, "column_spacing": 58.0, "radius_scale": 1.0 },
+  { "id": "turret_escort", "pattern": "escort", "front_ratio": 0.72, "rear_offset": 92.0, "radius_scale": 1.0 },
+  { "id": "elite_lead", "pattern": "leader_flanks", "flank_angle_degrees": 36.0, "depth_spacing": 64.0, "radius_scale": 1.0 },
+  { "id": "seal_contest", "pattern": "dual_ring", "inner_radius_scale": 0.72, "radius_scale": 1.0 },
+  { "id": "chest_ambush", "pattern": "pincer", "side_angle_degrees": 76.0, "depth_spacing": 54.0, "radius_scale": 0.96 },
+  { "id": "boss_vanguard", "pattern": "corridor", "lane_spacing": 68.0, "depth_spacing": 58.0, "radius_scale": 1.0 }
+]
