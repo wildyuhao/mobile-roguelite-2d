@@ -21,6 +21,10 @@ func run(runner) -> void:
 	runner.assert_true(db.has_method("get_enemies"), "database should expose all enemies")
 	runner.assert_true(db.has_weapon("spirit_needle_array"), "database should include spirit_needle_array")
 	runner.assert_true(db.get_weapons().size() >= 5, "combat density foundation should include five weapons")
+	for weapon_id in ["flying_sword", "talisman_fire", "mechanism_crossbow", "spirit_needle_array"]:
+		var texture_path := String(db.get_weapon(weapon_id).get("projectile_texture_path", ""))
+		runner.assert_true(texture_path != "", "%s should declare a projectile texture" % weapon_id)
+		runner.assert_true(ResourceLoader.exists(texture_path), "%s projectile texture should exist" % weapon_id)
 	runner.assert_true(db.get_enemies().size() >= 5, "vertical slice should include four enemies and one boss")
 	runner.assert_true(db.get_equipment().size() >= 6, "vertical slice should include six equipment items")
 

@@ -23,6 +23,20 @@ func configure_from_event(direction: Vector2, event: Dictionary) -> void:
 	remaining_pierce = int(event.get("pierce", 0))
 	area_damage_radius = float(event.get("area_size", 0.0))
 	max_travel_distance = float(event.get("range", 0.0))
+	_configure_visual(event)
+
+func _configure_visual(event: Dictionary) -> void:
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		return
+	var texture_path := String(event.get("projectile_texture_path", ""))
+	if texture_path != "" and ResourceLoader.exists(texture_path):
+		sprite.texture = load(texture_path)
+	var visual_scale: float = maxf(0.01, float(event.get("projectile_scale", 0.08)))
+	sprite.scale = Vector2(visual_scale, visual_scale)
+	var tint_text := String(event.get("projectile_tint", "#ffffff"))
+	if Color.html_is_valid(tint_text):
+		sprite.modulate = Color.html(tint_text)
 
 func _ready() -> void:
 	add_to_group(GameConstantsScript.PROJECTILE_GROUP)

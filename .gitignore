@@ -1,5 +1,7 @@
 .godot/
 .import/
+__pycache__/
+*.pyc
 *.tmp
 *.translation
 export/
