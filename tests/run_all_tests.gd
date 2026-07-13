@@ -54,7 +54,7 @@ func _initialize() -> void:
 			continue
 
 		var script = load(script_path)
-		if script == null:
+		if script == null or not script.can_instantiate():
 			runner.assert_true(false, "Test script failed to load: %s" % script_path)
 			continue
 
