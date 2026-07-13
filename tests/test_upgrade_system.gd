@@ -77,6 +77,64 @@ func run(runner) -> void:
 		"authored weapon summaries should override generic text"
 	)
 
+	var presentation_system = upgrade_system_script.new()
+	var presentation_upgrades: Array[Dictionary] = [
+		{
+			"id": "weapon_damage_1",
+			"display_name": "锋刃淬炼",
+			"kind": "stat",
+			"stat": "weapon_damage_multiplier",
+			"value": 0.15,
+			"max_stacks": 5,
+		},
+		{
+			"id": "quickstep_invocation",
+			"display_name": "疾行敕令",
+			"kind": "stat_bundle",
+			"stat_modifiers": {"move_speed": 12},
+			"max_stacks": 3,
+		},
+		{
+			"id": "flying_sword_level",
+			"display_name": "飞剑精进",
+			"kind": "weapon_level",
+			"weapon_id": "flying_sword",
+			"max_stacks": 4,
+		},
+		{
+			"id": "unlock_frost_talisman",
+			"display_name": "习得寒霜符",
+			"kind": "weapon_unlock",
+			"weapon_id": "frost_talisman",
+			"max_stacks": 1,
+		},
+	]
+	presentation_system.configure(presentation_upgrades)
+	var presentation_state := {
+		"owned_weapons": {"flying_sword": 2, "talisman_fire": 1},
+		"upgrade_stacks": {"weapon_damage_1": 1},
+		"max_weapon_slots": 4,
+	}
+	var presentation_choices = presentation_system.get_choices(
+		presentation_state,
+		4,
+		2718
+	)
+	var unlock_presentation := _find_choice(presentation_choices, "unlock_frost_talisman")
+	runner.assert_eq(unlock_presentation.get("category_label", ""), "新武器", "unlock should identify its category")
+	runner.assert_eq(unlock_presentation.get("progress_label", ""), "Lv.1", "unlock should show its starting level")
+	var level_presentation := _find_choice(presentation_choices, "flying_sword_level")
+	runner.assert_eq(level_presentation.get("category_label", ""), "武器精进", "weapon level should identify its category")
+	runner.assert_eq(level_presentation.get("progress_label", ""), "Lv.2→3", "weapon level should show current and next level")
+	runner.assert_eq(
+		_find_choice(presentation_choices, "weapon_damage_1").get("progress_label", ""),
+		"第2重",
+		"stacked stat should show the level being selected"
+	)
+	var bundle_presentation := _find_choice(presentation_choices, "quickstep_invocation")
+	runner.assert_eq(bundle_presentation.get("category_label", ""), "组合功法", "bundle should identify its category")
+	runner.assert_eq(bundle_presentation.get("progress_label", ""), "第1重", "fresh bundle should show its first layer")
+
 	var damage_upgrade := _find_choice(choices, "weapon_damage_1")
 	if damage_upgrade.is_empty():
 		damage_upgrade = db.get_upgrades()[0]

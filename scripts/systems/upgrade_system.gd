@@ -28,12 +28,12 @@ func get_choices(runtime_state: Dictionary, count: int = 3, seed_value: int = 0)
 		if not unlocks.is_empty():
 			var unlock_index := rng.randi_range(0, unlocks.size() - 1)
 			var unlock_choice: Dictionary = unlocks[unlock_index]
-			choices.append(_with_effect_summary(unlock_choice))
+			choices.append(_with_presentation(unlock_choice, runtime_state))
 			_remove_upgrade_by_id(available, String(unlock_choice.get("id", "")))
 
 	while not available.is_empty() and choices.size() < count:
 		var index := rng.randi_range(0, available.size() - 1)
-		choices.append(_with_effect_summary(available[index]))
+		choices.append(_with_presentation(available[index], runtime_state))
 		available.remove_at(index)
 	return choices
 
@@ -136,6 +136,32 @@ func _normalize_number_types(values: Dictionary) -> Dictionary:
 		var value := float(values[key])
 		normalized[key] = int(value) if is_equal_approx(value, round(value)) else value
 	return normalized
+
+func _with_presentation(upgrade: Dictionary, runtime_state: Dictionary) -> Dictionary:
+	var result := _with_effect_summary(upgrade)
+	var kind := String(result.get("kind", ""))
+	var stacks: Dictionary = runtime_state.get("upgrade_stacks", {})
+	match kind:
+		"weapon_unlock":
+			result["category_label"] = "新武器"
+			result["progress_label"] = "Lv.1"
+		"weapon_level":
+			result["category_label"] = "武器精进"
+			var owned_weapons: Dictionary = runtime_state.get("owned_weapons", {})
+			var weapon_id := String(result.get("weapon_id", ""))
+			var current_level := maxi(1, int(owned_weapons.get(weapon_id, 1)))
+			result["progress_label"] = "Lv.%d→%d" % [current_level, current_level + 1]
+		"stat_bundle":
+			result["category_label"] = "组合功法"
+			result["progress_label"] = _get_next_stack_label(result, stacks)
+		_:
+			result["category_label"] = "功法强化"
+			result["progress_label"] = _get_next_stack_label(result, stacks)
+	return result
+
+func _get_next_stack_label(upgrade: Dictionary, stacks: Dictionary) -> String:
+	var upgrade_id := String(upgrade.get("id", ""))
+	return "第%d重" % (int(stacks.get(upgrade_id, 0)) + 1)
 
 func _with_effect_summary(upgrade: Dictionary) -> Dictionary:
 	var result := upgrade.duplicate(true)
