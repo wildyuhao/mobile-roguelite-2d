@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -8,12 +8,26 @@
 [ext_resource type="Texture2D" path="res://art/characters/player/animation/walk_side_strip.png" id="6"]
 [ext_resource type="Script" path="res://scripts/components/hit_feedback.gd" id="7"]
 [ext_resource type="Texture2D" path="res://art/effects/hit/player_contact_hit_burst.png" id="8"]
+[ext_resource type="Texture2D" path="res://art/effects/player/starting_ward.png" id="9"]
+[ext_resource type="Script" path="res://scripts/components/starting_ward_visual.gd" id="10"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 18.0
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1")
+starting_ward_seconds = 6.0
+
+[node name="StartingWardSprite" type="Sprite2D" parent="."]
+visible = false
+z_index = -1
+texture_filter = 1
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("9")
+
+[node name="StartingWardVisual" type="Node" parent="."]
+script = ExtResource("10")
+sprite_path = NodePath("../StartingWardSprite")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1

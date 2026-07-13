@@ -49,6 +49,29 @@ func run(runner) -> void:
 			player.get_node_or_null("DamageLabel") is Label,
 			"player should include a floating damage label"
 		)
+		runner.assert_near(
+			float(player.get("starting_ward_seconds")),
+			6.0,
+			0.001,
+			"player scene should provide six active seconds of starting protection"
+		)
+		var ward_sprite = player.get_node_or_null("StartingWardSprite")
+		var ward_visual = player.get_node_or_null("StartingWardVisual")
+		runner.assert_true(ward_sprite is Sprite2D, "player should include a starting ward sprite")
+		runner.assert_true(ward_visual != null, "player should include a starting ward visual component")
+		if ward_sprite is Sprite2D:
+			runner.assert_true(ward_sprite.texture != null, "starting ward sprite should use its formal texture")
+			var player_sprite = player.get_node_or_null("AnimatedSprite2D")
+			if player_sprite is AnimatedSprite2D:
+				runner.assert_true(
+					ward_sprite.z_index < player_sprite.z_index,
+					"starting ward should remain beneath the player animation"
+				)
+		if ward_visual != null:
+			runner.assert_true(
+				not _contains_collision_shape(ward_visual),
+				"starting ward visual branch should not contain collision geometry"
+			)
 	var pipeline = game.get_node_or_null("CombatEffectPipeline")
 	if pipeline != null:
 		for scene_property in ["projectile_scene", "area_scene", "orbit_scene", "summon_scene"]:
@@ -104,6 +127,7 @@ func run(runner) -> void:
 	for effect_path in [
 		"res://art/effects/hit/player_contact_hit_burst.png",
 		"res://art/effects/hit/enemy_weapon_hit_spark.png",
+		"res://art/effects/player/starting_ward.png",
 	]:
 		runner.assert_true(
 			ResourceLoader.exists(effect_path),
@@ -120,3 +144,11 @@ func run(runner) -> void:
 		)
 
 	game.free()
+
+func _contains_collision_shape(node: Node) -> bool:
+	if node is CollisionShape2D:
+		return true
+	for child in node.get_children():
+		if _contains_collision_shape(child):
+			return true
+	return false
