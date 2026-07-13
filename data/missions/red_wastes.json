@@ -1,0 +1,107 @@
+[
+  {
+    "id": "red_wastes_survival",
+    "chapter_id": "red_wastes",
+    "order": 1,
+    "type": "survival",
+    "display_name": "\u8352\u5883\u5b88\u671b",
+    "description": "\u5728\u8d64\u571f\u8352\u5883\u62b5\u5fa1\u5996\u9b54\u3002",
+    "estimated_minutes": 12,
+    "objective": { "kind": "survive", "duration": 720 },
+    "environment_id": "red_wastes",
+    "encounter_deck_id": "red_wastes_deck",
+    "boss_id": "",
+    "prerequisites": [],
+    "first_reward": {
+      "materials": { "spirit_ore": 100 },
+      "unlock_tokens": ["red_wastes_seal"]
+    },
+    "repeat_reward": {
+      "materials": { "spirit_ore": 40 }
+    }
+  },
+  {
+    "id": "red_wastes_seal",
+    "chapter_id": "red_wastes",
+    "order": 2,
+    "type": "seal",
+    "display_name": "\u5c01\u5370\u4e89\u593a",
+    "description": "\u5b88\u4f4f\u8352\u5883\u4e2d\u7684\u4e09\u5904\u5c01\u5370\u70b9\u3002",
+    "estimated_minutes": 15,
+    "objective": { "kind": "seal_points", "count": 3, "hold_seconds": 25 },
+    "environment_id": "red_wastes",
+    "encounter_deck_id": "red_wastes_deck",
+    "boss_id": "",
+    "prerequisites": ["red_wastes_survival"],
+    "first_reward": {
+      "materials": { "spirit_ore": 110 },
+      "unlock_tokens": ["red_wastes_hunt"]
+    },
+    "repeat_reward": {
+      "materials": { "spirit_ore": 45 }
+    }
+  },
+  {
+    "id": "red_wastes_hunt",
+    "chapter_id": "red_wastes",
+    "order": 3,
+    "type": "hunt",
+    "display_name": "\u7cbe\u82f1\u72e9\u730e",
+    "description": "\u6e05\u9664\u6e38\u8361\u5728\u8352\u5883\u7684\u7cbe\u82f1\u5996\u9b54\u3002",
+    "estimated_minutes": 18,
+    "objective": { "kind": "elite_hunt", "count": 4 },
+    "environment_id": "red_wastes",
+    "encounter_deck_id": "red_wastes_deck",
+    "boss_id": "",
+    "prerequisites": ["red_wastes_seal"],
+    "first_reward": {
+      "materials": { "spirit_ore": 120, "demon_cores": 5 },
+      "unlock_tokens": ["red_wastes_mutation"]
+    },
+    "repeat_reward": {
+      "materials": { "spirit_ore": 50, "demon_cores": 2 }
+    }
+  },
+  {
+    "id": "red_wastes_mutation",
+    "chapter_id": "red_wastes",
+    "order": 4,
+    "type": "mutation",
+    "display_name": "\u5f02\u5316\u538b\u529b",
+    "description": "\u5728\u8fc5\u6377\u5f02\u53d8\u7684\u538b\u529b\u4e0b\u7ee7\u7eed\u751f\u5b58\u3002",
+    "estimated_minutes": 15,
+    "objective": { "kind": "mutator_survival", "duration": 900, "mutators": ["swift"] },
+    "environment_id": "red_wastes",
+    "encounter_deck_id": "red_wastes_deck",
+    "boss_id": "",
+    "prerequisites": ["red_wastes_hunt"],
+    "first_reward": {
+      "materials": { "spirit_ore": 140 },
+      "unlock_tokens": ["red_wastes_boss"]
+    },
+    "repeat_reward": {
+      "materials": { "spirit_ore": 60 }
+    }
+  },
+  {
+    "id": "red_wastes_boss",
+    "chapter_id": "red_wastes",
+    "order": 5,
+    "type": "boss",
+    "display_name": "\u5c01\u9b54\u9996\u9886",
+    "description": "\u51fb\u8d25\u5b88\u536b\u8352\u5883\u7684\u5c01\u5370\u9996\u9886\u3002",
+    "estimated_minutes": 25,
+    "objective": { "kind": "boss", "boss_id": "seal_boss" },
+    "environment_id": "red_wastes",
+    "encounter_deck_id": "red_wastes_deck",
+    "boss_id": "seal_boss",
+    "prerequisites": ["red_wastes_mutation"],
+    "first_reward": {
+      "materials": { "spirit_ore": 160, "demon_cores": 8 },
+      "unlock_tokens": ["red_wastes_complete"]
+    },
+    "repeat_reward": {
+      "materials": { "spirit_ore": 70, "demon_cores": 3 }
+    }
+  }
+]

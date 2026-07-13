@@ -1,0 +1,15 @@
+[
+  {
+    "id": "red_wastes_deck",
+    "chapter_id": "red_wastes",
+    "encounter_ids": [
+      "four_side_surround",
+      "wedge_charge",
+      "turret_escort",
+      "elite_lead",
+      "seal_contest",
+      "chest_ambush",
+      "boss_vanguard"
+    ]
+  }
+]

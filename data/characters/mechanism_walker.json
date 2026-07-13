@@ -1,0 +1,25 @@
+{
+  "id": "mechanism_walker",
+  "display_name": "\u673a\u5173\u884c\u8005",
+  "description": "\u4ee5\u673a\u5173\u8fde\u5f29\u548c\u6a21\u5757\u5f3a\u5316\u7ef4\u6301\u7a33\u5b9a\u706b\u529b\u7684\u5747\u8861\u884c\u8005\u3002",
+  "starting_weapon_id": "mechanism_crossbow",
+  "scene_path": "res://scenes/player/Player.tscn",
+  "portrait_path": "res://art/characters/player/player_front.png",
+  "base_stat_modifiers": {},
+  "innate_talent_id": "mechanism_first_upgrade_haste",
+  "active_skill_id": "mechanism_overdrive",
+  "build_tags": ["\u5747\u8861", "\u673a\u5173", "\u6295\u5c04\u7269"],
+  "unlock_condition": { "kind": "default" },
+  "mastery_rewards": [
+    { "level": 1, "kind": "base_kit", "id": "mechanism_base_kit" },
+    { "level": 2, "kind": "upgrade_unlock", "id": "mechanism_specialist_1" },
+    { "level": 3, "kind": "loadout_unlock", "id": "mechanism_crossbow_start" },
+    { "level": 4, "kind": "cosmetic", "id": "mechanism_portrait_1" },
+    { "level": 5, "kind": "upgrade_unlock", "id": "mechanism_specialist_2" },
+    { "level": 6, "kind": "passive_unlock", "id": "mechanism_passive_1" },
+    { "level": 7, "kind": "cosmetic", "id": "mechanism_palette_1" },
+    { "level": 8, "kind": "skill_variant", "id": "mechanism_overdrive_reset" },
+    { "level": 9, "kind": "codex_challenge", "id": "mechanism_archive" },
+    { "level": 10, "kind": "core_upgrade", "id": "mechanism_core_mastery" }
+  ]
+}

@@ -1,0 +1,8 @@
+[
+  { "id": "red_wastes", "order": 1, "display_name": "\u8d64\u571f\u8352\u5883", "implemented": true, "first_mission_id": "red_wastes_survival" },
+  { "id": "bamboo_ruins", "order": 2, "display_name": "\u5e7d\u7af9\u6b8b\u6797", "implemented": false, "first_mission_id": "" },
+  { "id": "ghost_market", "order": 3, "display_name": "\u767e\u9b3c\u591c\u5e02", "implemented": false, "first_mission_id": "" },
+  { "id": "underworld_tomb", "order": 4, "display_name": "\u9ec4\u6cc9\u673a\u5173\u51a2", "implemented": false, "first_mission_id": "" },
+  { "id": "thunder_altar", "order": 5, "display_name": "\u96f7\u72f1\u5929\u575b", "implemented": false, "first_mission_id": "" },
+  { "id": "rift_seal_platform", "order": 6, "display_name": "\u88c2\u5929\u5c01\u9b54\u53f0", "implemented": false, "first_mission_id": "" }
+]

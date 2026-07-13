@@ -4,6 +4,7 @@ const TestRunnerScript = preload("res://scripts/core/test_runner.gd")
 
 const TEST_SCRIPTS := [
 	"res://tests/test_game_database.gd",
+	"res://tests/test_content_catalog.gd",
 	"res://tests/test_pool_service.gd",
 	"res://tests/test_target_selector.gd",
 	"res://tests/test_pool_churn.gd",

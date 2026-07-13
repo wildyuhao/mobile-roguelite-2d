@@ -1,0 +1,8 @@
+[
+  {
+    "id": "red_wastes",
+    "chapter_id": "red_wastes",
+    "display_name": "\u8d64\u571f\u8352\u5883",
+    "ground_texture_path": "res://art/environment/wasteland_ground_tile.png"
+  }
+]
