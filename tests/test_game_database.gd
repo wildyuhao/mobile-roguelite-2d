@@ -60,10 +60,19 @@ func run(runner) -> void:
 	runner.assert_true(not db.has_weapon("sword_gourd"), "equipment id sword_gourd must not collide with a weapon id")
 	_assert_new_weapon_signatures(runner, db)
 	for upgrade in db.get_upgrades():
+		var upgrade_id := String(upgrade.get("id", ""))
 		runner.assert_true(
 			_has_cjk(String(upgrade.get("display_name", ""))),
-			"%s should use a Chinese display name" % upgrade.get("id", "")
+			"%s should use a Chinese display name" % upgrade_id
 		)
+		var icon_path := String(upgrade.get("icon_path", ""))
+		runner.assert_true(icon_path != "", "%s should define an upgrade icon" % upgrade_id)
+		runner.assert_true(ResourceLoader.exists(icon_path), "%s icon should exist" % upgrade_id)
+		if ResourceLoader.exists(icon_path):
+			runner.assert_true(
+				load(icon_path) is Texture2D,
+				"%s icon should load as a texture" % upgrade_id
+			)
 	runner.assert_true(db.has_enemy("basic_demon"), "database should include basic_demon")
 	var charging_demon: Dictionary = db.get_enemy("charging_demon")
 	runner.assert_eq(charging_demon.get("display_name", ""), "角冲妖", "charger should use its Chinese name")

@@ -1,6 +1,7 @@
 [
   {
     "id": "weapon_damage_1",
+    "icon_path": "res://art/icons/icon_flying_sword.png",
     "display_name": "锋刃淬炼",
     "kind": "stat",
     "stat": "weapon_damage_multiplier",
@@ -9,6 +10,7 @@
   },
   {
     "id": "cooldown_1",
+    "icon_path": "res://art/icons/icon_jade_compass.png",
     "display_name": "迅捷敕令",
     "kind": "stat",
     "stat": "weapon_cooldown_multiplier",
@@ -17,6 +19,7 @@
   },
   {
     "id": "pickup_radius_1",
+    "icon_path": "res://art/icons/icon_spirit_stone.png",
     "display_name": "聚灵磁场",
     "kind": "stat",
     "stat": "pickup_radius",
@@ -25,6 +28,7 @@
   },
   {
     "id": "move_speed_1",
+    "icon_path": "res://art/icons/icon_mechanism_part.png",
     "display_name": "踏云步",
     "kind": "stat",
     "stat": "move_speed",
@@ -33,6 +37,7 @@
   },
   {
     "id": "max_health_1",
+    "icon_path": "res://art/icons/icon_talisman_paper.png",
     "display_name": "玉骨法身",
     "kind": "stat",
     "stat": "max_health",
@@ -41,6 +46,7 @@
   },
   {
     "id": "flying_sword_level",
+    "icon_path": "res://art/icons/icon_flying_sword.png",
     "display_name": "飞剑精通",
     "kind": "weapon_level",
     "weapon_id": "flying_sword",
@@ -48,6 +54,7 @@
   },
   {
     "id": "talisman_fire_level",
+    "icon_path": "res://art/icons/icon_talisman_fire.png",
     "display_name": "符火精通",
     "kind": "weapon_level",
     "weapon_id": "talisman_fire",
@@ -55,6 +62,7 @@
   },
   {
     "id": "mechanism_crossbow_level",
+    "icon_path": "res://art/icons/icon_mechanism_crossbow.png",
     "display_name": "机关连弩精通",
     "kind": "weapon_level",
     "weapon_id": "mechanism_crossbow",
@@ -62,6 +70,7 @@
   },
   {
     "id": "demon_sealing_bell_level",
+    "icon_path": "res://art/icons/icon_demon_sealing_bell.png",
     "display_name": "封魔铃精通",
     "kind": "weapon_level",
     "weapon_id": "demon_sealing_bell",
@@ -69,6 +78,7 @@
   },
   {
     "id": "unlock_talisman_fire",
+    "icon_path": "res://art/icons/icon_talisman_fire.png",
     "display_name": "习得符火",
     "kind": "weapon_unlock",
     "weapon_id": "talisman_fire",
@@ -76,6 +86,7 @@
   },
   {
     "id": "unlock_mechanism_crossbow",
+    "icon_path": "res://art/icons/icon_mechanism_crossbow.png",
     "display_name": "铸造机关连弩",
     "kind": "weapon_unlock",
     "weapon_id": "mechanism_crossbow",
@@ -83,6 +94,7 @@
   },
   {
     "id": "unlock_demon_sealing_bell",
+    "icon_path": "res://art/icons/icon_demon_sealing_bell.png",
     "display_name": "调律封魔铃",
     "kind": "weapon_unlock",
     "weapon_id": "demon_sealing_bell",
@@ -90,6 +102,7 @@
   },
   {
     "id": "quickstep_invocation",
+    "icon_path": "res://art/icons/icon_jade_compass.png",
     "display_name": "疾行敕令",
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_cooldown_multiplier": -0.06, "move_speed": 12 },
@@ -97,6 +110,7 @@
   },
   {
     "id": "heavy_seal",
+    "icon_path": "res://art/icons/icon_flying_sword.png",
     "display_name": "重山封印",
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_damage_multiplier": 0.25, "move_speed": -10 },
@@ -104,6 +118,7 @@
   },
   {
     "id": "prosperity_compass",
+    "icon_path": "res://art/icons/icon_spirit_stone.png",
     "display_name": "纳福罗盘",
     "kind": "stat_bundle",
     "stat_modifiers": { "pickup_radius": 32, "material_gain": 0.10 },
@@ -111,6 +126,7 @@
   },
   {
     "id": "iron_focus",
+    "icon_path": "res://art/icons/icon_talisman_paper.png",
     "display_name": "铁心凝神",
     "kind": "stat_bundle",
     "stat_modifiers": { "max_health": 10, "weapon_damage_multiplier": 0.10 },
@@ -118,6 +134,7 @@
   },
   {
     "id": "wind_edge",
+    "icon_path": "res://art/icons/icon_flying_sword.png",
     "display_name": "风刃诀",
     "kind": "stat_bundle",
     "stat_modifiers": { "move_speed": 18, "weapon_damage_multiplier": 0.10 },
@@ -125,6 +142,7 @@
   },
   {
     "id": "gathering_breath",
+    "icon_path": "res://art/icons/icon_jade_compass.png",
     "display_name": "聚息诀",
     "kind": "stat_bundle",
     "stat_modifiers": { "weapon_cooldown_multiplier": -0.04, "pickup_radius": 16 },
@@ -132,6 +150,7 @@
   },
   {
     "id": "spirit_needle_array_level",
+    "icon_path": "res://art/icons/icon_spirit_needle_array.png",
     "display_name": "灵针阵精通",
     "kind": "weapon_level",
     "weapon_id": "spirit_needle_array",
@@ -139,6 +158,7 @@
   },
   {
     "id": "unlock_spirit_needle_array",
+    "icon_path": "res://art/icons/icon_spirit_needle_array.png",
     "display_name": "铸造灵针阵",
     "kind": "weapon_unlock",
     "weapon_id": "spirit_needle_array",
@@ -146,6 +166,7 @@
   },
   {
     "id": "unlock_sword_gourd_blades",
+    "icon_path": "res://art/weapons/sword_gourd/sword_gourd_icon.png",
     "display_name": "开启剑葫芦",
     "kind": "weapon_unlock",
     "weapon_id": "sword_gourd_blades",
@@ -154,6 +175,7 @@
   },
   {
     "id": "sword_gourd_blades_level",
+    "icon_path": "res://art/weapons/sword_gourd/sword_gourd_icon.png",
     "display_name": "剑葫芦精通",
     "kind": "weapon_level",
     "weapon_id": "sword_gourd_blades",
@@ -162,6 +184,7 @@
   },
   {
     "id": "unlock_frost_talisman",
+    "icon_path": "res://art/weapons/frost_talisman/frost_talisman_icon.png",
     "display_name": "习得寒霜符",
     "kind": "weapon_unlock",
     "weapon_id": "frost_talisman",
@@ -170,6 +193,7 @@
   },
   {
     "id": "frost_talisman_level",
+    "icon_path": "res://art/weapons/frost_talisman/frost_talisman_icon.png",
     "display_name": "寒霜符精通",
     "kind": "weapon_level",
     "weapon_id": "frost_talisman",
@@ -178,6 +202,7 @@
   },
   {
     "id": "unlock_soul_lantern",
+    "icon_path": "res://art/weapons/soul_lantern/soul_lantern_icon.png",
     "display_name": "点亮引魂灯",
     "kind": "weapon_unlock",
     "weapon_id": "soul_lantern",
@@ -186,6 +211,7 @@
   },
   {
     "id": "soul_lantern_level",
+    "icon_path": "res://art/weapons/soul_lantern/soul_lantern_icon.png",
     "display_name": "引魂灯精通",
     "kind": "weapon_level",
     "weapon_id": "soul_lantern",
