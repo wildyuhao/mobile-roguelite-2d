@@ -182,7 +182,7 @@ runner.assert_true(button1.icon is Texture2D, "valid choice icon should load")
 runner.assert_eq(button2.icon, null, "invalid icon should fall back to text only")
 runner.assert_true(button1.custom_minimum_size.y >= 116.0, "choice should remain a mobile touch target")
 runner.assert_true(button1.expand_icon, "choice icon should scale inside its bound")
-runner.assert_eq(button1.icon_max_width, 68, "choice icon should have a stable width")
+runner.assert_eq(button1.get_theme_constant("icon_max_width"), 68, "choice icon should have a stable width")
 runner.assert_eq(button1.alignment, HORIZONTAL_ALIGNMENT_LEFT, "choice text should scan from the left")
 panel.show_choices([])
 runner.assert_eq(button1.icon, null, "button reuse should clear stale icons")
@@ -216,7 +216,7 @@ In `show_choices()`, assign `button.icon = _load_choice_icon(choice)` for availa
 
 - [ ] **Step 4: Update the scene layout**
 
-Set the panel offsets to top `250`, bottom `850`; set every button to minimum height `116`, font size `17`, left text alignment, `expand_icon = true`, `icon_max_width = 68`, `clip_text = true`, and ellipsis overrun behavior.
+Set the panel offsets to top `250`, bottom `850`; set every button to minimum height `116`, font size `17`, left text alignment, `expand_icon = true`, `theme_override_constants/icon_max_width = 68`, `clip_text = true`, and ellipsis overrun behavior.
 
 - [ ] **Step 5: Run automated and visual verification**
 
