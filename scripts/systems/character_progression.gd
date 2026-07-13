@@ -35,12 +35,24 @@ func calculate_mission_experience(mission_type: String, victory: bool, progress_
 
 func apply_experience(characters_state: Dictionary, character_id: String, amount: int) -> Dictionary:
 	var updated_state: Dictionary = characters_state.duplicate(true)
-	if character_id.is_empty() or amount <= 0 or not updated_state.has(character_id):
+	var unlocked_ids_value = updated_state.get("unlocked_ids", [])
+	if (
+		character_id.is_empty()
+		or amount <= 0
+		or typeof(unlocked_ids_value) != TYPE_ARRAY
+		or not Array(unlocked_ids_value).has(character_id)
+	):
 		return updated_state
 
-	var character_state: Dictionary = Dictionary(updated_state[character_id]).duplicate(true)
-	var experience := maxi(0, int(character_state.get("mastery_experience", 0))) + amount
-	character_state["mastery_experience"] = experience
-	character_state["level"] = get_level_for_experience(experience)
-	updated_state[character_id] = character_state
+	var experience_by_character: Dictionary = {}
+	if typeof(updated_state.get("mastery_experience")) == TYPE_DICTIONARY:
+		experience_by_character = Dictionary(updated_state["mastery_experience"]).duplicate(true)
+	var levels_by_character: Dictionary = {}
+	if typeof(updated_state.get("mastery_levels")) == TYPE_DICTIONARY:
+		levels_by_character = Dictionary(updated_state["mastery_levels"]).duplicate(true)
+	var experience := maxi(0, int(experience_by_character.get(character_id, 0))) + amount
+	experience_by_character[character_id] = experience
+	levels_by_character[character_id] = get_level_for_experience(experience)
+	updated_state["mastery_experience"] = experience_by_character
+	updated_state["mastery_levels"] = levels_by_character
 	return updated_state

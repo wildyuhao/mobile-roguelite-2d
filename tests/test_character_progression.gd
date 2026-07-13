@@ -63,20 +63,42 @@ func _test_mission_experience(runner, progression) -> void:
 
 func _test_character_independence(runner, progression) -> void:
 	var initial := {
-		"azure": {"mastery_experience": 90, "level": 1},
-		"crimson": {"mastery_experience": 240, "level": 3},
-		"ember": {"mastery_experience": -40, "level": 1},
+		"unlocked_ids": ["azure", "crimson", "ember"],
+		"mastery_experience": {
+			"azure": 90,
+			"crimson": 240,
+			"ember": -40,
+			"locked": 100,
+		},
+		"mastery_levels": {
+			"azure": 1,
+			"crimson": 3,
+			"ember": 1,
+			"locked": 2,
+		},
+		"selected_id": "azure",
+		"starting_loadouts": {"azure": {"weapon": "crossbow"}},
 	}
 	var updated: Dictionary = progression.apply_experience(initial, "azure", 20)
-	runner.assert_eq(updated["azure"]["mastery_experience"], 110, "selected character should receive cumulative XP")
-	runner.assert_eq(updated["azure"]["level"], 2, "selected character level should be derived from cumulative XP")
-	runner.assert_eq(updated["crimson"], initial["crimson"], "other characters should remain independent")
-	runner.assert_eq(initial["azure"]["mastery_experience"], 90, "input state should not be mutated")
+	runner.assert_eq(updated["mastery_experience"]["azure"], 110, "selected character should receive cumulative XP")
+	runner.assert_eq(updated["mastery_levels"]["azure"], 2, "selected character level should be derived from cumulative XP")
+	runner.assert_eq(updated["mastery_experience"]["crimson"], 240, "other character XP should remain independent")
+	runner.assert_eq(updated["mastery_levels"]["crimson"], 3, "other character levels should remain independent")
+	runner.assert_eq(updated["selected_id"], "azure", "selected character metadata should be preserved")
+	runner.assert_eq(updated["starting_loadouts"], initial["starting_loadouts"], "starting loadouts should be preserved")
+	runner.assert_eq(initial["mastery_experience"]["azure"], 90, "input state should not be mutated")
+	var save := {"characters": initial.duplicate(true)}
+	save["characters"] = progression.apply_experience(save["characters"], "azure", 20)
+	runner.assert_eq(save["characters"], updated, "progression output should assign directly back to save characters")
 	var normalized: Dictionary = progression.apply_experience(initial, "ember", 50)
-	runner.assert_eq(normalized["ember"]["mastery_experience"], 50, "negative mastery XP should normalize to zero before adding")
-	runner.assert_eq(normalized["ember"]["level"], 1, "normalized mastery XP should derive the correct level")
-	runner.assert_true(normalized["ember"]["mastery_experience"] >= 0, "mastery XP should never remain negative")
+	runner.assert_eq(normalized["mastery_experience"]["ember"], 50, "negative mastery XP should normalize to zero before adding")
+	runner.assert_eq(normalized["mastery_levels"]["ember"], 1, "normalized mastery XP should derive the correct level")
+	runner.assert_true(normalized["mastery_experience"]["ember"] >= 0, "mastery XP should never remain negative")
 	runner.assert_eq(progression.apply_experience(initial, "", 20), initial, "empty character ID should leave a duplicate unchanged")
+	runner.assert_eq(progression.apply_experience(initial, "locked", 20), initial, "locked character ID should leave a duplicate unchanged")
 	runner.assert_eq(progression.apply_experience(initial, "missing", 20), initial, "unknown character ID should leave a duplicate unchanged")
 	runner.assert_eq(progression.apply_experience(initial, "azure", 0), initial, "zero XP should leave a duplicate unchanged")
 	runner.assert_eq(progression.apply_experience(initial, "azure", -5), initial, "negative XP should leave a duplicate unchanged")
+	var rejected: Dictionary = progression.apply_experience(initial, "", 20)
+	rejected["mastery_experience"]["azure"] = 999
+	runner.assert_eq(initial["mastery_experience"]["azure"], 90, "rejected updates should still return a deep duplicate")

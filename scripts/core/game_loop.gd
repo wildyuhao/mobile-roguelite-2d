@@ -2,6 +2,7 @@ extends Node2D
 class_name GameLoop
 
 const GameDatabaseScript = preload("res://scripts/data/game_database.gd")
+const ContentCatalogScript = preload("res://scripts/data/content_catalog.gd")
 const UpgradeSystemScript = preload("res://scripts/systems/upgrade_system.gd")
 const SettlementSystemScript = preload("res://scripts/systems/settlement_system.gd")
 const SaveSystemScript = preload("res://scripts/systems/save_system.gd")
@@ -27,6 +28,7 @@ const ENEMY_PROJECTILE_PREWARM := 16
 @onready var combat_effect_pipeline: Node = get_node_or_null("CombatEffectPipeline")
 
 var database = GameDatabaseScript.new()
+var content_catalog = ContentCatalogScript.new()
 var upgrade_system = UpgradeSystemScript.new()
 var settlement_system = SettlementSystemScript.new()
 var save_system: Object = SaveSystemScript.new()
@@ -53,6 +55,8 @@ var run_time: float = 0.0
 func _ready() -> void:
 	var loaded = database.load_all()
 	assert(loaded, "Game database failed to load: %s" % str(database.errors))
+	var campaign_loaded = content_catalog.load_all(database)
+	assert(campaign_loaded, "Campaign catalog failed to load: %s" % str(content_catalog.errors))
 	if pool_service != null and pool_service.has_method("prewarm"):
 		pool_service.prewarm("pickup", experience_pickup_scene, self, 32)
 		if enemy_projectile_scene != null:
@@ -69,7 +73,7 @@ func _ready() -> void:
 	):
 		combat_effect_pipeline.prepare_runtime(pool_service, self)
 
-	var save_data := _load_save_data()
+	var save_data := _load_campaign_save_data()
 	apply_saved_equipment_to_player(save_data)
 	upgrade_system.configure(database.get_upgrades())
 	weapon_system.add_weapon(database.get_weapon("flying_sword"))
@@ -347,6 +351,21 @@ func _load_save_data() -> Dictionary:
 	if typeof(save_data) != TYPE_DICTIONARY:
 		return {}
 	return save_data
+
+func _load_campaign_save_data() -> Dictionary:
+	if save_system != null and save_system.has_method("configure_content_ids"):
+		save_system.configure_content_ids(
+			_dictionary_string_keys(content_catalog.get_missions()),
+			_dictionary_string_keys(content_catalog.get_characters()),
+			_dictionary_string_keys(content_catalog.get_chapters()),
+		)
+	return _load_save_data()
+
+func _dictionary_string_keys(values: Dictionary) -> Array[String]:
+	var ids: Array[String] = []
+	for id in values.keys():
+		ids.append(String(id))
+	return ids
 
 func _ensure_database_loaded() -> bool:
 	if not database.get_equipment().is_empty():

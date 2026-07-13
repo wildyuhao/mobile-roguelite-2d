@@ -90,7 +90,15 @@ func _copy_legacy_fields(data: Dictionary, normalized: Dictionary) -> void:
 	if typeof(data.get("equipment_levels")) == TYPE_DICTIONARY:
 		normalized["equipment_levels"] = _normalize_equipment_levels(data["equipment_levels"])
 	if typeof(data.get("settings")) == TYPE_DICTIONARY:
-		normalized["settings"] = Dictionary(data["settings"]).duplicate(true)
+		var settings: Dictionary = Dictionary(data["settings"]).duplicate(true)
+		var default_settings: Dictionary = normalized["settings"]
+		for volume_key in ["music_volume", "sfx_volume"]:
+			var volume_value = settings.get(volume_key)
+			if typeof(volume_value) in [TYPE_INT, TYPE_FLOAT]:
+				settings[volume_key] = clampf(float(volume_value), 0.0, 1.0)
+			else:
+				settings[volume_key] = float(default_settings[volume_key])
+		normalized["settings"] = settings
 
 	var unlocked_equipment := _normalize_string_array(data.get("unlocked_equipment", []))
 	for equipment_id in DEFAULT_UNLOCKED_EQUIPMENT:
@@ -106,7 +114,10 @@ func _normalize_campaign(data: Dictionary, normalized: Dictionary) -> void:
 	var target: Dictionary = normalized["campaign"]
 	target["completed_missions"] = _normalize_id_integer_dictionary(campaign.get("completed_missions", {}), known_mission_ids, 0)
 	target["unlocked_missions"] = _normalize_known_id_array(campaign.get("unlocked_missions", []), known_mission_ids, DEFAULT_MISSION_ID)
-	target["chapter_marks"] = _normalize_id_integer_dictionary(campaign.get("chapter_marks", {}), known_chapter_ids, 0)
+	var chapter_marks := _normalize_id_integer_dictionary(campaign.get("chapter_marks", {}), known_chapter_ids, 0)
+	if not chapter_marks.has(DEFAULT_CHAPTER_ID):
+		chapter_marks[DEFAULT_CHAPTER_ID] = 0
+	target["chapter_marks"] = chapter_marks
 	if typeof(campaign.get("selected_mission_id")) == TYPE_STRING and _is_known_id(campaign["selected_mission_id"], known_mission_ids):
 		target["selected_mission_id"] = campaign["selected_mission_id"]
 	normalized["campaign"] = target

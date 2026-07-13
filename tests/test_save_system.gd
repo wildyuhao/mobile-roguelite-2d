@@ -15,7 +15,14 @@ func run(runner) -> void:
 		"red_wastes_boss",
 	]
 	var character_ids: Array[String] = ["mechanism_walker"]
-	var chapter_ids: Array[String] = ["red_wastes"]
+	var chapter_ids: Array[String] = [
+		"red_wastes",
+		"bamboo_ruins",
+		"ghost_market",
+		"underworld_tomb",
+		"thunder_altar",
+		"rift_seal_platform",
+	]
 	save_system.configure_content_ids(mission_ids, character_ids, chapter_ids)
 	var data = save_system.create_default_save()
 	runner.assert_eq(data["version"], 2, "default save should use campaign save version two")
@@ -47,18 +54,25 @@ func run(runner) -> void:
 	runner.assert_eq(loaded["materials"], 17, "loaded materials should match saved data")
 	runner.assert_eq(loaded["equipment_levels"]["talisman_robe"], 2, "loaded equipment level should match saved data")
 
-	runner.assert_true(save_system.save_game({
+	var legacy_fixture := {
 		"version": 1,
 		"materials": 9,
 		"equipment_levels": {"talisman_robe": 3},
 		"unlocked_equipment": ["talisman_robe", "sword_gourd"],
-		"settings": {"music_volume": 0.35, "sfx_volume": 0.65},
-	}), "legacy save should be writable")
+		"settings": {"music_volume": 0.35, "sfx_volume": 0.65, "screen_shake": false},
+	}
+	var legacy_file := FileAccess.open(save_system.save_path, FileAccess.WRITE)
+	runner.assert_true(legacy_file != null, "v1 fixture should be writable directly")
+	if legacy_file != null:
+		legacy_file.store_string(JSON.stringify(legacy_fixture))
+		legacy_file.close()
 	var migrated = save_system.load_game()
 	runner.assert_eq(migrated["version"], 2, "legacy saves should migrate to version two")
 	runner.assert_eq(migrated["materials"], 9, "migrated save should preserve materials")
 	runner.assert_eq(migrated["equipment_levels"], {"talisman_robe": 3}, "migrated save should preserve equipment levels")
-	runner.assert_eq(migrated["settings"], {"music_volume": 0.35, "sfx_volume": 0.65}, "migrated save should preserve settings")
+	runner.assert_eq(migrated["settings"], {"music_volume": 0.35, "sfx_volume": 0.65, "screen_shake": false}, "migrated save should preserve settings")
+	runner.assert_true(migrated["unlocked_equipment"].has("talisman_robe"), "migrated save should preserve legacy equipment unlocks")
+	runner.assert_true(migrated["unlocked_equipment"].has("sword_gourd"), "migrated save should preserve the legacy starting weapon unlock")
 	runner.assert_true(migrated["unlocked_equipment"].has("cloudstep_boots"), "legacy save should gain boot upgrade access")
 	runner.assert_true(migrated["unlocked_equipment"].has("bronze_gear_core"), "legacy save should gain gear core upgrade access")
 	runner.assert_true(migrated["unlocked_equipment"].has("jade_compass"), "legacy save should gain compass upgrade access")
@@ -95,6 +109,43 @@ func run(runner) -> void:
 	runner.assert_eq(normalized["characters"]["mastery_levels"], {"mechanism_walker": 1}, "mastery levels should normalize to valid integers")
 	runner.assert_eq(normalized["characters"]["mastery_experience"], {"mechanism_walker": 0}, "mastery experience should normalize to valid integers")
 	runner.assert_eq(normalized["characters"]["starting_loadouts"], {"mechanism_walker": {"weapon": "crossbow"}}, "unknown character loadouts should be removed")
+
+	var missing_marks = save_system._normalize_save({"campaign": {"unlocked_missions": []}})
+	runner.assert_eq(missing_marks["campaign"]["chapter_marks"], {"red_wastes": 0}, "missing chapter marks should retain the default chapter mark")
+	var malformed_marks = save_system._normalize_save({"campaign": {"chapter_marks": ["red_wastes"]}})
+	runner.assert_eq(malformed_marks["campaign"]["chapter_marks"], {"red_wastes": 0}, "malformed chapter marks should retain the default chapter mark")
+	var filtered_marks = save_system._normalize_save({"campaign": {"chapter_marks": {"unknown_chapter": 4}}})
+	runner.assert_eq(filtered_marks["campaign"]["chapter_marks"], {"red_wastes": 0}, "filtered-empty chapter marks should retain the default chapter mark")
+	var omitted_default_mark = save_system._normalize_save({"campaign": {"chapter_marks": {"bamboo_ruins": 2}}})
+	runner.assert_eq(omitted_default_mark["campaign"]["chapter_marks"], {"bamboo_ruins": 2, "red_wastes": 0}, "chapter marks should restore an omitted default chapter")
+
+	var missing_volumes_source := {"settings": {"accessibility": {"high_contrast": true}}}
+	var missing_volumes = save_system._normalize_save(missing_volumes_source)
+	runner.assert_eq(missing_volumes["settings"].get("music_volume"), 0.8, "missing music volume should retain its default")
+	runner.assert_eq(missing_volumes["settings"].get("sfx_volume"), 0.8, "missing SFX volume should retain its default")
+	runner.assert_eq(missing_volumes["settings"].get("accessibility"), {"high_contrast": true}, "extra settings should be preserved")
+	missing_volumes_source["settings"]["accessibility"]["high_contrast"] = false
+	runner.assert_eq(missing_volumes["settings"]["accessibility"], {"high_contrast": true}, "extra settings should be deep copied")
+	var invalid_volumes = save_system._normalize_save({
+		"settings": {
+			"music_volume": "0.25",
+			"sfx_volume": 1.5,
+			"display_mode": "borderless",
+		},
+	})
+	var invalid_music_volume = invalid_volumes["settings"].get("music_volume")
+	if typeof(invalid_music_volume) == TYPE_FLOAT:
+		runner.assert_near(invalid_music_volume, 0.8, 0.0001, "nonnumeric music volume should retain its default")
+	else:
+		runner.assert_true(false, "nonnumeric music volume should retain a float default")
+	runner.assert_eq(invalid_volumes["settings"].get("sfx_volume"), 1.0, "high SFX volume should clamp to one")
+	runner.assert_eq(invalid_volumes["settings"].get("display_mode"), "borderless", "unrelated settings keys should survive normalization")
+	runner.assert_eq(typeof(invalid_volumes["settings"].get("sfx_volume")), TYPE_FLOAT, "SFX volume should normalize to float")
+	var clamped_volumes = save_system._normalize_save({"settings": {"music_volume": -2, "sfx_volume": 1}})
+	runner.assert_eq(clamped_volumes["settings"].get("music_volume"), 0.0, "low music volume should clamp to zero")
+	runner.assert_eq(clamped_volumes["settings"].get("sfx_volume"), 1.0, "integer SFX volume should normalize to a clamped float")
+	runner.assert_eq(typeof(clamped_volumes["settings"].get("music_volume")), TYPE_FLOAT, "clamped music volume should be a float")
+	runner.assert_eq(typeof(clamped_volumes["settings"].get("sfx_volume")), TYPE_FLOAT, "integer SFX volume should become a float")
 	save_system.delete_save()
 
 	var unconfigured_path := "user://test_fuji_unconfigured_save.json"

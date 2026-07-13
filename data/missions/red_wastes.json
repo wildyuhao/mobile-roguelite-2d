@@ -13,11 +13,13 @@
     "boss_id": "",
     "prerequisites": [],
     "first_reward": {
-      "materials": { "spirit_ore": 100 },
+      "materials": 100,
+      "demon_cores": 0,
       "unlock_tokens": ["red_wastes_seal"]
     },
     "repeat_reward": {
-      "materials": { "spirit_ore": 40 }
+      "materials": 40,
+      "demon_cores": 0
     }
   },
   {
@@ -34,11 +36,13 @@
     "boss_id": "",
     "prerequisites": ["red_wastes_survival"],
     "first_reward": {
-      "materials": { "spirit_ore": 110 },
+      "materials": 110,
+      "demon_cores": 0,
       "unlock_tokens": ["red_wastes_hunt"]
     },
     "repeat_reward": {
-      "materials": { "spirit_ore": 45 }
+      "materials": 45,
+      "demon_cores": 0
     }
   },
   {
@@ -55,11 +59,13 @@
     "boss_id": "",
     "prerequisites": ["red_wastes_seal"],
     "first_reward": {
-      "materials": { "spirit_ore": 120, "demon_cores": 5 },
+      "materials": 120,
+      "demon_cores": 5,
       "unlock_tokens": ["red_wastes_mutation"]
     },
     "repeat_reward": {
-      "materials": { "spirit_ore": 50, "demon_cores": 2 }
+      "materials": 50,
+      "demon_cores": 2
     }
   },
   {
@@ -76,11 +82,13 @@
     "boss_id": "",
     "prerequisites": ["red_wastes_hunt"],
     "first_reward": {
-      "materials": { "spirit_ore": 140 },
+      "materials": 140,
+      "demon_cores": 0,
       "unlock_tokens": ["red_wastes_boss"]
     },
     "repeat_reward": {
-      "materials": { "spirit_ore": 60 }
+      "materials": 60,
+      "demon_cores": 0
     }
   },
   {
@@ -97,11 +105,13 @@
     "boss_id": "seal_boss",
     "prerequisites": ["red_wastes_mutation"],
     "first_reward": {
-      "materials": { "spirit_ore": 160, "demon_cores": 8 },
+      "materials": 160,
+      "demon_cores": 8,
       "unlock_tokens": ["red_wastes_complete"]
     },
     "repeat_reward": {
-      "materials": { "spirit_ore": 70, "demon_cores": 3 }
+      "materials": 70,
+      "demon_cores": 3
     }
   }
 ]

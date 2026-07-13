@@ -73,10 +73,22 @@ func _load_directory_arrays_as_id_map(path: String, label: String) -> Dictionary
 	while file_name != "":
 		if not dir.current_is_dir() and file_name.ends_with(".json"):
 			for item in _load_json_array("%s/%s" % [path, file_name]):
+				if label == "mission":
+					_normalize_mission_reward_numbers(item)
 				_add_to_id_map(result, item, label)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 	return result
+
+func _normalize_mission_reward_numbers(mission: Dictionary) -> void:
+	for reward_name in ["first_reward", "repeat_reward"]:
+		if typeof(mission.get(reward_name)) != TYPE_DICTIONARY:
+			continue
+		var reward: Dictionary = mission[reward_name]
+		for field_name in ["materials", "demon_cores"]:
+			var value = reward.get(field_name)
+			if typeof(value) == TYPE_FLOAT and is_equal_approx(float(value), round(float(value))):
+				reward[field_name] = int(value)
 
 func _load_json_dictionary(path: String) -> Dictionary:
 	var data = _load_json(path)
@@ -203,31 +215,48 @@ func _validate_missions(battle_database: Object) -> void:
 	_validate_first_chapter_missions()
 
 func _validate_rewards(mission_id: String, mission: Dictionary) -> void:
-	var first_materials := _validate_reward(mission_id, "first", Dictionary(mission.get("first_reward", {})))
-	var repeat_materials := _validate_reward(mission_id, "repeat", Dictionary(mission.get("repeat_reward", {})))
-	if first_materials <= 0 or repeat_materials <= 0:
-		return
-	if repeat_materials >= first_materials:
+	var first_reward: Dictionary = {}
+	if typeof(mission.get("first_reward")) == TYPE_DICTIONARY:
+		first_reward = mission["first_reward"]
+	else:
+		errors.append("Mission %s first reward must be a dictionary" % mission_id)
+	var repeat_reward: Dictionary = {}
+	if typeof(mission.get("repeat_reward")) == TYPE_DICTIONARY:
+		repeat_reward = mission["repeat_reward"]
+	else:
+		errors.append("Mission %s repeat reward must be a dictionary" % mission_id)
+	var first_materials := _validate_reward(mission_id, "first", first_reward)
+	var repeat_materials := _validate_reward(mission_id, "repeat", repeat_reward)
+	if first_materials > 0 and repeat_materials > 0 and repeat_materials >= first_materials:
 		errors.append("Mission %s repeat reward must grant fewer materials" % mission_id)
-	var first_tokens := Array(Dictionary(mission.get("first_reward", {})).get("unlock_tokens", []))
-	if first_tokens.size() != 1 or String(first_tokens[0]) == "":
+	var first_tokens_value = first_reward.get("unlock_tokens")
+	if (
+		typeof(first_tokens_value) != TYPE_ARRAY
+		or Array(first_tokens_value).size() != 1
+		or typeof(Array(first_tokens_value)[0]) != TYPE_STRING
+		or String(Array(first_tokens_value)[0]).is_empty()
+	):
 		errors.append("Mission %s first reward must grant one unlock token" % mission_id)
 	if String(mission.get("type", "")) in ["hunt", "boss"]:
-		for reward_name in ["first_reward", "repeat_reward"]:
-			if int(Dictionary(mission.get(reward_name, {})).get("materials", {}).get("demon_cores", 0)) <= 0:
+		for reward_entry in [["first_reward", first_reward], ["repeat_reward", repeat_reward]]:
+			var reward_name: String = reward_entry[0]
+			var reward: Dictionary = reward_entry[1]
+			if typeof(reward.get("demon_cores")) != TYPE_INT or int(reward.get("demon_cores", 0)) <= 0:
 				errors.append("Mission %s %s must grant demon cores" % [mission_id, reward_name])
 
 func _validate_reward(mission_id: String, reward_type: String, reward: Dictionary) -> int:
-	var total := 0
-	var materials: Dictionary = reward.get("materials", {})
-	if materials.is_empty():
-		errors.append("Mission %s %s reward has no materials" % [mission_id, reward_type])
-	for material_id in materials.keys():
-		var amount := int(materials[material_id])
-		if amount <= 0:
-			errors.append("Mission %s %s reward has nonpositive %s" % [mission_id, reward_type, material_id])
-		total += amount
-	return total
+	var materials_value = reward.get("materials")
+	var materials := 0
+	if typeof(materials_value) != TYPE_INT:
+		errors.append("Mission %s %s reward materials must be an integer" % [mission_id, reward_type])
+	else:
+		materials = int(materials_value)
+		if materials <= 0:
+			errors.append("Mission %s %s reward has nonpositive materials" % [mission_id, reward_type])
+	var demon_cores_value = reward.get("demon_cores")
+	if typeof(demon_cores_value) != TYPE_INT or int(demon_cores_value) < 0:
+		errors.append("Mission %s %s reward demon cores must be a nonnegative integer" % [mission_id, reward_type])
+	return materials
 
 func _validate_first_chapter_missions() -> void:
 	var first_chapter_id := ""

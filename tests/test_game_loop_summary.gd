@@ -143,6 +143,12 @@ class FakeSaveSystem:
 	var data: Dictionary = {}
 	var save_calls: int = 0
 	var last_saved_data: Dictionary = {}
+	var configure_calls: int = 0
+	var load_calls: int = 0
+	var configured_before_load: bool = false
+	var configured_mission_ids: Array[String] = []
+	var configured_character_ids: Array[String] = []
+	var configured_chapter_ids: Array[String] = []
 
 	func _init(starting_materials: int = 0) -> void:
 		data = {
@@ -153,7 +159,15 @@ class FakeSaveSystem:
 			"settings": {},
 		}
 
+	func configure_content_ids(mission_ids: Array[String], character_ids: Array[String], chapter_ids: Array[String]) -> void:
+		configure_calls += 1
+		configured_mission_ids = mission_ids.duplicate()
+		configured_character_ids = character_ids.duplicate()
+		configured_chapter_ids = chapter_ids.duplicate()
+
 	func load_game() -> Dictionary:
+		load_calls += 1
+		configured_before_load = configure_calls > 0
 		return data.duplicate(true)
 
 	func save_game(new_data: Dictionary) -> bool:
@@ -162,12 +176,66 @@ class FakeSaveSystem:
 		data = new_data.duplicate(true)
 		return true
 
+class FakeLegacySaveSystem:
+	extends RefCounted
+
+	var load_calls: int = 0
+
+	func load_game() -> Dictionary:
+		load_calls += 1
+		return {}
+
 func run(runner) -> void:
 	if not ResourceLoader.exists("res://scripts/core/game_loop.gd"):
 		runner.assert_true(false, "game loop script should exist")
 		return
 
 	var game_loop_script = load("res://scripts/core/game_loop.gd")
+	var configuration_loop = game_loop_script.new()
+	var configuration_save := FakeSaveSystem.new()
+	configuration_loop.set_save_system(configuration_save)
+	if configuration_loop.has_method("_load_campaign_save_data"):
+		runner.assert_true(configuration_loop.database.load_all(), "battle database should load before campaign save configuration")
+		runner.assert_true(
+			configuration_loop.content_catalog.load_all(configuration_loop.database),
+			"campaign catalog should load before campaign save configuration"
+		)
+		configuration_loop._load_campaign_save_data()
+		var expected_mission_ids: Array[String] = [
+			"red_wastes_survival",
+			"red_wastes_seal",
+			"red_wastes_hunt",
+			"red_wastes_mutation",
+			"red_wastes_boss",
+		]
+		var expected_chapter_ids: Array[String] = [
+			"red_wastes",
+			"bamboo_ruins",
+			"ghost_market",
+			"underworld_tomb",
+			"thunder_altar",
+			"rift_seal_platform",
+		]
+		configuration_save.configured_mission_ids.sort()
+		configuration_save.configured_chapter_ids.sort()
+		expected_mission_ids.sort()
+		expected_chapter_ids.sort()
+		runner.assert_eq(configuration_save.configured_mission_ids, expected_mission_ids, "game loop should configure all five campaign mission IDs")
+		runner.assert_eq(configuration_save.configured_character_ids, ["mechanism_walker"], "game loop should configure the campaign character ID")
+		runner.assert_eq(configuration_save.configured_chapter_ids, expected_chapter_ids, "game loop should configure all six campaign chapter IDs")
+		runner.assert_true(configuration_save.configured_before_load, "content IDs should be configured before save loading")
+		runner.assert_eq(configuration_save.load_calls, 1, "campaign save loading should happen once")
+		var legacy_loop = game_loop_script.new()
+		var legacy_save := FakeLegacySaveSystem.new()
+		legacy_loop.set_save_system(legacy_save)
+		runner.assert_true(legacy_loop.database.load_all(), "legacy fake should load after the battle database")
+		runner.assert_true(legacy_loop.content_catalog.load_all(legacy_loop.database), "legacy fake should load after the campaign catalog")
+		legacy_loop._load_campaign_save_data()
+		runner.assert_eq(legacy_save.load_calls, 1, "save systems without optional configuration should remain compatible")
+		legacy_loop.free()
+	else:
+		runner.assert_true(false, "game loop should configure campaign content IDs before loading saves")
+	configuration_loop.free()
 	var game_loop = game_loop_script.new()
 	var victory_panel := FakeSettlementPanel.new()
 	var victory_save := FakeSaveSystem.new(11)
