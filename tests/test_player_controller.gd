@@ -63,6 +63,27 @@ func run(runner) -> void:
 	else:
 		runner.assert_true(false, "player should accept an external move vector")
 
+	if (
+		player.has_method("start_starting_ward")
+		and player.has_method("tick_starting_ward")
+		and player.has_method("is_starting_ward_active")
+		and player.has_method("get_starting_ward_ratio")
+	):
+		player.starting_ward_seconds = 6.0
+		player.start_starting_ward()
+		runner.assert_true(player.is_starting_ward_active(), "starting ward should activate at run start")
+		runner.assert_near(player.get_starting_ward_ratio(), 1.0, 0.001, "fresh ward should report full ratio")
+		runner.assert_true(not player.take_contact_damage(12), "starting ward should reject enemy damage")
+		runner.assert_eq(health.current_health, 100, "blocked starting damage should preserve health")
+		player.tick_starting_ward(0.0)
+		runner.assert_near(player.get_starting_ward_ratio(), 1.0, 0.001, "zero delta should not consume the ward")
+		player.tick_starting_ward(4.5)
+		runner.assert_near(player.get_starting_ward_ratio(), 0.25, 0.001, "ward ratio should follow remaining time")
+		player.tick_starting_ward(1.5)
+		runner.assert_true(not player.is_starting_ward_active(), "ward should expire after six active seconds")
+	else:
+		runner.assert_true(false, "player should expose starting ward state methods")
+
 	if player.has_method("take_contact_damage") and player.has_method("tick_damage_invulnerability"):
 		runner.assert_true(player.take_contact_damage(12), "first contact damage should apply")
 		runner.assert_eq(health.current_health, 88, "contact damage should reduce health")

@@ -6,6 +6,7 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 @export var move_speed: float = 260.0
 @export var base_max_health: int = 100
 @export var contact_invulnerability_seconds: float = 0.6
+@export var starting_ward_seconds: float = 6.0
 
 @onready var health: Node = $HealthComponent
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -14,6 +15,7 @@ const GameConstantsScript = preload("res://scripts/core/constants.gd")
 
 var external_move_vector: Vector2 = Vector2.ZERO
 var damage_invulnerability_remaining: float = 0.0
+var starting_ward_remaining: float = 0.0
 var base_move_speed: float = 260.0
 
 func _ready() -> void:
@@ -26,9 +28,11 @@ func _ready() -> void:
 	if health != null:
 		health.configure(base_max_health)
 	_connect_hit_feedback()
+	start_starting_ward()
 
-func _physics_process(_delta: float) -> void:
-	tick_damage_invulnerability(_delta)
+func _physics_process(delta: float) -> void:
+	tick_starting_ward(delta)
+	tick_damage_invulnerability(delta)
 	var input_vector := _get_move_input()
 	if input_vector.length() > 1.0:
 		input_vector = input_vector.normalized()
@@ -66,7 +70,7 @@ func apply_stat_modifiers(modifiers: Dictionary) -> void:
 		)
 
 func take_contact_damage(amount: int) -> bool:
-	if amount <= 0 or damage_invulnerability_remaining > 0.0:
+	if amount <= 0 or is_starting_ward_active() or damage_invulnerability_remaining > 0.0:
 		return false
 	if health == null:
 		health = get_node_or_null("HealthComponent")
@@ -76,6 +80,27 @@ func take_contact_damage(amount: int) -> bool:
 	health.take_damage(amount)
 	damage_invulnerability_remaining = contact_invulnerability_seconds
 	return true
+
+func start_starting_ward() -> void:
+	starting_ward_remaining = maxf(0.0, starting_ward_seconds)
+
+func tick_starting_ward(delta: float) -> void:
+	starting_ward_remaining = maxf(
+		0.0,
+		starting_ward_remaining - maxf(0.0, delta)
+	)
+
+func is_starting_ward_active() -> bool:
+	return starting_ward_remaining > 0.0
+
+func get_starting_ward_ratio() -> float:
+	if starting_ward_seconds <= 0.0:
+		return 0.0
+	return clampf(
+		starting_ward_remaining / starting_ward_seconds,
+		0.0,
+		1.0
+	)
 
 func tick_damage_invulnerability(delta: float) -> void:
 	if damage_invulnerability_remaining <= 0.0:
