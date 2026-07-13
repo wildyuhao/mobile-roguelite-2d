@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_agent.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -13,6 +13,9 @@
 [ext_resource type="Texture2D" path="res://art/effects/status/burn_mark.png" id="11"]
 [ext_resource type="Texture2D" path="res://art/enemies/ranged_demon/enemy_fire_muzzle.png" id="12"]
 [ext_resource type="Texture2D" path="res://art/enemies/ranged_demon/enemy_fire_sigil.png" id="13"]
+[ext_resource type="Texture2D" path="res://art/enemies/charging_demon/charge_warning_sigil.png" id="14"]
+[ext_resource type="Texture2D" path="res://art/enemies/charging_demon/charge_trail.png" id="15"]
+[ext_resource type="Texture2D" path="res://art/enemies/charging_demon/charge_dust.png" id="16"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 16.0
@@ -79,6 +82,43 @@ z_index = 14
 texture_filter = 1
 scale = Vector2(0.12, 0.12)
 texture = ExtResource("12")
+
+[node name="ChargeWarningLane" type="Line2D" parent="."]
+visible = false
+z_index = 10
+points = PackedVector2Array(0, 0, 120, 0)
+width = 20.0
+default_color = Color(0.9, 0.05, 0.02, 0.2)
+antialiased = true
+
+[node name="ChargeWarningCore" type="Line2D" parent="."]
+visible = false
+z_index = 11
+points = PackedVector2Array(0, 0, 120, 0)
+width = 2.5
+default_color = Color(1, 0.32, 0.04, 0.92)
+antialiased = true
+
+[node name="ChargeWarningSigil" type="Sprite2D" parent="."]
+visible = false
+z_index = 12
+texture_filter = 1
+scale = Vector2(0.11, 0.11)
+texture = ExtResource("14")
+
+[node name="ChargeTrail" type="Sprite2D" parent="."]
+visible = false
+z_index = 9
+texture_filter = 1
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("15")
+
+[node name="ChargeDust" type="Sprite2D" parent="."]
+visible = false
+z_index = 8
+texture_filter = 1
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("16")
 
 [node name="HitSpark" type="Sprite2D" parent="."]
 visible = false

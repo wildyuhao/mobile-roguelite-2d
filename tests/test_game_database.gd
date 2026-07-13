@@ -65,6 +65,16 @@ func run(runner) -> void:
 			"%s should use a Chinese display name" % upgrade.get("id", "")
 		)
 	runner.assert_true(db.has_enemy("basic_demon"), "database should include basic_demon")
+	var charging_demon: Dictionary = db.get_enemy("charging_demon")
+	runner.assert_eq(charging_demon.get("display_name", ""), "角冲妖", "charger should use its Chinese name")
+	runner.assert_eq(int(charging_demon.get("charge_trigger_range", 0)), 300, "charger trigger range")
+	runner.assert_eq(int(charging_demon.get("charge_speed", 0)), 420, "charger speed")
+	runner.assert_near(
+		float(charging_demon.get("charge_speed", 0.0)) * float(charging_demon.get("attack_active", 0.0)),
+		294.0,
+		0.01,
+		"charger warning distance should match its active travel"
+	)
 	runner.assert_true(db.get_upgrades().size() >= 20, "combat density foundation should include at least twenty upgrades")
 	runner.assert_true(db.get_wave_events().size() >= 2, "database should include wave events")
 	_assert_early_wave_pressure(runner, db.get_wave_events())

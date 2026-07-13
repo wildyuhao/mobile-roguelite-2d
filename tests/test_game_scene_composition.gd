@@ -72,6 +72,10 @@ func run(runner) -> void:
 	runner.assert_true(enemy.get_node_or_null("RangedAimLine") is Line2D, "enemy should include a ranged aim line")
 	runner.assert_true(enemy.get_node_or_null("RangedMuzzle") is Sprite2D, "enemy should include a ranged muzzle flash")
 	runner.assert_true(enemy.get_node_or_null("RangedAimSigil") is Sprite2D, "enemy should include a ranged aim sigil")
+	for charge_node in ["ChargeWarningLane", "ChargeWarningCore"]:
+		runner.assert_true(enemy.get_node_or_null(charge_node) is Line2D, "enemy should include %s" % charge_node)
+	for charge_node in ["ChargeWarningSigil", "ChargeTrail", "ChargeDust"]:
+		runner.assert_true(enemy.get_node_or_null(charge_node) is Sprite2D, "enemy should include %s" % charge_node)
 	var status_visual = enemy.get_node_or_null("StatusVisual")
 	runner.assert_true(status_visual != null, "basic enemy should include one aggregate status visual")
 	if status_visual != null:

@@ -29,6 +29,11 @@ func run(runner) -> void:
 	var collision := CollisionShape2D.new()
 	var collision_shape := CircleShape2D.new()
 	var ranged_aim_line := Line2D.new()
+	var charge_warning_lane := Line2D.new()
+	var charge_warning_core := Line2D.new()
+	var charge_warning_sigil := Sprite2D.new()
+	var charge_trail := Sprite2D.new()
+	var charge_dust := Sprite2D.new()
 	var target := Node2D.new()
 	var status_controller: Node = null
 	health.name = "HealthComponent"
@@ -38,10 +43,27 @@ func run(runner) -> void:
 	collision.shape = collision_shape
 	ranged_aim_line.name = "RangedAimLine"
 	ranged_aim_line.visible = false
+	charge_warning_lane.name = "ChargeWarningLane"
+	charge_warning_lane.visible = false
+	charge_warning_lane.points = PackedVector2Array([Vector2.ZERO, Vector2.ZERO])
+	charge_warning_core.name = "ChargeWarningCore"
+	charge_warning_core.visible = false
+	charge_warning_core.points = PackedVector2Array([Vector2.ZERO, Vector2.ZERO])
+	charge_warning_sigil.name = "ChargeWarningSigil"
+	charge_warning_sigil.visible = false
+	charge_trail.name = "ChargeTrail"
+	charge_trail.visible = false
+	charge_dust.name = "ChargeDust"
+	charge_dust.visible = false
 	enemy.add_child(health)
 	enemy.add_child(sprite)
 	enemy.add_child(collision)
 	enemy.add_child(ranged_aim_line)
+	enemy.add_child(charge_warning_lane)
+	enemy.add_child(charge_warning_core)
+	enemy.add_child(charge_warning_sigil)
+	enemy.add_child(charge_trail)
+	enemy.add_child(charge_dust)
 	if ResourceLoader.exists("res://scripts/components/status_controller.gd"):
 		status_controller = load("res://scripts/components/status_controller.gd").new()
 		status_controller.name = "StatusController"
@@ -160,11 +182,11 @@ func run(runner) -> void:
 		enemy.configure({
 			"behavior": "charge",
 			"move_speed": 95,
-			"charge_speed": 260,
-			"charge_trigger_range": 360,
+			"charge_speed": 420,
+			"charge_trigger_range": 300,
 			"attack_windup": 0.55,
-			"attack_active": 0.45,
-			"attack_recovery": 0.65,
+			"attack_active": 0.70,
+			"attack_recovery": 0.75,
 			"max_health": 38,
 		}, charge_target)
 		runner.assert_eq(
@@ -177,18 +199,36 @@ func run(runner) -> void:
 			"windup",
 			"charge should visibly wind up"
 		)
+		runner.assert_true(charge_warning_lane.visible, "charge windup should show a wide danger lane")
+		runner.assert_true(charge_warning_core.visible, "charge windup should show a bright center line")
+		runner.assert_true(charge_warning_sigil.visible, "charge windup should show an endpoint sigil")
+		runner.assert_near(
+			charge_warning_lane.points[1].length(),
+			294.0,
+			0.01,
+			"charge warning length should equal speed times active duration"
+		)
+		charge_target.global_position = Vector2(0, 200)
 		var active_charge_velocity = enemy.calculate_action_velocity(0.55)
 		runner.assert_near(
 			active_charge_velocity.length(),
-			260.0,
+			420.0,
 			0.01,
 			"active charge should use charge speed"
 		)
+		runner.assert_near(active_charge_velocity.x, 420.0, 0.01, "charge should keep its original x direction")
+		runner.assert_near(active_charge_velocity.y, 0.0, 0.01, "charge should not track target during windup")
 		runner.assert_eq(
 			enemy.action_state.state,
 			"active",
 			"charge should enter active after windup"
 		)
+		runner.assert_true(not charge_warning_lane.visible, "active charge should hide its warning lane")
+		runner.assert_true(charge_trail.visible, "active charge should show a directional trail")
+		enemy.calculate_action_velocity(0.70)
+		runner.assert_eq(enemy.action_state.state, "recovery", "completed charge should enter recovery")
+		runner.assert_true(not charge_trail.visible, "charge trail should hide during recovery")
+		runner.assert_true(charge_dust.visible, "charge recovery should show a dust burst")
 		charge_target.free()
 
 		if enemy.has_signal("ranged_attack_requested"):
@@ -304,12 +344,20 @@ func run(runner) -> void:
 		enemy.set_meta("enemy_role", "charger")
 		enemy.set_meta("last_weapon_id", "old_weapon")
 		enemy.action_state.start_attack(0.1, 0.1, 0.1)
+		for visual in [charge_warning_lane, charge_warning_core, charge_warning_sigil, charge_trail, charge_dust]:
+			visual.visible = true
 		enemy.deactivate_for_pool()
 		runner.assert_true(not enemy.is_pool_active(), "deactivated enemy should be inactive")
+		for visual in [charge_warning_lane, charge_warning_core, charge_warning_sigil, charge_trail, charge_dust]:
+			runner.assert_true(not visual.visible, "deactivation should clear dirty charge visuals")
 		runner.assert_true(not enemy.has_meta("encounter_id"), "deactivation should clear encounter metadata")
 		runner.assert_true(not enemy.has_meta("enemy_role"), "deactivation should clear role metadata")
 		runner.assert_true(not enemy.has_meta("last_weapon_id"), "deactivation should clear weapon attribution")
+		for visual in [charge_warning_lane, charge_warning_core, charge_warning_sigil, charge_trail, charge_dust]:
+			visual.visible = true
 		enemy.activate_from_pool()
+		for visual in [charge_warning_lane, charge_warning_core, charge_warning_sigil, charge_trail, charge_dust]:
+			runner.assert_true(not visual.visible, "reactivation should clear stale charge visuals")
 		enemy.configure({"max_health": 77, "behavior": "chase"}, target)
 		runner.assert_true(enemy.is_pool_active(), "reactivated enemy should be active")
 		runner.assert_eq(health.current_health, 77, "reactivation should restore configured health")
@@ -320,6 +368,8 @@ func run(runner) -> void:
 		runner.assert_eq(enemy.attack_windup, 0.28, "reuse should reset omitted attack windup")
 		runner.assert_eq(enemy.contact_damage, 8, "reuse should reset omitted contact damage")
 		runner.assert_eq(enemy.contact_reach_padding, 4.0, "reuse should reset contact reach padding")
+		for visual in [charge_warning_lane, charge_warning_core, charge_warning_sigil, charge_trail, charge_dust]:
+			runner.assert_true(not visual.visible, "reuse should clear charge visuals")
 		enemy._on_died()
 		runner.assert_eq(release_requests, [enemy], "pooled enemy death should request one release")
 	else:

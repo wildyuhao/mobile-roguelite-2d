@@ -50,6 +50,11 @@ const DEFAULT_MATERIAL_VALUE := 1
 @onready var ranged_aim_line: Line2D = get_node_or_null("RangedAimLine")
 @onready var ranged_muzzle: Sprite2D = get_node_or_null("RangedMuzzle")
 @onready var ranged_aim_sigil: Sprite2D = get_node_or_null("RangedAimSigil")
+@onready var charge_warning_lane: Line2D = get_node_or_null("ChargeWarningLane")
+@onready var charge_warning_core: Line2D = get_node_or_null("ChargeWarningCore")
+@onready var charge_warning_sigil: Sprite2D = get_node_or_null("ChargeWarningSigil")
+@onready var charge_trail: Sprite2D = get_node_or_null("ChargeTrail")
+@onready var charge_dust: Sprite2D = get_node_or_null("ChargeDust")
 
 var target: Node2D
 var behavior: String = "chase"
@@ -74,6 +79,16 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 		ranged_muzzle = get_node_or_null("RangedMuzzle") as Sprite2D
 	if ranged_aim_sigil == null:
 		ranged_aim_sigil = get_node_or_null("RangedAimSigil") as Sprite2D
+	if charge_warning_lane == null:
+		charge_warning_lane = get_node_or_null("ChargeWarningLane") as Line2D
+	if charge_warning_core == null:
+		charge_warning_core = get_node_or_null("ChargeWarningCore") as Line2D
+	if charge_warning_sigil == null:
+		charge_warning_sigil = get_node_or_null("ChargeWarningSigil") as Sprite2D
+	if charge_trail == null:
+		charge_trail = get_node_or_null("ChargeTrail") as Sprite2D
+	if charge_dust == null:
+		charge_dust = get_node_or_null("ChargeDust") as Sprite2D
 	_reset_definition_defaults()
 	target = new_target
 	behavior = definition.get("behavior", "chase")
@@ -106,6 +121,7 @@ func configure(definition: Dictionary, new_target: Node2D) -> void:
 	_configure_sprite(definition)
 	_configure_collision(definition)
 	_reset_ranged_visuals()
+	_reset_charge_visuals()
 
 func _reset_definition_defaults() -> void:
 	behavior = "chase"
@@ -248,6 +264,7 @@ func _update_action_visual() -> void:
 			_:
 				sprite.modulate = Color.WHITE
 	_update_ranged_telegraph_visuals()
+	_update_charge_telegraph_visuals()
 
 func _is_target_in_ranged_attack_range() -> bool:
 	return (
@@ -310,12 +327,49 @@ func _reset_ranged_visuals() -> void:
 	if ranged_muzzle != null:
 		ranged_muzzle.visible = false
 
+func _update_charge_telegraph_visuals() -> void:
+	var show_warning: bool = behavior == "charge" and action_state.state == EnemyActionStateScript.WINDUP
+	var show_trail: bool = behavior == "charge" and action_state.state == EnemyActionStateScript.ACTIVE
+	var show_dust: bool = behavior == "charge" and action_state.state == EnemyActionStateScript.RECOVERY
+	var direction := locked_action_direction.normalized()
+	if direction == Vector2.ZERO:
+		direction = Vector2.RIGHT
+	var charge_distance := maxf(1.0, charge_speed * attack_active)
+	for line in [charge_warning_lane, charge_warning_core]:
+		if line == null:
+			continue
+		line.visible = show_warning
+		line.points = PackedVector2Array([Vector2.ZERO, direction * charge_distance])
+	if charge_warning_sigil != null:
+		charge_warning_sigil.visible = show_warning
+		charge_warning_sigil.position = direction * charge_distance
+		charge_warning_sigil.rotation = direction.angle()
+	if charge_trail != null:
+		charge_trail.visible = show_trail
+		charge_trail.position = -direction * 32.0
+		charge_trail.rotation = direction.angle()
+	if charge_dust != null:
+		charge_dust.visible = show_dust
+		charge_dust.rotation = direction.angle()
+
+func _reset_charge_visuals() -> void:
+	for visual in [
+		charge_warning_lane,
+		charge_warning_core,
+		charge_warning_sigil,
+		charge_trail,
+		charge_dust,
+	]:
+		if visual != null:
+			visual.visible = false
+
 func _on_died() -> void:
 	action_state.mark_dead()
 	if status_controller != null and status_controller.has_method("clear_all"):
 		status_controller.clear_all()
 	_reset_hit_feedback()
 	_reset_ranged_visuals()
+	_reset_charge_visuals()
 	if collision_shape != null:
 		collision_shape.set_deferred("disabled", true)
 	defeated.emit(get_defeat_payload())
@@ -335,6 +389,7 @@ func activate_from_pool() -> void:
 		status_controller.clear_all()
 	_reset_hit_feedback()
 	_reset_ranged_visuals()
+	_reset_charge_visuals()
 	if not is_in_group(GameConstantsScript.ENEMY_GROUP):
 		add_to_group(GameConstantsScript.ENEMY_GROUP)
 	if collision_shape == null:
@@ -364,6 +419,7 @@ func begin_pool_release() -> void:
 	if status_controller != null and status_controller.has_method("clear_all"):
 		status_controller.clear_all()
 	_reset_ranged_visuals()
+	_reset_charge_visuals()
 	visible = false
 	remove_from_group(GameConstantsScript.ENEMY_GROUP)
 
