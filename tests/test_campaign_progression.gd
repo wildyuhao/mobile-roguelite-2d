@@ -5,8 +5,9 @@ const CampaignProgressionScript = preload("res://scripts/systems/campaign_progre
 func run(runner) -> void:
 	var system = CampaignProgressionScript.new()
 	var missions := {
-		"red_wastes_survival": {"id": "red_wastes_survival", "chapter_id": "red_wastes", "order": 1, "type": "survival"},
-		"red_wastes_seal": {"id": "red_wastes_seal", "chapter_id": "red_wastes", "order": 2, "type": "seal"},
+		"red_wastes_decoy": {"id": "red_wastes_decoy", "chapter_id": "red_wastes", "order": 2, "type": "seal", "prerequisites": ["other_mission"]},
+		"red_wastes_survival": {"id": "red_wastes_survival", "chapter_id": "red_wastes", "order": 1, "type": "survival", "prerequisites": []},
+		"red_wastes_seal": {"id": "red_wastes_seal", "chapter_id": "red_wastes", "order": 3, "type": "seal", "prerequisites": ["red_wastes_survival"]},
 	}
 	var chapters := {
 		"red_wastes": {"id": "red_wastes", "order": 1, "first_mission_id": "red_wastes_survival"},
@@ -21,9 +22,16 @@ func run(runner) -> void:
 	runner.assert_eq(system.get_mission_state("red_wastes_survival", campaign, missions, chapters), "available", "first mission should be available")
 	runner.assert_eq(system.get_mission_state("red_wastes_seal", campaign, missions, chapters), "locked", "second mission should be locked")
 
+	var locked_before: Dictionary = campaign.duplicate(true)
+	var locked_result: Dictionary = system.apply_victory(campaign, "red_wastes_seal", 1, missions, chapters)
+	runner.assert_eq(locked_result.get("error", ""), "mission_locked", "locked mission victory should report an error")
+	runner.assert_eq(locked_result["campaign"], locked_before, "locked mission victory should leave campaign untouched")
+	runner.assert_true(locked_result["newly_unlocked"].is_empty(), "locked mission victory should not unlock another mission")
+
 	var first: Dictionary = system.apply_victory(campaign, "red_wastes_survival", 0, missions, chapters)
 	runner.assert_true(first["first_completion"], "first clear should be marked once")
 	runner.assert_true(first["newly_unlocked"].has("red_wastes_seal"), "normal clear should unlock the next node")
+	runner.assert_true(not first["newly_unlocked"].has("red_wastes_decoy"), "normal clear should ignore adjacent missions without a matching prerequisite")
 	runner.assert_eq(first["campaign"]["completed_missions"]["red_wastes_survival"], 0, "victory should store the completed mark")
 	runner.assert_true(not first["mark_unlocked"], "normal clear should not unlock a chapter mark")
 
@@ -37,6 +45,10 @@ func run(runner) -> void:
 	runner.assert_eq(system.get_mission_state("red_wastes_survival", mastered_campaign, missions, chapters), "completed", "lower mark clear should be completed")
 	mastered_campaign["completed_missions"]["red_wastes_survival"] = 1
 	runner.assert_eq(system.get_mission_state("red_wastes_survival", mastered_campaign, missions, chapters), "mastered", "matching mark clear should be mastered")
+	var missing_chapter_missions := {
+		"orphan_mission": {"id": "orphan_mission", "chapter_id": "missing_chapter", "order": 1, "type": "survival"},
+	}
+	runner.assert_eq(system.get_mission_state("orphan_mission", {"unlocked_missions": ["orphan_mission"]}, missing_chapter_missions, {}), "locked", "mission with missing chapter should be locked")
 
 	var boss_missions := {
 		"red_wastes_boss": {"id": "red_wastes_boss", "chapter_id": "red_wastes", "order": 1, "type": "boss"},

@@ -3,6 +3,9 @@ extends RefCounted
 func get_mission_state(mission_id: String, campaign: Dictionary, missions: Dictionary, chapters: Dictionary) -> String:
 	if not missions.has(mission_id):
 		return "locked"
+	var mission: Dictionary = missions[mission_id]
+	if not chapters.has(String(mission.get("chapter_id", ""))):
+		return "locked"
 	if not Array(campaign.get("unlocked_missions", [])).has(mission_id):
 		return "locked"
 
@@ -10,7 +13,6 @@ func get_mission_state(mission_id: String, campaign: Dictionary, missions: Dicti
 	if not completed_missions.has(mission_id):
 		return "available"
 
-	var mission: Dictionary = missions[mission_id]
 	var chapter_id := String(mission.get("chapter_id", ""))
 	var chapter_marks: Dictionary = campaign.get("chapter_marks", {})
 	var current_chapter_mark := int(chapter_marks.get(chapter_id, 0))
@@ -30,6 +32,10 @@ func apply_victory(campaign: Dictionary, mission_id: String, difficulty_mark: in
 		return result
 
 	var updated_campaign: Dictionary = result["campaign"]
+	var mission: Dictionary = missions[mission_id]
+	if not chapters.has(String(mission.get("chapter_id", ""))) or not Array(campaign.get("unlocked_missions", [])).has(mission_id):
+		result["error"] = "mission_locked"
+		return result
 	var completed_missions: Dictionary = updated_campaign.get("completed_missions", {})
 	var mark := maxi(0, difficulty_mark)
 	if not completed_missions.has(mission_id):
@@ -41,7 +47,6 @@ func apply_victory(campaign: Dictionary, mission_id: String, difficulty_mark: in
 	updated_campaign["completed_missions"] = completed_missions
 
 	var unlocked_missions: Array = Array(updated_campaign.get("unlocked_missions", [])).duplicate()
-	var mission: Dictionary = missions[mission_id]
 	var next_mission_id := _find_next_mission_id(mission, missions, chapters)
 	if next_mission_id != "" and not unlocked_missions.has(next_mission_id):
 		unlocked_missions.append(next_mission_id)
@@ -63,10 +68,20 @@ func _find_next_mission_id(mission: Dictionary, missions: Dictionary, chapters: 
 	var chapter_id := String(mission.get("chapter_id", ""))
 	var mission_order := int(mission.get("order", 0))
 	if String(mission.get("type", "")) != "boss":
+		var mission_id := String(mission.get("id", ""))
+		var next_order := 2147483647
+		var next_mission_id := ""
 		for candidate in missions.values():
-			if String(candidate.get("chapter_id", "")) == chapter_id and int(candidate.get("order", 0)) == mission_order + 1:
-				return String(candidate.get("id", ""))
-		return ""
+			if String(candidate.get("chapter_id", "")) != chapter_id:
+				continue
+			var candidate_order := int(candidate.get("order", 0))
+			if candidate_order <= mission_order or candidate_order >= next_order:
+				continue
+			if not Array(candidate.get("prerequisites", [])).has(mission_id):
+				continue
+			next_order = candidate_order
+			next_mission_id = String(candidate.get("id", ""))
+		return next_mission_id
 
 	var chapter: Dictionary = chapters.get(chapter_id, {})
 	var completed_chapter_order := int(chapter.get("order", 0))
