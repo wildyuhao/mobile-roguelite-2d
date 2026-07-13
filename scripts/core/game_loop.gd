@@ -22,6 +22,7 @@ const ENEMY_PROJECTILE_PREWARM := 16
 @onready var upgrade_choice_panel: Node = $UpgradeChoicePanel
 @onready var virtual_joystick: Node = $VirtualJoystick/Stick
 @onready var settlement_panel: Node = $SettlementPanel
+@onready var pause_overlay: Node = get_node_or_null("PauseOverlay")
 @onready var pool_service: Node = get_node_or_null("PoolService")
 @onready var combat_effect_pipeline: Node = get_node_or_null("CombatEffectPipeline")
 
@@ -45,6 +46,8 @@ var active_stat_modifiers: Dictionary = {}
 var settlement_rewards := {}
 var settlement_saved: bool = false
 var run_ended: bool = false
+var manual_pause_active: bool = false
+var terminal_pause_active: bool = false
 var run_time: float = 0.0
 
 func _ready() -> void:
@@ -74,6 +77,7 @@ func _ready() -> void:
 	enemy_director.configure(database, player)
 	virtual_joystick.move_vector_changed.connect(player.set_external_move_vector)
 	_connect_settlement_panel_signals()
+	_connect_pause_overlay_signals()
 	_connect_player_health()
 	experience_system.level_up.connect(_on_level_up)
 	experience_system.experience_changed.connect(hud.set_experience)
@@ -144,16 +148,19 @@ func _acquire_runtime_node(pool_key: String, scene: PackedScene) -> Node:
 
 func _on_level_up(new_level: int) -> void:
 	hud.set_level(new_level)
+	_prepare_automatic_pause()
 	get_tree().paused = true
 	var choices: Array[Dictionary] = upgrade_system.get_choices(runtime_state, 3)
 	upgrade_choice_panel.show_choices(choices)
 
 func _on_upgrade_selected(upgrade: Dictionary) -> void:
 	if not _try_apply_runtime_upgrade(upgrade):
+		_set_pause_available(true)
 		get_tree().paused = false
 		return
 	_apply_total_stat_modifiers()
 	_show_runtime_upgrade_feedback(upgrade)
+	_set_pause_available(true)
 	get_tree().paused = false
 
 func _try_apply_runtime_upgrade(upgrade: Dictionary) -> bool:
@@ -245,6 +252,7 @@ func record_enemy_defeat(payload: Dictionary) -> Dictionary:
 	if bool(payload.get("is_boss", false)):
 		run_summary["boss_defeated"] = true
 		run_ended = true
+		_begin_terminal_pause_state()
 		settlement_rewards = _calculate_settlement_rewards()
 		_persist_settlement_rewards()
 		_show_settlement_result("封印成功")
@@ -257,11 +265,10 @@ func record_player_defeat() -> Dictionary:
 	run_summary["boss_defeated"] = false
 	run_summary["player_defeated"] = true
 	run_ended = true
+	_begin_terminal_pause_state()
 	settlement_rewards = _calculate_settlement_rewards()
 	_persist_settlement_rewards()
 	_show_settlement_result("挑战失败")
-	if is_inside_tree():
-		get_tree().paused = true
 	return run_summary
 
 func _calculate_settlement_rewards() -> Dictionary:
@@ -272,6 +279,11 @@ func _calculate_settlement_rewards() -> Dictionary:
 func set_settlement_panel(panel: Node) -> void:
 	settlement_panel = panel
 	_connect_settlement_panel_signals()
+
+func set_pause_overlay(overlay: Node) -> void:
+	_disconnect_pause_overlay_signals(pause_overlay)
+	pause_overlay = overlay
+	_connect_pause_overlay_signals()
 
 func set_save_system(system: Object) -> void:
 	save_system = system
@@ -348,6 +360,83 @@ func _connect_settlement_panel_signals() -> void:
 		settlement_panel.restart_requested.connect(_on_settlement_restart_requested)
 	if settlement_panel.has_signal("upgrade_requested") and not settlement_panel.upgrade_requested.is_connected(_on_settlement_upgrade_requested):
 		settlement_panel.upgrade_requested.connect(_on_settlement_upgrade_requested)
+
+func _connect_pause_overlay_signals() -> void:
+	if pause_overlay == null:
+		return
+	if pause_overlay.has_signal("pause_requested") and not pause_overlay.pause_requested.is_connected(_on_manual_pause_requested):
+		pause_overlay.pause_requested.connect(_on_manual_pause_requested)
+	if pause_overlay.has_signal("resume_requested") and not pause_overlay.resume_requested.is_connected(_on_manual_pause_resume_requested):
+		pause_overlay.resume_requested.connect(_on_manual_pause_resume_requested)
+	if pause_overlay.has_signal("restart_requested") and not pause_overlay.restart_requested.is_connected(_on_manual_pause_restart_requested):
+		pause_overlay.restart_requested.connect(_on_manual_pause_restart_requested)
+
+func _disconnect_pause_overlay_signals(overlay: Node) -> void:
+	if overlay == null:
+		return
+	if overlay.has_signal("pause_requested") and overlay.pause_requested.is_connected(_on_manual_pause_requested):
+		overlay.pause_requested.disconnect(_on_manual_pause_requested)
+	if overlay.has_signal("resume_requested") and overlay.resume_requested.is_connected(_on_manual_pause_resume_requested):
+		overlay.resume_requested.disconnect(_on_manual_pause_resume_requested)
+	if overlay.has_signal("restart_requested") and overlay.restart_requested.is_connected(_on_manual_pause_restart_requested):
+		overlay.restart_requested.disconnect(_on_manual_pause_restart_requested)
+
+func _set_pause_available(available: bool) -> void:
+	if pause_overlay != null and pause_overlay.has_method("set_pause_available"):
+		pause_overlay.set_pause_available(available)
+
+func _clear_manual_movement() -> void:
+	if virtual_joystick != null and virtual_joystick.has_method("end_drag"):
+		virtual_joystick.end_drag()
+	if player != null and player.has_method("set_external_move_vector"):
+		player.set_external_move_vector(Vector2.ZERO)
+
+func _prepare_automatic_pause() -> void:
+	_clear_manual_movement()
+	manual_pause_active = false
+	if pause_overlay != null and pause_overlay.has_method("hide_pause"):
+		pause_overlay.hide_pause()
+	_set_pause_available(false)
+
+func _begin_terminal_pause_state() -> void:
+	terminal_pause_active = true
+	manual_pause_active = false
+	if pause_overlay != null and pause_overlay.has_method("hide_pause"):
+		pause_overlay.hide_pause()
+	_set_pause_available(false)
+	if is_inside_tree():
+		get_tree().paused = true
+
+func _on_manual_pause_requested() -> void:
+	if run_ended or manual_pause_active or not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree.paused:
+		return
+	manual_pause_active = true
+	_clear_manual_movement()
+	if pause_overlay != null and pause_overlay.has_method("show_pause"):
+		pause_overlay.show_pause()
+	tree.paused = true
+
+func _on_manual_pause_resume_requested() -> void:
+	if not manual_pause_active or not is_inside_tree():
+		return
+	manual_pause_active = false
+	if pause_overlay != null and pause_overlay.has_method("hide_pause"):
+		pause_overlay.hide_pause()
+	get_tree().paused = false
+
+func _on_manual_pause_restart_requested() -> void:
+	if not manual_pause_active or not is_inside_tree():
+		return
+	manual_pause_active = false
+	terminal_pause_active = false
+	if pause_overlay != null and pause_overlay.has_method("hide_pause"):
+		pause_overlay.hide_pause()
+	var tree := get_tree()
+	tree.paused = false
+	tree.reload_current_scene()
 
 func _connect_player_health() -> void:
 	var player_health := player.get_node_or_null("HealthComponent")
@@ -552,6 +641,8 @@ func _on_settlement_restart_requested() -> void:
 		return
 
 	var tree := get_tree()
+	manual_pause_active = false
+	terminal_pause_active = false
 	tree.paused = false
 	tree.reload_current_scene()
 

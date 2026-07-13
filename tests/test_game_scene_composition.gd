@@ -12,6 +12,13 @@ func run(runner) -> void:
 	runner.assert_true(game.has_node("CombatEffectPipeline"), "game scene should include a combat effect pipeline")
 	runner.assert_true(game.has_node("VirtualJoystick/Stick"), "game scene should include a virtual joystick stick")
 	runner.assert_true(game.has_node("SettlementPanel"), "game scene should include a settlement panel")
+	runner.assert_true(game.has_node("PauseOverlay"), "game scene should include a mobile pause overlay")
+	var pause_overlay = game.get_node_or_null("PauseOverlay")
+	if pause_overlay != null:
+		runner.assert_true(
+			pause_overlay.get_node_or_null("PauseButton") is TextureButton,
+			"pause overlay should include a top-right texture button"
+		)
 
 	var ground = game.get_node_or_null("Ground")
 	if ground != null:

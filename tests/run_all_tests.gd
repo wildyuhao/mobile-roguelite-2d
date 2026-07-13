@@ -40,6 +40,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_player_controller.gd",
 	"res://tests/test_directional_animation.gd",
 	"res://tests/test_hud.gd",
+	"res://tests/test_pause_overlay.gd",
 	"res://tests/test_upgrade_choice_panel.gd",
 	"res://tests/test_settlement_panel.gd",
 	"res://tests/test_game_scene_composition.gd",
