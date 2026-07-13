@@ -93,6 +93,10 @@ func run(runner) -> void:
 	invalid_token_catalog.missions["red_wastes_survival"]["first_reward"]["unlock_tokens"] = ["missing_unlock"]
 	invalid_token_catalog._validate_rewards("red_wastes_survival", invalid_token_catalog.missions["red_wastes_survival"])
 	runner.assert_true(_has_error_containing(invalid_token_catalog.errors, "unknown unlock token missing_unlock"), "catalog should reject unknown mission unlock tokens")
+	var misdirected_token_catalog = _clone_catalog(load("res://scripts/data/content_catalog.gd"), catalog)
+	misdirected_token_catalog.missions["red_wastes_survival"]["first_reward"]["unlock_tokens"] = ["red_wastes_boss"]
+	misdirected_token_catalog._validate_rewards("red_wastes_survival", misdirected_token_catalog.missions["red_wastes_survival"])
+	runner.assert_true(_has_error_containing(misdirected_token_catalog.errors, "must unlock red_wastes_seal"), "catalog should reject a known mission that is not the actual next node")
 
 	var chapter_gap_catalog = _clone_catalog(load("res://scripts/data/content_catalog.gd"), catalog)
 	chapter_gap_catalog.chapters["bamboo_ruins"]["order"] = 3

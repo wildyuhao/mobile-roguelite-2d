@@ -252,6 +252,12 @@ func _validate_rewards(mission_id: String, mission: Dictionary) -> void:
 		var completion_token := "%s_complete" % String(mission.get("chapter_id", ""))
 		if not missions.has(unlock_token) and unlock_token != completion_token:
 			errors.append("Mission %s references unknown unlock token %s" % [mission_id, unlock_token])
+		else:
+			var expected_token := _get_expected_unlock_token(mission)
+			if expected_token.is_empty():
+				errors.append("Mission %s has no valid unlock target" % mission_id)
+			elif unlock_token != expected_token:
+				errors.append("Mission %s first reward must unlock %s" % [mission_id, expected_token])
 	if String(mission.get("type", "")) in ["hunt", "boss"]:
 		for reward_entry in [["first_reward", first_reward], ["repeat_reward", repeat_reward]]:
 			var reward_name: String = reward_entry[0]
@@ -272,6 +278,30 @@ func _validate_reward(mission_id: String, reward_type: String, reward: Dictionar
 	if typeof(demon_cores_value) != TYPE_INT or int(demon_cores_value) < 0:
 		errors.append("Mission %s %s reward demon cores must be a nonnegative integer" % [mission_id, reward_type])
 	return materials
+
+func _get_expected_unlock_token(mission: Dictionary) -> String:
+	var chapter_id := String(mission.get("chapter_id", ""))
+	if String(mission.get("type", "")) == "boss":
+		return "%s_complete" % chapter_id
+	var mission_id := String(mission.get("id", ""))
+	var mission_order := int(mission.get("order", 0))
+	var next_order := 2147483647
+	var next_mission_id := ""
+	for candidate_value in missions.values():
+		if typeof(candidate_value) != TYPE_DICTIONARY:
+			continue
+		var candidate: Dictionary = candidate_value
+		if String(candidate.get("chapter_id", "")) != chapter_id:
+			continue
+		var candidate_order := int(candidate.get("order", 0))
+		if candidate_order <= mission_order or candidate_order >= next_order:
+			continue
+		var prerequisites_value = candidate.get("prerequisites", [])
+		if typeof(prerequisites_value) != TYPE_ARRAY or not Array(prerequisites_value).has(mission_id):
+			continue
+		next_order = candidate_order
+		next_mission_id = String(candidate.get("id", ""))
+	return next_mission_id
 
 func _validate_first_chapter_missions() -> void:
 	var first_chapter_id := ""
