@@ -175,7 +175,11 @@ func _validate_encounter_decks(battle_database: Object) -> void:
 		var chapter_id := String(deck.get("chapter_id", ""))
 		if not chapters.has(chapter_id):
 			errors.append("Encounter deck %s references missing chapter %s" % [deck_id, chapter_id])
-		for encounter_id_value in Array(deck.get("encounter_ids", [])):
+		var encounter_ids_value = deck.get("encounter_ids")
+		if typeof(encounter_ids_value) != TYPE_ARRAY:
+			errors.append("Encounter deck %s encounter_ids must be an array" % deck_id)
+			continue
+		for encounter_id_value in Array(encounter_ids_value):
 			var encounter_id := String(encounter_id_value)
 			if not encounter_ids.has(encounter_id):
 				errors.append("Encounter deck %s references missing encounter %s" % [deck_id, encounter_id])
@@ -197,10 +201,14 @@ func _validate_missions(battle_database: Object) -> void:
 			errors.append("Mission %s references missing environment %s" % [mission_id, mission.get("environment_id", "")])
 		if not encounter_decks.has(String(mission.get("encounter_deck_id", ""))):
 			errors.append("Mission %s references missing encounter deck %s" % [mission_id, mission.get("encounter_deck_id", "")])
-		for prerequisite_value in Array(mission.get("prerequisites", [])):
-			var prerequisite_id := String(prerequisite_value)
-			if not missions.has(prerequisite_id):
-				errors.append("Mission %s references missing prerequisite %s" % [mission_id, prerequisite_id])
+		var prerequisites_value = mission.get("prerequisites")
+		if typeof(prerequisites_value) != TYPE_ARRAY:
+			errors.append("Mission %s prerequisites must be an array" % mission_id)
+		else:
+			for prerequisite_value in Array(prerequisites_value):
+				var prerequisite_id := String(prerequisite_value)
+				if not missions.has(prerequisite_id):
+					errors.append("Mission %s references missing prerequisite %s" % [mission_id, prerequisite_id])
 		var boss_id := String(mission.get("boss_id", ""))
 		if String(mission.get("type", "")) == "boss" and boss_id == "":
 			errors.append("Boss mission %s has no boss" % mission_id)
@@ -208,9 +216,13 @@ func _validate_missions(battle_database: Object) -> void:
 			errors.append("Mission %s references missing boss %s" % [mission_id, boss_id])
 		if int(mission.get("estimated_minutes", 0)) <= 0:
 			errors.append("Mission %s has nonpositive estimated minutes" % mission_id)
-		var objective: Dictionary = mission.get("objective", {})
-		if objective.has("duration") and int(objective.get("duration", 0)) <= 0:
-			errors.append("Mission %s has nonpositive duration" % mission_id)
+		var objective_value = mission.get("objective")
+		if typeof(objective_value) != TYPE_DICTIONARY:
+			errors.append("Mission %s objective must be a dictionary" % mission_id)
+		else:
+			var objective: Dictionary = objective_value
+			if objective.has("duration") and int(objective.get("duration", 0)) <= 0:
+				errors.append("Mission %s has nonpositive duration" % mission_id)
 		_validate_rewards(mission_id, mission)
 	_validate_first_chapter_missions()
 
@@ -230,13 +242,16 @@ func _validate_rewards(mission_id: String, mission: Dictionary) -> void:
 	if first_materials > 0 and repeat_materials > 0 and repeat_materials >= first_materials:
 		errors.append("Mission %s repeat reward must grant fewer materials" % mission_id)
 	var first_tokens_value = first_reward.get("unlock_tokens")
-	if (
-		typeof(first_tokens_value) != TYPE_ARRAY
-		or Array(first_tokens_value).size() != 1
-		or typeof(Array(first_tokens_value)[0]) != TYPE_STRING
-		or String(Array(first_tokens_value)[0]).is_empty()
-	):
+	var first_tokens: Array = []
+	if typeof(first_tokens_value) == TYPE_ARRAY:
+		first_tokens = first_tokens_value
+	if first_tokens.size() != 1 or typeof(first_tokens[0]) != TYPE_STRING or String(first_tokens[0]).is_empty():
 		errors.append("Mission %s first reward must grant one unlock token" % mission_id)
+	else:
+		var unlock_token := String(first_tokens[0])
+		var completion_token := "%s_complete" % String(mission.get("chapter_id", ""))
+		if not missions.has(unlock_token) and unlock_token != completion_token:
+			errors.append("Mission %s references unknown unlock token %s" % [mission_id, unlock_token])
 	if String(mission.get("type", "")) in ["hunt", "boss"]:
 		for reward_entry in [["first_reward", first_reward], ["repeat_reward", repeat_reward]]:
 			var reward_name: String = reward_entry[0]
@@ -288,10 +303,17 @@ func _validate_characters(battle_database: Object) -> void:
 			errors.append("Character %s references missing weapon %s" % [character_id, weapon_id])
 		_validate_resource(character_id, "scene", String(character.get("scene_path", "")))
 		_validate_resource(character_id, "portrait", String(character.get("portrait_path", "")))
-		var mastery_rewards := Array(character.get("mastery_rewards", []))
+		var mastery_rewards_value = character.get("mastery_rewards")
+		if typeof(mastery_rewards_value) != TYPE_ARRAY:
+			errors.append("Character %s mastery_rewards must be an array" % character_id)
+			continue
+		var mastery_rewards := Array(mastery_rewards_value)
 		if mastery_rewards.size() != 10:
 			errors.append("Character %s must define ten mastery rewards" % character_id)
 		for index in range(mastery_rewards.size()):
+			if typeof(mastery_rewards[index]) != TYPE_DICTIONARY:
+				errors.append("Character %s mastery reward %d must be a dictionary" % [character_id, index + 1])
+				continue
 			var reward: Dictionary = mastery_rewards[index]
 			if int(reward.get("level", 0)) != index + 1:
 				errors.append("Character %s mastery rewards must be sequential" % character_id)

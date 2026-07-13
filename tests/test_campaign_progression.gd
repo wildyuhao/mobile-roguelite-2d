@@ -6,6 +6,7 @@ func run(runner) -> void:
 	var system = CampaignProgressionScript.new()
 	var missions := {
 		"red_wastes_decoy": {"id": "red_wastes_decoy", "chapter_id": "red_wastes", "order": 2, "type": "seal", "prerequisites": ["other_mission"]},
+		"red_wastes_gate": {"id": "red_wastes_gate", "chapter_id": "red_wastes", "order": 2, "type": "seal", "prerequisites": ["red_wastes_survival", "red_wastes_side"]},
 		"red_wastes_survival": {"id": "red_wastes_survival", "chapter_id": "red_wastes", "order": 1, "type": "survival", "prerequisites": []},
 		"red_wastes_seal": {"id": "red_wastes_seal", "chapter_id": "red_wastes", "order": 3, "type": "seal", "prerequisites": ["red_wastes_survival"]},
 	}
@@ -32,8 +33,17 @@ func run(runner) -> void:
 	runner.assert_true(first["first_completion"], "first clear should be marked once")
 	runner.assert_true(first["newly_unlocked"].has("red_wastes_seal"), "normal clear should unlock the next node")
 	runner.assert_true(not first["newly_unlocked"].has("red_wastes_decoy"), "normal clear should ignore adjacent missions without a matching prerequisite")
+	runner.assert_true(not first["newly_unlocked"].has("red_wastes_gate"), "normal clear should not unlock a node with unfinished prerequisites")
 	runner.assert_eq(first["campaign"]["completed_missions"]["red_wastes_survival"], 0, "victory should store the completed mark")
 	runner.assert_true(not first["mark_unlocked"], "normal clear should not unlock a chapter mark")
+	var over_mark: Dictionary = system.apply_victory(campaign, "red_wastes_survival", 99, missions, chapters)
+	runner.assert_eq(over_mark["campaign"]["completed_missions"]["red_wastes_survival"], 0, "victory should clamp completion to the unlocked chapter mark")
+
+	var joined_campaign: Dictionary = campaign.duplicate(true)
+	joined_campaign["completed_missions"]["red_wastes_side"] = 0
+	var joined_result: Dictionary = system.apply_victory(joined_campaign, "red_wastes_survival", 0, missions, chapters)
+	runner.assert_true(joined_result["newly_unlocked"].has("red_wastes_gate"), "node should unlock after every prerequisite is complete")
+	runner.assert_true(not joined_result["newly_unlocked"].has("red_wastes_seal"), "only the nearest eligible node should unlock")
 
 	var repeat: Dictionary = system.apply_victory(first["campaign"], "red_wastes_survival", 0, missions, chapters)
 	runner.assert_true(not repeat["first_completion"], "repeat clear should not repeat first rewards")
@@ -65,6 +75,7 @@ func run(runner) -> void:
 	}
 	var boss_result: Dictionary = system.apply_victory(boss_campaign, "red_wastes_boss", 2, boss_missions, boss_chapters)
 	runner.assert_true(boss_result["newly_unlocked"].has("bamboo_ruins_survival"), "boss clear should unlock the next chapter first mission")
+	runner.assert_eq(boss_result["campaign"]["completed_missions"]["red_wastes_boss"], 0, "boss clear should not record a locked difficulty mark")
 	runner.assert_eq(boss_result["campaign"]["chapter_marks"]["red_wastes"], 1, "boss clear should raise the completed chapter mark")
 	runner.assert_true(boss_result["mark_unlocked"], "boss clear should report a newly unlocked mark")
 

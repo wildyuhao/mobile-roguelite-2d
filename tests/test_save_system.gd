@@ -110,6 +110,21 @@ func run(runner) -> void:
 	runner.assert_eq(normalized["characters"]["mastery_experience"], {"mechanism_walker": 0}, "mastery experience should normalize to valid integers")
 	runner.assert_eq(normalized["characters"]["starting_loadouts"], {"mechanism_walker": {"weapon": "crossbow"}}, "unknown character loadouts should be removed")
 
+	var locked_selection = save_system._normalize_save({
+		"campaign": {
+			"unlocked_missions": ["red_wastes_survival"],
+			"selected_mission_id": "red_wastes_boss",
+		},
+	})
+	runner.assert_eq(locked_selection["campaign"]["selected_mission_id"], "red_wastes_survival", "locked known missions should not remain selected")
+	var unlocked_selection = save_system._normalize_save({
+		"campaign": {
+			"unlocked_missions": ["red_wastes_hunt"],
+			"selected_mission_id": "red_wastes_hunt",
+		},
+	})
+	runner.assert_eq(unlocked_selection["campaign"]["selected_mission_id"], "red_wastes_hunt", "known unlocked missions should remain selected")
+
 	var missing_marks = save_system._normalize_save({"campaign": {"unlocked_missions": []}})
 	runner.assert_eq(missing_marks["campaign"]["chapter_marks"], {"red_wastes": 0}, "missing chapter marks should retain the default chapter mark")
 	var malformed_marks = save_system._normalize_save({"campaign": {"chapter_marks": ["red_wastes"]}})

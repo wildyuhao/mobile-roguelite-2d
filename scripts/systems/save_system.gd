@@ -118,7 +118,7 @@ func _normalize_campaign(data: Dictionary, normalized: Dictionary) -> void:
 	if not chapter_marks.has(DEFAULT_CHAPTER_ID):
 		chapter_marks[DEFAULT_CHAPTER_ID] = 0
 	target["chapter_marks"] = chapter_marks
-	if typeof(campaign.get("selected_mission_id")) == TYPE_STRING and _is_known_id(campaign["selected_mission_id"], known_mission_ids):
+	if typeof(campaign.get("selected_mission_id")) == TYPE_STRING and target["unlocked_missions"].has(campaign["selected_mission_id"]):
 		target["selected_mission_id"] = campaign["selected_mission_id"]
 	normalized["campaign"] = target
 

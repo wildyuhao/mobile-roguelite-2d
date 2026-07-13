@@ -71,6 +71,29 @@ func run(runner) -> void:
 	runner.assert_true(_has_error_containing(missing_reference_catalog.errors, "missing boss missing_boss"), "catalog should reject missing boss references")
 	runner.assert_true(_has_error_containing(missing_reference_catalog.errors, "missing weapon missing_weapon"), "catalog should reject missing weapon references")
 
+	var invalid_container_catalog = _clone_catalog(load("res://scripts/data/content_catalog.gd"), catalog)
+	invalid_container_catalog.encounter_decks["red_wastes_deck"]["encounter_ids"] = "four_side_surround"
+	invalid_container_catalog.missions["red_wastes_survival"]["prerequisites"] = "none"
+	invalid_container_catalog.missions["red_wastes_seal"]["objective"] = "seal_points"
+	invalid_container_catalog.characters["mechanism_walker"]["mastery_rewards"] = "ten"
+	invalid_container_catalog._validate_encounter_decks(battle_db)
+	invalid_container_catalog._validate_missions(battle_db)
+	invalid_container_catalog._validate_characters(battle_db)
+	runner.assert_true(_has_error_containing(invalid_container_catalog.errors, "encounter_ids must be an array"), "catalog should reject a non-array encounter list without a script error")
+	runner.assert_true(_has_error_containing(invalid_container_catalog.errors, "prerequisites must be an array"), "catalog should reject non-array prerequisites without a script error")
+	runner.assert_true(_has_error_containing(invalid_container_catalog.errors, "objective must be a dictionary"), "catalog should reject a non-dictionary objective without a script error")
+	runner.assert_true(_has_error_containing(invalid_container_catalog.errors, "mastery_rewards must be an array"), "catalog should reject non-array mastery rewards without a script error")
+
+	var invalid_mastery_entry_catalog = _clone_catalog(load("res://scripts/data/content_catalog.gd"), catalog)
+	invalid_mastery_entry_catalog.characters["mechanism_walker"]["mastery_rewards"][0] = "base_kit"
+	invalid_mastery_entry_catalog._validate_characters(battle_db)
+	runner.assert_true(_has_error_containing(invalid_mastery_entry_catalog.errors, "mastery reward 1 must be a dictionary"), "catalog should reject malformed mastery reward entries")
+
+	var invalid_token_catalog = _clone_catalog(load("res://scripts/data/content_catalog.gd"), catalog)
+	invalid_token_catalog.missions["red_wastes_survival"]["first_reward"]["unlock_tokens"] = ["missing_unlock"]
+	invalid_token_catalog._validate_rewards("red_wastes_survival", invalid_token_catalog.missions["red_wastes_survival"])
+	runner.assert_true(_has_error_containing(invalid_token_catalog.errors, "unknown unlock token missing_unlock"), "catalog should reject unknown mission unlock tokens")
+
 	var chapter_gap_catalog = _clone_catalog(load("res://scripts/data/content_catalog.gd"), catalog)
 	chapter_gap_catalog.chapters["bamboo_ruins"]["order"] = 3
 	chapter_gap_catalog._validate_chapters()
