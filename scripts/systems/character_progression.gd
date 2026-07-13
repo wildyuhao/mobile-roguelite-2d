@@ -28,7 +28,10 @@ func calculate_mission_experience(mission_type: String, victory: bool, progress_
 		return base + first_completion_bonus
 
 	var failure_ratio := lerpf(0.35, 0.55, clampf(progress_ratio, 0.0, 1.0))
-	return int(round(base * failure_ratio))
+	var rounded_experience := int(round(base * failure_ratio))
+	var minimum_experience := int(ceil(base * 0.35))
+	var maximum_experience := int(floor(base * 0.55))
+	return clampi(rounded_experience, minimum_experience, maximum_experience)
 
 func apply_experience(characters_state: Dictionary, character_id: String, amount: int) -> Dictionary:
 	var updated_state: Dictionary = characters_state.duplicate(true)
@@ -36,9 +39,8 @@ func apply_experience(characters_state: Dictionary, character_id: String, amount
 		return updated_state
 
 	var character_state: Dictionary = Dictionary(updated_state[character_id]).duplicate(true)
-	var experience := int(character_state.get("experience", 0)) + amount
-	character_state["experience"] = experience
+	var experience := maxi(0, int(character_state.get("mastery_experience", 0))) + amount
+	character_state["mastery_experience"] = experience
 	character_state["level"] = get_level_for_experience(experience)
 	updated_state[character_id] = character_state
 	return updated_state
-

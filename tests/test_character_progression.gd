@@ -45,11 +45,11 @@ func _test_mission_experience(runner, progression) -> void:
 		var failure_at_full: int = progression.calculate_mission_experience(mission_type, false, 1.0, false)
 		runner.assert_eq(victory, base, "%s victory should award its base XP" % mission_type)
 		runner.assert_true(float(failure_at_zero) / float(victory) >= 0.35, "%s failure floor should be at least 35%%" % mission_type)
-		runner.assert_true(float(failure_at_zero) / float(victory) <= 0.555, "%s failure floor should be at most 55%% after integer rounding" % mission_type)
+		runner.assert_true(float(failure_at_zero) / float(victory) <= 0.55, "%s failure floor should be at most 55%%" % mission_type)
 		runner.assert_true(float(failure_at_full) / float(victory) >= 0.35, "%s failure ceiling should be at least 35%%" % mission_type)
-		runner.assert_true(float(failure_at_full) / float(victory) <= 0.555, "%s failure ceiling should be at most 55%% after integer rounding" % mission_type)
-		runner.assert_eq(failure_at_zero, round(base * 0.35), "%s progress 0 should use 35%% XP" % mission_type)
-		runner.assert_eq(failure_at_full, round(base * 0.55), "%s progress 1 should use 55%% XP" % mission_type)
+		runner.assert_true(float(failure_at_full) / float(victory) <= 0.55, "%s failure ceiling should be at most 55%%" % mission_type)
+		runner.assert_eq(failure_at_zero, maxi(int(ceil(base * 0.35)), int(round(base * 0.35))), "%s progress 0 should use the bounded 35%% XP result" % mission_type)
+		runner.assert_eq(failure_at_full, mini(int(floor(base * 0.55)), int(round(base * 0.55))), "%s progress 1 should use the bounded 55%% XP result" % mission_type)
 		runner.assert_eq(
 			progression.calculate_mission_experience(mission_type, false, 0.5, true),
 			progression.calculate_mission_experience(mission_type, false, 0.5, false),
@@ -63,14 +63,19 @@ func _test_mission_experience(runner, progression) -> void:
 
 func _test_character_independence(runner, progression) -> void:
 	var initial := {
-		"azure": {"experience": 90, "level": 1},
-		"crimson": {"experience": 240, "level": 3},
+		"azure": {"mastery_experience": 90, "level": 1},
+		"crimson": {"mastery_experience": 240, "level": 3},
+		"ember": {"mastery_experience": -40, "level": 1},
 	}
 	var updated: Dictionary = progression.apply_experience(initial, "azure", 20)
-	runner.assert_eq(updated["azure"]["experience"], 110, "selected character should receive cumulative XP")
+	runner.assert_eq(updated["azure"]["mastery_experience"], 110, "selected character should receive cumulative XP")
 	runner.assert_eq(updated["azure"]["level"], 2, "selected character level should be derived from cumulative XP")
 	runner.assert_eq(updated["crimson"], initial["crimson"], "other characters should remain independent")
-	runner.assert_eq(initial["azure"]["experience"], 90, "input state should not be mutated")
+	runner.assert_eq(initial["azure"]["mastery_experience"], 90, "input state should not be mutated")
+	var normalized: Dictionary = progression.apply_experience(initial, "ember", 50)
+	runner.assert_eq(normalized["ember"]["mastery_experience"], 50, "negative mastery XP should normalize to zero before adding")
+	runner.assert_eq(normalized["ember"]["level"], 1, "normalized mastery XP should derive the correct level")
+	runner.assert_true(normalized["ember"]["mastery_experience"] >= 0, "mastery XP should never remain negative")
 	runner.assert_eq(progression.apply_experience(initial, "", 20), initial, "empty character ID should leave a duplicate unchanged")
 	runner.assert_eq(progression.apply_experience(initial, "missing", 20), initial, "unknown character ID should leave a duplicate unchanged")
 	runner.assert_eq(progression.apply_experience(initial, "azure", 0), initial, "zero XP should leave a duplicate unchanged")
