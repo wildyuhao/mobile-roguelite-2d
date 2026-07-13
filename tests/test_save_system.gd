@@ -96,3 +96,70 @@ func run(runner) -> void:
 	runner.assert_eq(normalized["characters"]["mastery_experience"], {"mechanism_walker": 0}, "mastery experience should normalize to valid integers")
 	runner.assert_eq(normalized["characters"]["starting_loadouts"], {"mechanism_walker": {"weapon": "crossbow"}}, "unknown character loadouts should be removed")
 	save_system.delete_save()
+
+	var unconfigured_path := "user://test_fuji_unconfigured_save.json"
+	var unconfigured_save_system = save_system_script.new(unconfigured_path)
+	runner.assert_true(unconfigured_save_system.save_game({
+		"version": 1,
+		"materials": 23,
+		"equipment_levels": {"talisman_robe": 4},
+		"unlocked_equipment": ["talisman_robe"],
+		"settings": {"music_volume": 0.25, "sfx_volume": 0.75},
+	}), "unconfigured legacy save should be writable")
+	var written = JSON.parse_string(FileAccess.get_file_as_string(unconfigured_path))
+	runner.assert_eq(written["version"], 2, "save_game should write version two saves")
+	runner.assert_true(written.has("campaign"), "save_game should write campaign state")
+	runner.assert_true(written.has("characters"), "save_game should write character state")
+	runner.assert_true(written.has("codex"), "save_game should write codex state")
+	runner.assert_true(written.has("resources"), "save_game should write resources state")
+	runner.assert_eq(written["materials"], 23, "save_game should preserve legacy materials")
+	runner.assert_eq(written["equipment_levels"]["talisman_robe"], 4, "save_game should preserve legacy equipment levels")
+	runner.assert_eq(written["settings"], {"music_volume": 0.25, "sfx_volume": 0.75}, "save_game should preserve legacy settings")
+
+	runner.assert_true(unconfigured_save_system.save_game({
+		"version": 2,
+		"campaign": {
+			"completed_missions": {"red_wastes_survival": 1, "unknown_mission": 2},
+			"unlocked_missions": ["red_wastes_survival", "unknown_mission"],
+			"chapter_marks": {"red_wastes": 1, "unknown_chapter": 2},
+			"selected_mission_id": "unknown_mission",
+		},
+		"characters": {
+			"unlocked_ids": ["mechanism_walker", "unknown_character"],
+			"mastery_levels": {"mechanism_walker": 2, "unknown_character": 3},
+			"mastery_experience": {"mechanism_walker": 100, "unknown_character": 240},
+			"selected_id": "unknown_character",
+		},
+	}), "unconfigured malformed v2 save should be writable")
+	var unconfigured_normalized = unconfigured_save_system.load_game()
+	runner.assert_eq(unconfigured_normalized["campaign"]["completed_missions"], {"red_wastes_survival": 1}, "unconfigured saves should filter unknown missions")
+	runner.assert_eq(unconfigured_normalized["campaign"]["unlocked_missions"], ["red_wastes_survival"], "unconfigured saves should filter unknown mission unlocks")
+	runner.assert_eq(unconfigured_normalized["campaign"]["chapter_marks"], {"red_wastes": 1}, "unconfigured saves should filter unknown chapters")
+	runner.assert_eq(unconfigured_normalized["campaign"]["selected_mission_id"], "red_wastes_survival", "unconfigured saves should fall back from unknown missions")
+	runner.assert_eq(unconfigured_normalized["characters"]["unlocked_ids"], ["mechanism_walker"], "unconfigured saves should filter unknown characters")
+	runner.assert_eq(unconfigured_normalized["characters"]["mastery_experience"], {"mechanism_walker": 100}, "unconfigured saves should filter unknown character progression")
+	runner.assert_eq(unconfigured_normalized["characters"]["selected_id"], "mechanism_walker", "unconfigured saves should fall back from unknown characters")
+
+	var partial_config_path := "user://test_fuji_partial_config_save.json"
+	var partial_config_save_system = save_system_script.new(partial_config_path)
+	var partial_mission_ids: Array[String] = ["red_wastes_hunt"]
+	var partial_character_ids: Array[String] = []
+	var partial_chapter_ids: Array[String] = []
+	partial_config_save_system.configure_content_ids(partial_mission_ids, partial_character_ids, partial_chapter_ids)
+	runner.assert_true(partial_config_save_system.save_game({
+		"version": 2,
+		"campaign": {
+			"completed_missions": {"red_wastes_survival": 1, "red_wastes_hunt": 2},
+			"chapter_marks": {"red_wastes": 1},
+		},
+		"characters": {
+			"unlocked_ids": ["mechanism_walker"],
+			"mastery_experience": {"mechanism_walker": 100},
+		},
+	}), "partial configured save should be writable")
+	var partial_config_normalized = partial_config_save_system.load_game()
+	runner.assert_eq(partial_config_normalized["campaign"]["completed_missions"], {"red_wastes_survival": 1, "red_wastes_hunt": 2}, "configured content IDs should retain the default mission")
+	runner.assert_eq(partial_config_normalized["campaign"]["chapter_marks"], {"red_wastes": 1}, "configured content IDs should retain the default chapter")
+	runner.assert_eq(partial_config_normalized["characters"]["mastery_experience"], {"mechanism_walker": 100}, "configured content IDs should retain the default character")
+	unconfigured_save_system.delete_save()
+	partial_config_save_system.delete_save()

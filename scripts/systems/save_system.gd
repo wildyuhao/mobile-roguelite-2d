@@ -9,9 +9,9 @@ const DEFAULT_UNLOCKED_EQUIPMENT := ["talisman_robe", "cloudstep_boots", "bronze
 const CharacterProgression = preload("res://scripts/systems/character_progression.gd")
 
 var save_path: String
-var known_mission_ids: Dictionary = {}
-var known_character_ids: Dictionary = {}
-var known_chapter_ids: Dictionary = {}
+var known_mission_ids: Dictionary = {DEFAULT_MISSION_ID: true}
+var known_character_ids: Dictionary = {DEFAULT_CHARACTER_ID: true}
+var known_chapter_ids: Dictionary = {DEFAULT_CHAPTER_ID: true}
 
 func _init(new_save_path: String = "user://save.json") -> void:
 	save_path = new_save_path
@@ -20,6 +20,9 @@ func configure_content_ids(mission_ids: Array[String], character_ids: Array[Stri
 	known_mission_ids = _make_id_set(mission_ids)
 	known_character_ids = _make_id_set(character_ids)
 	known_chapter_ids = _make_id_set(chapter_ids)
+	known_mission_ids[DEFAULT_MISSION_ID] = true
+	known_character_ids[DEFAULT_CHARACTER_ID] = true
+	known_chapter_ids[DEFAULT_CHAPTER_ID] = true
 
 func create_default_save() -> Dictionary:
 	return {
@@ -59,11 +62,12 @@ func load_game() -> Dictionary:
 	return _normalize_save(parsed)
 
 func save_game(data: Dictionary) -> bool:
+	var normalized := _normalize_save(data)
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		return false
 
-	file.store_string(JSON.stringify(data, "\t"))
+	file.store_string(JSON.stringify(normalized, "\t"))
 	file.close()
 	return true
 
@@ -208,7 +212,7 @@ func _normalize_loadouts(value: Variant) -> Dictionary:
 	return normalized
 
 func _is_known_id(id: String, known_ids: Dictionary) -> bool:
-	return known_ids.is_empty() or known_ids.has(id)
+	return known_ids.has(id)
 
 func _is_integer_number(value: Variant) -> bool:
 	return typeof(value) == TYPE_INT or (typeof(value) == TYPE_FLOAT and is_equal_approx(float(value), round(float(value))))
