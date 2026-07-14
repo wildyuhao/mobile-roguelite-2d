@@ -8,6 +8,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_run_context_builder.gd",
 	"res://tests/test_campaign_progression.gd",
 	"res://tests/test_campaign_map.gd",
+	"res://tests/test_character_select.gd",
 	"res://tests/test_character_progression.gd",
 	"res://tests/test_pool_service.gd",
 	"res://tests/test_target_selector.gd",
