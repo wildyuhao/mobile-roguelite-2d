@@ -1,0 +1,208 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/campaign_map.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://art/environment/wasteland_ground_tile.png" id="2_ground"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_detail"]
+content_margin_left = 16.0
+content_margin_top = 14.0
+content_margin_right = 16.0
+content_margin_bottom = 14.0
+bg_color = Color(0.055, 0.075, 0.078, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.16, 0.49, 0.51, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_select_normal"]
+bg_color = Color(0.08, 0.34, 0.36, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.31, 0.79, 0.81, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_select_hover"]
+bg_color = Color(0.1, 0.43, 0.45, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.48, 0.91, 0.92, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_select_pressed"]
+bg_color = Color(0.05, 0.25, 0.27, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.91, 0.79, 0.42, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_select_disabled"]
+bg_color = Color(0.09, 0.11, 0.12, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.34, 0.35, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="CampaignMap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="WastelandTexture" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_ground")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.025, 0.035, 0.038, 0.82)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.91, 0.79, 0.42, 1)
+theme_override_font_sizes/font_size = 28
+text = "征途地图"
+vertical_alignment = 1
+
+[node name="MaterialsLabel" type="Label" parent="MarginContainer/VBoxContainer/Header"]
+custom_minimum_size = Vector2(104, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.86, 0.85, 1)
+theme_override_font_sizes/font_size = 17
+text = "灵石 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="DemonCoresLabel" type="Label" parent="MarginContainer/VBoxContainer/Header"]
+custom_minimum_size = Vector2(104, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.79, 0.81, 1)
+theme_override_font_sizes/font_size = 17
+text = "妖核 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ChapterScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ChapterList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ChapterScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="MissionDetail" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 292)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_detail")
+
+[node name="DetailVBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MissionDetail"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MissionNameLabel" type="Label" parent="MarginContainer/VBoxContainer/MissionDetail/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.79, 0.42, 1)
+theme_override_font_sizes/font_size = 23
+text = "暂无任务"
+
+[node name="MissionDescriptionLabel" type="Label" parent="MarginContainer/VBoxContainer/MissionDetail/DetailVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.83, 0.88, 0.87, 1)
+theme_override_font_sizes/font_size = 17
+text = "选择任务以查看详情。"
+autowrap_mode = 2
+
+[node name="MissionRuleLabel" type="Label" parent="MarginContainer/VBoxContainer/MissionDetail/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.85, 0.86, 1)
+theme_override_font_sizes/font_size = 16
+text = "目标：暂无"
+autowrap_mode = 2
+
+[node name="MissionRewardLabel" type="Label" parent="MarginContainer/VBoxContainer/MissionDetail/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.77, 0.52, 1)
+theme_override_font_sizes/font_size = 16
+text = "奖励：暂无"
+autowrap_mode = 2
+
+[node name="SelectButton" type="Button" parent="MarginContainer/VBoxContainer/MissionDetail/DetailVBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.98, 0.97, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.95, 0.74, 1)
+theme_override_colors/font_disabled_color = Color(0.49, 0.55, 0.56, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBox_select_normal")
+theme_override_styles/hover = SubResource("StyleBox_select_hover")
+theme_override_styles/pressed = SubResource("StyleBox_select_pressed")
+theme_override_styles/disabled = SubResource("StyleBox_select_disabled")
+text = "不可进入"
+disabled = true
