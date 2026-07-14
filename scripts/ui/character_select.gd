@@ -139,7 +139,8 @@ func _show_character_detail(character_id: String) -> void:
 	var weapon_id := String(character.get("starting_weapon_id", ""))
 	var weapon: Dictionary = _weapon_definitions.get(weapon_id, {})
 	_weapon_label.text = "初始武器 · %s" % String(weapon.get("display_name", weapon_id))
-	_talent_label.text = "天赋 · %s" % String(character.get("innate_talent_id", "未配置"))
+	var talent_display_name := String(character.get("innate_talent_display_name", "")).strip_edges()
+	_talent_label.text = "天赋 · %s" % (talent_display_name if talent_display_name != "" else "未配置")
 	var tags: Array[String] = []
 	for tag in Array(character.get("build_tags", [])):
 		tags.append(String(tag))

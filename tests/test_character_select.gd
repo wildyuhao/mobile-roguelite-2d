@@ -41,6 +41,8 @@ func run(runner) -> void:
 	runner.assert_true("Lv.1" in screen_text, "selection should show mastery level one")
 	runner.assert_true("40 / 100" in screen_text, "selection should show progress toward the next mastery threshold")
 	runner.assert_true("机关连弩" in screen_text, "selection should resolve the formal starting weapon name from injected definitions")
+	runner.assert_true("天赋 · 机巧先发" in screen_text, "selection should show the formal Chinese talent name")
+	runner.assert_true("mechanism_first_upgrade_haste" not in screen_text, "selection should never expose the internal talent ID")
 	for tag in ["均衡", "机关", "投射物"]:
 		runner.assert_true(tag in screen_text, "selection should show the %s build tag" % tag)
 
@@ -50,6 +52,8 @@ func run(runner) -> void:
 		runner.assert_eq(portrait.texture.resource_path, "res://art/characters/player/player_front.png", "character selection should reuse the formal player portrait")
 	runner.assert_true(portrait.custom_minimum_size.x <= 240.0, "portrait should be no wider than 240 logical pixels")
 	runner.assert_true(portrait.custom_minimum_size.y <= 320.0, "portrait should be no taller than 320 logical pixels")
+	runner.assert_true(portrait.size.x <= 240.0, "laid-out portrait should be no wider than 240 logical pixels")
+	runner.assert_true(portrait.size.y <= 320.0, "laid-out portrait should be no taller than 320 logical pixels")
 	runner.assert_true((portrait.size_flags_vertical & Control.SIZE_EXPAND) == 0, "portrait should not expand beyond 320 logical pixels")
 	runner.assert_eq(portrait.expand_mode, TextureRect.EXPAND_IGNORE_SIZE, "portrait should ignore its source size")
 	runner.assert_eq(portrait.stretch_mode, TextureRect.STRETCH_KEEP_ASPECT_CENTERED, "portrait should keep aspect ratio and remain centered")
@@ -97,6 +101,54 @@ func run(runner) -> void:
 	runner.assert_true(start_button.disabled, "locked character should disable the primary button")
 	start_button.pressed.emit()
 	runner.assert_eq(started_ids, [MECHANISM_WALKER_ID], "locked character should emit no start request")
+
+	var level_two_state: Dictionary = characters_state.duplicate(true)
+	level_two_state["mastery_levels"][MECHANISM_WALKER_ID] = 2
+	level_two_state["mastery_experience"][MECHANISM_WALKER_ID] = 100
+	selection.configure(mission, catalog.get_characters(), level_two_state, battle_db.get_weapons())
+	var mastery_label: Label = selection.get_node("MarginContainer/VBoxContainer/CharacterDetail/DetailVBox/MasteryLabel")
+	runner.assert_true("Lv.2" in mastery_label.text, "level two mastery should show Lv.2")
+	runner.assert_true("0 / 140" in mastery_label.text, "level two threshold start should show zero of 140 XP")
+	runner.assert_eq(mastery_bar.value, 0.0, "level two threshold start should reset bar progress")
+	runner.assert_eq(mastery_bar.max_value, 140.0, "level two should require 140 XP toward level three")
+
+	var over_max_state: Dictionary = characters_state.duplicate(true)
+	over_max_state["mastery_levels"][MECHANISM_WALKER_ID] = 99
+	over_max_state["mastery_experience"][MECHANISM_WALKER_ID] = 999999
+	selection.configure(mission, catalog.get_characters(), over_max_state, battle_db.get_weapons())
+	runner.assert_true("Lv.10" in mastery_label.text, "mastery levels above ten should clamp to Lv.10")
+	runner.assert_true("已满级" in mastery_label.text, "clamped level ten should show max-level copy")
+	runner.assert_eq(mastery_bar.value, 1.0, "max-level mastery bar should be full")
+	runner.assert_eq(mastery_bar.max_value, 1.0, "max-level mastery bar should use a one-unit range")
+
+	var below_min_state: Dictionary = characters_state.duplicate(true)
+	below_min_state["mastery_levels"][MECHANISM_WALKER_ID] = -3
+	below_min_state["mastery_experience"][MECHANISM_WALKER_ID] = -50
+	selection.configure(mission, catalog.get_characters(), below_min_state, battle_db.get_weapons())
+	runner.assert_true("Lv.1" in mastery_label.text, "mastery levels below one should clamp to Lv.1")
+	runner.assert_true("0 / 100" in mastery_label.text, "negative mastery XP should clamp to zero")
+	runner.assert_eq(mastery_bar.value, 0.0, "negative mastery XP should produce zero bar progress")
+	runner.assert_eq(mastery_bar.max_value, 100.0, "clamped level one should target 100 XP")
+
+	var missing_talent_character: Dictionary = catalog.get_character(MECHANISM_WALKER_ID).duplicate(true)
+	missing_talent_character["id"] = "missing_talent_display"
+	missing_talent_character["display_name"] = "无天赋显示名"
+	missing_talent_character.erase("innate_talent_display_name")
+	var missing_talent_state := {
+		"unlocked_ids": ["missing_talent_display"],
+		"selected_id": "missing_talent_display",
+		"mastery_levels": {"missing_talent_display": 1},
+		"mastery_experience": {"missing_talent_display": 0},
+	}
+	selection.configure(
+		mission,
+		{"missing_talent_display": missing_talent_character},
+		missing_talent_state,
+		battle_db.get_weapons(),
+	)
+	var talent_label: Label = selection.get_node("MarginContainer/VBoxContainer/CharacterDetail/DetailVBox/TalentLabel")
+	runner.assert_eq(talent_label.text, "天赋 · 未配置", "missing talent display name should use Chinese fallback copy")
+	runner.assert_true("mechanism_first_upgrade_haste" not in talent_label.text, "missing talent display name should not fall back to its internal ID")
 
 	selection.configure(mission, catalog.get_characters(), characters_state)
 	runner.assert_true("mechanism_crossbow" in _collect_text(selection), "three-argument configure should fall back to the starting weapon ID")

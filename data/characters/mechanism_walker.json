@@ -7,7 +7,9 @@
   "portrait_path": "res://art/characters/player/player_front.png",
   "base_stat_modifiers": {},
   "innate_talent_id": "mechanism_first_upgrade_haste",
+  "innate_talent_display_name": "机巧先发",
   "active_skill_id": "mechanism_overdrive",
+  "active_skill_display_name": "机关过载",
   "build_tags": ["\u5747\u8861", "\u673a\u5173", "\u6295\u5c04\u7269"],
   "unlock_condition": { "kind": "default" },
   "mastery_rewards": [
