@@ -70,3 +70,30 @@ func run(runner) -> void:
 			)
 	var unavailable: Dictionary = first.draw(2.0, 3)
 	runner.assert_true(unavailable.is_empty(), "no eligible card should return an empty draw")
+
+	var cooldown_bag = script.new()
+	var cooldown_card := {
+		"id": "cooldown_only",
+		"weight": 1,
+		"min_time": 0.0,
+		"max_time": 999.0,
+		"cooldown_draws": 1,
+		"pressure_cost": 1,
+		"groups": [{"enemy_id": "basic", "count": 1}],
+	}
+	var cooldown_cards: Array[Dictionary] = [cooldown_card]
+	cooldown_bag.configure(cooldown_cards, 17)
+	runner.assert_eq(
+		cooldown_bag.draw(100.0, 10).get("id", ""),
+		"cooldown_only",
+		"single-card bag should draw its eligible encounter"
+	)
+	runner.assert_true(
+		cooldown_bag.draw(100.0, 10).is_empty(),
+		"cooldown should block the immediately following draw attempt"
+	)
+	runner.assert_eq(
+		cooldown_bag.draw(100.0, 10).get("id", ""),
+		"cooldown_only",
+		"an empty draw attempt should advance cooldown recovery"
+	)

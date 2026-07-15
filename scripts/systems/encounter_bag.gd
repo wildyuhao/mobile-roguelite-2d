@@ -17,6 +17,7 @@ func configure(new_cards: Array[Dictionary], seed: int) -> void:
 	recent_signatures.clear()
 
 func draw(elapsed: float, budget: int) -> Dictionary:
+	draw_index += 1
 	var eligible: Array[Dictionary] = []
 	var total_weight := 0
 	for card in cards:
@@ -56,7 +57,6 @@ func draw(elapsed: float, budget: int) -> Dictionary:
 
 	var selected_id := String(selected.get("id", ""))
 	var signature := enemy_signature(selected)
-	draw_index += 1
 	last_draw_by_id[selected_id] = draw_index
 	_push_recent(recent_ids, selected_id)
 	_push_recent(recent_signatures, signature)

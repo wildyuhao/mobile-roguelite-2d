@@ -17,6 +17,7 @@ signal encounter_started(card_id: String)
 @export var encounter_interval_max: float = 60.0
 @export var max_active_enemies: int = 140
 @export var max_spawns_per_frame: int = 6
+@export var empty_field_recovery_delay: float = 6.0
 
 var database
 var player: Node2D
@@ -33,18 +34,27 @@ var enemy_definitions: Dictionary = {}
 var next_encounter_time: float = 45.0
 var active_enemies: Array[Node] = []
 var pool_service: Node
+var empty_field_elapsed: float = 0.0
 
 func set_pool_service(service: Node) -> void:
 	pool_service = service
 
-func configure(new_database, new_player: Node2D) -> void:
+func configure(
+	new_database,
+	new_player: Node2D,
+	allowed_encounter_ids: Array = [],
+	seed_value: int = 0
+) -> void:
 	database = new_database
 	player = new_player
+	if seed_value != 0:
+		encounter_seed = seed_value
 	wave_events = database.get_wave_events()
 	elapsed = 0.0
 	triggered_events.clear()
 	pending_spawn_waves.clear()
 	active_enemies.clear()
+	empty_field_elapsed = 0.0
 	formations = (
 		database.get_formations()
 		if database.has_method("get_formations")
@@ -58,6 +68,15 @@ func configure(new_database, new_player: Node2D) -> void:
 	var cards: Array[Dictionary] = []
 	if database.has_method("get_encounters"):
 		cards = database.get_encounters()
+	if not allowed_encounter_ids.is_empty():
+		var allowed_ids: Dictionary = {}
+		for encounter_id in allowed_encounter_ids:
+			allowed_ids[String(encounter_id)] = true
+		var filtered_cards: Array[Dictionary] = []
+		for card in cards:
+			if allowed_ids.has(String(card.get("id", ""))):
+				filtered_cards.append(card)
+		cards = filtered_cards
 	encounter_bag.configure(cards, encounter_seed)
 	interval_rng.seed = encounter_seed ^ 0x5f3759df
 	next_encounter_time = encounter_interval_min
@@ -84,6 +103,17 @@ func _process(delta: float) -> void:
 			encounter_interval_min,
 			encounter_interval_max
 		)
+	_recover_empty_field(delta)
+
+func _recover_empty_field(delta: float) -> void:
+	if not pending_spawn_waves.is_empty() or not _get_active_enemies().is_empty():
+		empty_field_elapsed = 0.0
+		return
+	empty_field_elapsed += maxf(0.0, delta)
+	if empty_field_elapsed < maxf(0.1, empty_field_recovery_delay):
+		return
+	empty_field_elapsed = 0.0
+	_try_schedule_encounter()
 
 func _spawn_wave(event: Dictionary) -> void:
 	var enemy_id: String = event.get("enemy_id", "basic_demon")

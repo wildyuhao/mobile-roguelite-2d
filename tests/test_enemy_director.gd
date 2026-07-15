@@ -114,6 +114,55 @@ func run(runner) -> void:
 
 	_assert_spawn_interval_batches_enemies(runner, director_script)
 	_assert_budgeted_encounter(runner, director_script)
+	_assert_allowed_encounters_and_seed(runner, director_script)
+	_assert_empty_field_recovery(runner, director_script)
+
+func _method_argument_count(instance: Object, method_name: String) -> int:
+	for method in instance.get_method_list():
+		if String(method.get("name", "")) == method_name:
+			return Array(method.get("args", [])).size()
+	return 0
+
+func _assert_allowed_encounters_and_seed(runner, director_script) -> void:
+	var director = director_script.new()
+	var player := Node2D.new()
+	var encounters: Array[Dictionary] = [
+		{"id": "allowed_alpha", "weight": 1, "groups": []},
+		{"id": "blocked_card", "weight": 1, "groups": []},
+		{"id": "allowed_beta", "weight": 1, "groups": []},
+	]
+	var allowed_ids := ["allowed_alpha", "allowed_beta"]
+	var supports_selection := _method_argument_count(director, "configure") >= 4
+	runner.assert_true(
+		supports_selection,
+		"enemy director configure should accept encounter allowlist and explicit seed"
+	)
+	if supports_selection:
+		director.configure(FakeDatabase.new([], encounters), player, allowed_ids, 24680)
+	else:
+		director.configure(FakeDatabase.new([], encounters), player)
+	runner.assert_eq(
+		director.encounter_seed,
+		24680,
+		"enemy director should retain the explicit mission seed"
+	)
+	runner.assert_eq(
+		director.encounter_bag.rng.seed,
+		24680,
+		"encounter bag should use the explicit mission seed"
+	)
+	for card in director.encounter_bag.cards:
+		runner.assert_true(
+			allowed_ids.has(String(card.get("id", ""))),
+			"encounter bag should contain only allowlisted cards"
+		)
+	runner.assert_eq(
+		director.encounter_bag.cards.size(),
+		2,
+		"encounter bag should retain both allowlisted encounter cards"
+	)
+	director.free()
+	player.free()
 
 func _assert_spawn_interval_batches_enemies(runner, director_script) -> void:
 	var parent := Node2D.new()
@@ -218,4 +267,30 @@ func _assert_budgeted_encounter(runner, director_script) -> void:
 				"director enemy should record encounter provenance"
 			)
 	runner.assert_true(fake_pool.calls.has("enemy"), "director should acquire enemies from the pool")
+	parent.queue_free()
+
+func _assert_empty_field_recovery(runner, director_script) -> void:
+	var parent := Node2D.new()
+	var player := Node2D.new()
+	var director = director_script.new()
+	parent.add_child(player)
+	parent.add_child(director)
+	Engine.get_main_loop().root.add_child(parent)
+	director.enemy_scene = load("res://scenes/enemies/BasicDemon.tscn")
+	director.configure(FakeDatabase.new([], [{
+		"id": "recovery_wave",
+		"weight": 1,
+		"min_time": 0.0,
+		"max_time": 999.0,
+		"cooldown_draws": 0,
+		"pressure_cost": 1,
+		"formation_id": "surround_gap",
+		"groups": [{"enemy_id": "basic_demon", "count": 4}],
+	}]), player)
+	director.next_encounter_time = 999.0
+	director._process(6.0)
+	runner.assert_true(
+		director.pending_spawn_waves.size() > 0,
+		"an empty battlefield should schedule a recovery encounter within six seconds"
+	)
 	parent.queue_free()
