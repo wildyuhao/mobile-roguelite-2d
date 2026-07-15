@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2"]
@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://art/effects/hit/player_contact_hit_burst.png" id="8"]
 [ext_resource type="Texture2D" path="res://art/effects/player/starting_ward.png" id="9"]
 [ext_resource type="Script" path="res://scripts/components/starting_ward_visual.gd" id="10"]
+[ext_resource type="Texture2D" path="res://art/characters/player/animation/idle_front_strip.png" id="11"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 18.0
@@ -40,6 +41,9 @@ sprite_path = NodePath("../AnimatedSprite2D")
 front_strip = ExtResource("4")
 back_strip = ExtResource("5")
 side_strip = ExtResource("6")
+idle_front_strip = ExtResource("11")
+idle_frame_count = 16
+idle_animation_fps = 3.2
 
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("2")

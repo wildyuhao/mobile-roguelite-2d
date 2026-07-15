@@ -37,6 +37,17 @@ func run(runner) -> void:
 			player.get_node_or_null("DirectionalAnimation") != null,
 			"player should include directional animation control"
 		)
+		var directional_animation = player.get_node_or_null("DirectionalAnimation")
+		if directional_animation != null:
+			runner.assert_true(
+				directional_animation.get("idle_front_strip") is Texture2D,
+				"player should configure the video-derived front idle strip"
+			)
+			runner.assert_eq(
+				int(directional_animation.get("idle_frame_count")),
+				16,
+				"player front idle should expose all sixteen sampled frames"
+			)
 		runner.assert_true(
 			player.get_node_or_null("HitFeedback") != null,
 			"player should include layered hit feedback"
@@ -134,6 +145,7 @@ func run(runner) -> void:
 			"%s should exist" % effect_path
 		)
 	for strip_path in [
+		"res://art/characters/player/animation/idle_front_strip.png",
 		"res://art/characters/player/animation/walk_front_strip.png",
 		"res://art/characters/player/animation/walk_back_strip.png",
 		"res://art/characters/player/animation/walk_side_strip.png",

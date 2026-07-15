@@ -24,6 +24,35 @@ func run(runner) -> void:
 		6,
 		"front walk should contain six frames"
 	)
+	var idle_texture := sprite.sprite_frames.get_frame_texture("idle_front", 0) as AtlasTexture
+	runner.assert_eq(
+		idle_texture.region.position.x,
+		128.0,
+		"idle presentation should use the neutral second frame instead of a stride pose"
+	)
+	var idle_image := Image.create(2048, 128, false, Image.FORMAT_RGBA8)
+	idle_image.fill(Color.WHITE)
+	var idle_strip := ImageTexture.create_from_image(idle_image)
+	runner.assert_true(
+		controller.configure(sprite, strip, strip, strip, idle_strip),
+		"directional animation should accept a dedicated front idle strip"
+	)
+	runner.assert_eq(
+		sprite.sprite_frames.get_frame_count("idle_front"),
+		16,
+		"front idle should contain all sampled video frames"
+	)
+	runner.assert_near(
+		sprite.sprite_frames.get_animation_speed("idle_front"),
+		3.2,
+		0.001,
+		"front idle should retain the five-second source motion"
+	)
+	runner.assert_eq(
+		sprite.sprite_frames.get_frame_count("idle_back"),
+		1,
+		"directions without a dedicated idle strip should retain a stable frame"
+	)
 	runner.assert_eq(
 		controller.update_motion(Vector2.RIGHT),
 		&"walk_side",
@@ -56,6 +85,21 @@ func run(runner) -> void:
 		controller.update_motion(Vector2.DOWN),
 		&"walk_front",
 		"down movement should use front walk"
+	)
+	runner.assert_eq(
+		controller.update_motion(Vector2(0.70, 0.71)),
+		&"walk_front",
+		"near-diagonal input should initially retain the vertical walk"
+	)
+	runner.assert_eq(
+		controller.update_motion(Vector2(0.71, 0.70)),
+		&"walk_front",
+		"minor joystick noise around a diagonal should not restart another direction"
+	)
+	runner.assert_eq(
+		controller.update_motion(Vector2(0.95, 0.10)),
+		&"walk_side",
+		"decisive horizontal input should still switch to the side walk"
 	)
 
 	controller.free()
